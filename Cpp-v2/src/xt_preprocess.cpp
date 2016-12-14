@@ -259,6 +259,8 @@ std::vector<Rec> XT_PreProcess::convertToRec(std::vector<std::string> &log)
         v_rec.push_back(rec);
         i++;
     }
+
+    std::cout << "finish: convert string xray taint log to Rec format..." << endl;
     return v_rec;
 } 
 
