@@ -268,10 +268,9 @@ void testCaseDup(string logPath, bool isForceAdd)
     // xtFile.write(XT_RESULT_PATH + logPath + XT_PREPROCESS + XT_FILE_EXT, xtLog);
 
     // add memory size infomation
-
     // xtLog = XT_PreProcess::add_mem_size_info(xtLog); Not needed
     xtLog = xtPreProc.parseMemSizeInfo(xtLog);
-    // xtFile.write(XT_RESULT_PATH + logPath + XT_ADD_SIZE_INFO + XT_FILE_EXT, xtLog);
+    xtFile.write(XT_RESULT_PATH + logPath + XT_ADD_SIZE_INFO + XT_FILE_EXT, xtLog);
 
     // buffer liveness analysis
     // aliveBuf = XT_Liveness::analyze_alive_buffer(xtLog);

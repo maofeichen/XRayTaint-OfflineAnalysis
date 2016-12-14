@@ -1,5 +1,7 @@
 #include <cassert>
+#include <iostream>
 #include <string>
+#include <sstream>
 #include <vector>
 #include "xt_flag.h"
 #include "xt_preprocess.h"
@@ -8,6 +10,84 @@
 using namespace std;
 
 XT_PreProcess::XT_PreProcess(){}
+
+// filter out mark records
+inline bool XT_PreProcess::isValidRecord(string &s)
+{
+    if(s.compare(flag::XT_INSN_ADDR) != 0 && \
+       s.compare(flag::XT_TCG_DEPOSIT) != 0 && \
+       s.compare(flag::XT_SIZE_BEGIN) != 0 && \
+       s.compare(flag::XT_SIZE_END) != 0 && \
+	   s.compare(flag::XT_CALL_INSN) != 0 && \
+       s.compare(flag::XT_CALL_INSN_SEC) != 0 && \
+	   s.compare(flag::XT_CALL_INSN_FF2) != 0 && \
+	   s.compare(flag::XT_CALL_INSN_FF2_SEC) != 0 && \
+       s.compare(flag::XT_RET_INSN) != 0 && \
+	   s.compare(flag::XT_RET_INSN_SEC) != 0)
+       return true;
+   else
+       return false;
+}
+
+// Given the record flag, determine its size
+inline std::string XT_PreProcess::getBufSize(int iRecFlag, int &TCGEncode)
+{
+	int size = 0;
+	if(iRecFlag > flag::NUM_TCG_ST_POINTER){
+		size = iRecFlag - flag::NUM_TCG_ST_POINTER;
+		TCGEncode = flag::NUM_TCG_ST_POINTER;
+	}
+	else if(iRecFlag > flag::NUM_TCG_ST){
+		size = iRecFlag - flag::NUM_TCG_ST;
+		TCGEncode = flag::NUM_TCG_ST;
+	}
+	else if(iRecFlag > flag::NUM_TCG_LD_POINTER){
+		size = iRecFlag - flag::NUM_TCG_LD_POINTER;
+		TCGEncode = flag::NUM_TCG_LD_POINTER;
+	}
+	else if(iRecFlag > flag::NUM_TCG_LD){
+		size = iRecFlag - flag::NUM_TCG_LD;
+		TCGEncode = flag::NUM_TCG_LD;
+	}
+	else
+		std::cout << "getBufSize(): unknown iRecFlag" << endl;
+
+	switch(size){
+		case 1:
+			return "8";
+		case 2:
+			return "16";
+		case 3:
+			return "32";
+		default:
+			std::cout << "getBufSize(): unknown size" << endl;
+	}
+}
+
+// Replace original flag with TCGEncode, add the size info at the end
+inline std::string XT_PreProcess::addBufSize(std::string &s, std::string size, int TCGEncode)
+{
+	std::string s_new, sTCGEncode;
+	std::vector<std::string> v_s;
+	std::ostringstream oTCGEncode;
+
+	oTCGEncode << std::hex << TCGEncode;
+	sTCGEncode = oTCGEncode.str();
+	v_s = XT_Util::split(s.c_str(), '\t');
+
+	// reform src of record
+	s_new = sTCGEncode + '\t';
+	s_new += v_s[1] + '\t';
+	s_new += v_s[2] + '\t';
+
+	// reform dst of record
+	s_new += sTCGEncode + '\t';
+	s_new += v_s[4] + '\t';
+	s_new += v_s[5] + '\t';
+	s_new += size;
+
+	return s_new;
+}
 
 vector<string> XT_PreProcess::clean_size_mark(vector<string> &v)
 {
@@ -185,10 +265,30 @@ std::vector<Rec> XT_PreProcess::convertToRec(std::vector<std::string> &log)
 // Parse size info for qemu_ld/st record
 std::vector<string> XT_PreProcess::parseMemSizeInfo(std::vector<std::string> &v)
 {
-	string recFlag;
+	string recFlag, size;
+	string rec;
+	int iRecFlag, TCGEncode;
+
+	std::vector<std::string> v_new;
+
 	for(vector<string>::iterator it = v.begin(); it != v.end(); ++it){
 		recFlag = (*it).substr(0,2);
+		rec = *it;
+		if(isValidRecord(recFlag) ){
+			iRecFlag = std::stoi(recFlag, nullptr, 16);
+			// if qemu_ld or qemu_st
+			if(iRecFlag >= flag::NUM_TCG_LD_MIN && iRecFlag <= flag::NUM_TCG_ST_MAX){
+				size = getBufSize(iRecFlag, TCGEncode);
+				rec = addBufSize(rec, size, TCGEncode);
+				v_new.push_back(rec);
+				continue;
+			}
+		}
+		v_new.push_back(*it);
 	}
+
+	std::cout << "parse memory size info..." << endl;
+	return v_new;
 }
 
 // for each qemu ld/st record, add size info to the end of each

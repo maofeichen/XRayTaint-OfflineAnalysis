@@ -31,6 +31,9 @@ namespace flag
     const int NUM_TCG_ST			= 0x5a;
     const int NUM_TCG_ST_POINTER	= 0x5e;
 
+    const int NUM_TCG_LD_MIN		= 0x52;
+    const int NUM_TCG_ST_MAX		= 0x61;
+
     const string TCG_ADD            = "3b";
     const string TCG_XOR            = "47";
 }

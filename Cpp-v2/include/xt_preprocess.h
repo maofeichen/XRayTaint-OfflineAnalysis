@@ -11,8 +11,11 @@ class XT_PreProcess
 {
 private:
     inline bool is_invalid_record(string &);
+    inline bool isValidRecord(string &s);
     inline RegularRec initMarkRecord(std::vector<std::string> &singleRec);
     inline RegularRec initRegularRecord(std::vector<std::string> &singleRec);
+    inline std::string getBufSize(int iRecFlag, int &TCGEncode);
+    inline std::string addBufSize(std::string &s, std::string size, int TCGEncode);
 public:
     XT_PreProcess();
 
