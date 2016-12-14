@@ -244,6 +244,7 @@ Func_Call_Cont_Buf_t XT_Liveness::analyze_continue_buffer_per_function(vector<st
             v_buf_rec.push_back(buf_rec);
         }
     }
+
     std::sort(v_buf_rec.begin(), v_buf_rec.end(), XT_Liveness::compare_buf_rec);
     v_cont_buf = XT_Liveness::create_continue_buffer(v_buf_rec);
     func_call_cont_buf.cont_buf = v_cont_buf;

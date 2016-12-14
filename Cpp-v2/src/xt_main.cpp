@@ -155,7 +155,9 @@ int main(int argc, char const *argv[])
     // testCase(AES_128_CBC_1B_Taint_INPUT_KEYSTROKE, false);
 
     // analyze aes 128 1b local compile taint input with memory
-    testCaseDup(AES_128_1B_LC_TAINT_INPUT, false);
+    // testCaseDup(AES_128_1B_LC_TAINT_INPUT, false);
+
+    testCaseDup(AES_128_1B_LC_TAINT_INPUT_FIX, false);
     return 0;
 }
 
@@ -265,16 +267,16 @@ void testCaseDup(string logPath, bool isForceAdd)
     // There is a bug
     // xtLog = xtPreProc.clean_empty_function_mark(xtLog);
     xtLog = xtPreProc.clean_nonempty_function_mark(xtLog);
-    // xtFile.write(XT_RESULT_PATH + logPath + XT_PREPROCESS + XT_FILE_EXT, xtLog);
+    xtFile.write(XT_RESULT_PATH + logPath + XT_PREPROCESS + XT_FILE_EXT, xtLog);
 
     // add memory size infomation
     // xtLog = XT_PreProcess::add_mem_size_info(xtLog); Not needed
     xtLog = xtPreProc.parseMemSizeInfo(xtLog);
-    // xtFile.write(XT_RESULT_PATH + logPath + XT_ADD_SIZE_INFO + XT_FILE_EXT, xtLog);
+    xtFile.write(XT_RESULT_PATH + logPath + XT_ADD_SIZE_INFO + XT_FILE_EXT, xtLog);
 
     // buffer liveness analysis
     aliveBuf = XT_Liveness::analyze_alive_buffer(xtLog);
-    // xtFile.write(XT_RESULT_PATH + logPath + XT_ALIVE_BUF + XT_FILE_EXT, aliveBuf);
+    xtFile.write(XT_RESULT_PATH + logPath + XT_ALIVE_BUF + XT_FILE_EXT, aliveBuf);
 
     // Merges continuous buffers
 
@@ -283,7 +285,7 @@ void testCaseDup(string logPath, bool isForceAdd)
     vFuncCallContBuf = XT_Liveness::filter_continue_buffer(vFuncCallContBuf);
     if(isForceAdd)
         xtLiveness.forceAddTaintBuffer(vFuncCallContBuf, TAINT_BUF_BEGIN_ADDR, TAINT_BUF_SIZE);
-    // xtFile.write_continue_buffer(XT_RESULT_PATH + logPath + CONT_BUF + XT_FILE_EXT, vFuncCallContBuf);
+    xtFile.write_continue_buffer(XT_RESULT_PATH + logPath + CONT_BUF + XT_FILE_EXT, vFuncCallContBuf);
 
     // Converts string format to Rec format
     // xtLogRec = xtPreProc.convertToRec(xtLog);
