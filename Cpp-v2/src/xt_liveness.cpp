@@ -59,6 +59,8 @@ vector<string> XT_Liveness::analyze_alive_buffer(vector<string> &v)
             }
         }
     }
+
+    std::cout << "finish: analyze alive buffers..." << endl;
     return alive_buffer;
 }
 
@@ -217,6 +219,7 @@ vector<Func_Call_Cont_Buf_t> XT_Liveness::merge_continue_buffer(vector<string> &
 
     }
 
+    std::cout << "finish merge continue buffer" << endl;
     return v_func_call_cont_buf;
 }
 
@@ -348,6 +351,7 @@ vector<Func_Call_Cont_Buf_t> XT_Liveness::filter_continue_buffer(vector<Func_Cal
         func_call_cont_buf.cont_buf.clear();
     }
 
+    std::cout << "finish filter continue buffers size > 4 bytes" << endl;
     return v_new;
 }
 

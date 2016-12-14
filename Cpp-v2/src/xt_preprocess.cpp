@@ -287,7 +287,7 @@ std::vector<string> XT_PreProcess::parseMemSizeInfo(std::vector<std::string> &v)
 		v_new.push_back(*it);
 	}
 
-	std::cout << "parse memory size info..." << endl;
+	std::cout << "finish parse memory size info..." << endl;
 	return v_new;
 }
 

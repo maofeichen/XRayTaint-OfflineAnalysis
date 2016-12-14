@@ -270,19 +270,19 @@ void testCaseDup(string logPath, bool isForceAdd)
     // add memory size infomation
     // xtLog = XT_PreProcess::add_mem_size_info(xtLog); Not needed
     xtLog = xtPreProc.parseMemSizeInfo(xtLog);
-    xtFile.write(XT_RESULT_PATH + logPath + XT_ADD_SIZE_INFO + XT_FILE_EXT, xtLog);
+    // xtFile.write(XT_RESULT_PATH + logPath + XT_ADD_SIZE_INFO + XT_FILE_EXT, xtLog);
 
     // buffer liveness analysis
-    // aliveBuf = XT_Liveness::analyze_alive_buffer(xtLog);
+    aliveBuf = XT_Liveness::analyze_alive_buffer(xtLog);
     // xtFile.write(XT_RESULT_PATH + logPath + XT_ALIVE_BUF + XT_FILE_EXT, aliveBuf);
 
     // Merges continuous buffers
 
     XT_Liveness xtLiveness;
-    // vFuncCallContBuf = XT_Liveness::merge_continue_buffer(aliveBuf);
-    // vFuncCallContBuf = XT_Liveness::filter_continue_buffer(vFuncCallContBuf);
-    // if(isForceAdd)
-        // xtLiveness.forceAddTaintBuffer(vFuncCallContBuf, TAINT_BUF_BEGIN_ADDR, TAINT_BUF_SIZE);
+    vFuncCallContBuf = XT_Liveness::merge_continue_buffer(aliveBuf);
+    vFuncCallContBuf = XT_Liveness::filter_continue_buffer(vFuncCallContBuf);
+    if(isForceAdd)
+        xtLiveness.forceAddTaintBuffer(vFuncCallContBuf, TAINT_BUF_BEGIN_ADDR, TAINT_BUF_SIZE);
     // xtFile.write_continue_buffer(XT_RESULT_PATH + logPath + CONT_BUF + XT_FILE_EXT, vFuncCallContBuf);
 
     // Converts string format to Rec format
