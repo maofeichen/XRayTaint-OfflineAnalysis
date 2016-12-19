@@ -49,31 +49,38 @@ vector<AvalancheResBetweenInAndOut> SearchAvalanche::searchAvalanche()
 				   in->buffer.beginAddr != out->buffer.beginAddr){
 
 				   	bufInOut = assignBufInOut(*in, *out);
+
+
 				   	if(!isDuplBufInOut(bufInOut, vBufInOut) ){
 				   		vBufInOut.push_back(bufInOut);
 
+				   		cout << "----------------------------------------" << endl;
 				   		cout << numSearch << " times search avalanche..." << endl;
 						// Print in & out 
-						cout << "----------------------------------------" << endl;
 						cout << "Input buffer:" << endl;
 					   	printFunctionCallBuffer(*in);
+					   	cout << "----------" << endl;
 					   	cout << "Output buffer: " << endl;
 					   	printFunctionCallBuffer(*out);
 
-					   	avalResInOut = searchAvalancheBetweenInAndOut(*in, *out);
+					   	// avalResInOut = searchAvalancheBetweenInAndOut(*in, *out);
 					   	// printAvalResBetweenInAndOut(avalResInOut);
-					   	vAvalRes.push_back(avalResInOut);
+					   	// vAvalRes.push_back(avalResInOut);
 
 					   	numSearch++;
 				   	}
+
 	
-					// DEBUG
-					// if(in->buffer.beginAddr == 0xbffff764 && 
-					// 	out->buffer.beginAddr == 0xbffff77c){
-					// 	avalResInOut = searchAvalancheBetweenInAndOut(*in, *out);
-					// 	printAvalResBetweenInAndOut(avalResInOut);
-					// 	goto LABEL_OUTTER_LOOP;
-					// }
+					// Debug
+//				   	if(in->callMark == "1a\tbffff0a4\t4f1833\t" && \
+//				   	   in->buffer.beginAddr == 0xbffff764){
+//						if(out->callMark == "14\tbffff0ac\t80c1aa3\t" && \
+//						   out->buffer.beginAddr == 0xbffff484){
+//							avalResInOut = searchAvalancheBetweenInAndOut(*in, *out);
+//							printAvalResBetweenInAndOut(avalResInOut);
+//						 	goto LABEL_OUTTER_LOOP;
+//						 }
+//				   	}
 
 					// search avalanche effect between in and out continuous buffer
 					// searchAvalancheBetweenInAndOut(*in, *out);
@@ -685,6 +692,7 @@ void SearchAvalanche::printFunctionCallBuffer(FunctionCallBuffer &a)
 	cout << "Sec Call Mark: " << a.callSecMark << endl;
 	cout << "Ret Mark: " << a.retMark << endl;
 	cout << "Sec Ret Mark: " << a.retSecMark << endl;
+	cout << "----------" << endl;
 	cout << "Buffer Begin Addr: " << hex << a.buffer.beginAddr << endl;
 	cout << "Buffer Size: " << dec << a.buffer.size / BIT_TO_BYTE << endl; 
 }

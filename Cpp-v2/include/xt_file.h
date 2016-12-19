@@ -11,11 +11,12 @@ using namespace std;
 const string XT_FILE_EXT    = ".txt";
 // const string XT_FILE_PATH   = "/Users/MChen/Workspace/XTaint/OfflineAnalysis/Cpp-v2/test-file/";
 // const string XT_FILE_PATH   = "/home/mchen/Workspace/XTaint/OfflineAnalysis/Cpp-v2/test-file/";
-const string XT_FILE_PATH	= "/home/mchen/Workspace/XRayTaint-OfflineAnalysis/Cpp-v2/test-file/";
+// const string XT_FILE_PATH	= "/home/mchen/Workspace/XRayTaint-OfflineAnalysis/Cpp-v2/test-file/";
+const string XT_FILE_PATH	= "/home/xtaint/Workplace/XRayTaint-OfflineAnalysis/Cpp-v2/test-file/";
 
 // const string XT_RESULT_PATH = "/Users/MChen/Workspace/XTaint/OfflineAnalysis/Cpp-v2/test-result/";
 // const string XT_RESULT_PATH = "/home/mchen/Workspace/XTaint/OfflineAnalysis/Cpp-v2/test-result/";
-const string XT_RESULT_PATH = "/home/mchen/Workspace/XRayTaint-OfflineAnalysis/Cpp-v2/test-result/";
+const string XT_RESULT_PATH = "/home/xtaint/Workplace/XRayTaint-OfflineAnalysis/Cpp-v2/test-result/";
 
 const string XT_FILE_FAKE_DATA  = "test-aes-128-1B-all-identify-in-out-buffer-fake-data";
 const string XT_FILE_AES        = "test-aes-128-1B-all-marks";
@@ -26,6 +27,7 @@ const string AES_128_CBC_1B_Taint_INPUT_KEYSTROKE = "aes-128-cbc-1B-taint-input-
 
 const string AES_128_1B_LC_TAINT_INPUT = "aes-128-one-block-enc-local_compile-taint_input";
 const string AES_128_1B_LC_TAINT_INPUT_FIX = "aes-128-one-block-enc-local_compile-taint_input-fix_ld_st_size_mark";
+const string AES_1B_ENC_LCOMP_TAINT_MEM_IN_FIX_ADD = "aes-1B-enc-LComp-taint_mem_in-fix-add_i32-error";
 
 
 const string XT_PREPROCESS      = "-preprocess";

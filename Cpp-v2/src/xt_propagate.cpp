@@ -243,10 +243,15 @@ unordered_set<Node, NodeHash> Propagate::bfs_old(NodePropagate &s, vector<Rec> &
                                 Node node = nextNode.n;
                                 insert_propagate_result(node, res_buffer);
                             } else{ // if not a buffer node
+                            	// No need to use isSameInsn & numHit
+                            	/*
                                 if(is_save_to_q_propagate(isSameInsn, numHit) ){
                                     q_propagate.push(nextNode);
                                     numHit++;
                                 }
+                                */
+                                q_propagate.push(nextNode);
+								numHit++;
                             }
                         } // end isValidPropagate
                     } // end isMark
@@ -255,6 +260,8 @@ unordered_set<Node, NodeHash> Propagate::bfs_old(NodePropagate &s, vector<Rec> &
                     // already have hit, and
                     // not a memory buffer
                     // can break the loop
+                    //
+                    // No need to use!!!
                     if(!isSameInsn && 
                         numHit >= 1 && 
                         !XT_Util::equal_mark(currNode.n.flag, flag::TCG_QEMU_ST) )
@@ -473,6 +480,7 @@ inline void Propagate::insert_propagate_result(Node &n, std::unordered_set<Node,
 //      consider valid
 // else otherwise
 //      case 1 - dst.addr == current record src.addr
+// Previous rule: ignore!!!
 inline bool Propagate::is_valid_propagate(NodePropagate &currNode, 
                                           Rec &currRec,
                                           vector<Rec> &v_rec)
@@ -487,8 +495,9 @@ inline bool Propagate::is_valid_propagate(NodePropagate &currNode,
 
     // is the dst node a store operation, indicating node is a memory buffer
     // then only the addresses are same is valid?
+    // NO, both <addr, val> need to be same
     if(isStore){
-        if(currNode.n.addr == currRec.regular.src.addr /*&& currNode.n.val == currRec.regular.src.val*/)
+        if(currNode.n.addr == currRec.regular.src.addr && currNode.n.val == currRec.regular.src.val)
             isValidPropagate = true;
     }else{
         // case 1
@@ -497,6 +506,7 @@ inline bool Propagate::is_valid_propagate(NodePropagate &currNode,
             // if vals are also same
             if(currNode.n.val == currRec.regular.src.val)
                 isValidPropagate = true;
+            /*
             else if(currNode.n.val.find(currRec.regular.src.val) != string::npos || 
                         currRec.regular.src.val.find(currNode.n.val) != string::npos)
                 isValidPropagate = true;
@@ -506,6 +516,7 @@ inline bool Propagate::is_valid_propagate(NodePropagate &currNode,
             // special case: if current node next node is a tcg xor
             else if(XT_Util::equal_mark(v_rec[currNode.pos + 1].regular.src.flag, flag::TCG_XOR) )
                 isValidPropagate = true;
+            */
         }
         // case 2
         // load pointer: current node val is same with current record's addr

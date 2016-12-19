@@ -157,7 +157,7 @@ int main(int argc, char const *argv[])
     // analyze aes 128 1b local compile taint input with memory
     // testCaseDup(AES_128_1B_LC_TAINT_INPUT, false);
 
-    testCaseDup(AES_128_1B_LC_TAINT_INPUT_FIX, true);
+    testCaseDup(AES_1B_ENC_LCOMP_TAINT_MEM_IN_FIX_ADD, false);
     return 0;
 }
 
@@ -279,7 +279,6 @@ void testCaseDup(string logPath, bool isForceAdd)
     // xtFile.write(XT_RESULT_PATH + logPath + XT_ALIVE_BUF + XT_FILE_EXT, aliveBuf);
 
     // Merges continuous buffers
-
     XT_Liveness xtLiveness;
     vFuncCallContBuf = XT_Liveness::merge_continue_buffer(aliveBuf);
     vFuncCallContBuf = XT_Liveness::filter_continue_buffer(vFuncCallContBuf);
