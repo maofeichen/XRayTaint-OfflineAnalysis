@@ -63,17 +63,18 @@ vector<AvalancheResBetweenInAndOut> SearchAvalanche::searchAvalanche()
 					   	cout << "Output buffer: " << endl;
 					   	printFunctionCallBuffer(*out);
 
-					   	// avalResInOut = searchAvalancheBetweenInAndOut(*in, *out);
+					   	avalResInOut = searchAvalancheBetweenInAndOut(*in, *out);
 					   	// printAvalResBetweenInAndOut(avalResInOut);
-					   	// vAvalRes.push_back(avalResInOut);
+					   	vAvalRes.push_back(avalResInOut);
 
 					   	numSearch++;
 				   	}
 
+
 	
 					// Debug
 //				   	if(in->callMark == "1a\tbffff0a4\t4f1833\t" && \
-//				   	   in->buffer.beginAddr == 0xbffff764){
+//				   	   in->buffer.beginAddr == 0xbffff744){
 //						if(out->callMark == "14\tbffff0ac\t80c1aa3\t" && \
 //						   out->buffer.beginAddr == 0xbffff484){
 //							avalResInOut = searchAvalancheBetweenInAndOut(*in, *out);

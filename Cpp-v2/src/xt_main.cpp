@@ -292,5 +292,5 @@ void testCaseDup(string logPath, bool isForceAdd)
     // Searches avalanche effect
     SearchAvalanche sa(vFuncCallContBuf, xtLogRec);
     vAvalResult = sa.searchAvalanche();
-    // xtFile.writeAvalancheResult(XT_RESULT_PATH + logPath + AVAL_RES + XT_FILE_EXT, vAvalResult);
+    xtFile.writeAvalancheResult(XT_RESULT_PATH + logPath + AVAL_RES + XT_FILE_EXT, vAvalResult);
 }
