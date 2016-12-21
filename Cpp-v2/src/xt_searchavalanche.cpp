@@ -1,5 +1,4 @@
 #include "xt_flag.h"
-#include "xt_propagate.h"
 #include "xt_searchavalanche.h"
 #include "xt_util.h"
 
@@ -23,6 +22,8 @@ vector<AvalancheResBetweenInAndOut> SearchAvalanche::searchAvalanche()
 	vector<FunctionCallBuffer> v_functionCallBuffer;
 	AvalancheResBetweenInAndOut avalResInOut;
 	vector<AvalancheResBetweenInAndOut> vAvalRes;
+
+    Propagate propagate;
 
 	BufferInOut bufInOut;
 	vector<BufferInOut> vBufInOut;	// Duplicate In Out buffers check
@@ -63,25 +64,23 @@ vector<AvalancheResBetweenInAndOut> SearchAvalanche::searchAvalanche()
 					   	cout << "Output buffer: " << endl;
 					   	printFunctionCallBuffer(*out);
 
-					   	avalResInOut = searchAvalancheBetweenInAndOut(*in, *out);
+					   	avalResInOut = searchAvalancheBetweenInAndOut(*in, *out, propagate);
 					   	// printAvalResBetweenInAndOut(avalResInOut);
 					   	vAvalRes.push_back(avalResInOut);
 
 					   	numSearch++;
 				   	}
-
-
 	
 					// Debug
-//				   	if(in->callMark == "1a\tbffff0a4\t4f1833\t" && \
-//				   	   in->buffer.beginAddr == 0xbffff744){
-//						if(out->callMark == "14\tbffff0ac\t80c1aa3\t" && \
-//						   out->buffer.beginAddr == 0xbffff484){
-//							avalResInOut = searchAvalancheBetweenInAndOut(*in, *out);
-//							printAvalResBetweenInAndOut(avalResInOut);
-//						 	goto LABEL_OUTTER_LOOP;
-//						 }
-//				   	}
+				 //   	if(in->callMark == "1a\tbffff0a4\t4f1833\t" && \
+				 //   	   in->buffer.beginAddr == 0xbffff744){
+					// 	if(out->callMark == "14\tbffff0ac\t80c1aa3\t" && \
+					// 	   out->buffer.beginAddr == 0xbffff484){
+					// 		avalResInOut = searchAvalancheBetweenInAndOut(*in, *out);
+					// 		printAvalResBetweenInAndOut(avalResInOut);
+					// 	 	goto LABEL_OUTTER_LOOP;
+					// 	 }
+				 //   	}
 
 					// search avalanche effect between in and out continuous buffer
 					// searchAvalancheBetweenInAndOut(*in, *out);
@@ -550,10 +549,12 @@ LABEL_STAGE_TWO:
 }
 
 
-AvalancheResBetweenInAndOut SearchAvalanche::searchAvalancheBetweenInAndOut(FunctionCallBuffer &in, FunctionCallBuffer &out)
+AvalancheResBetweenInAndOut SearchAvalanche::searchAvalancheBetweenInAndOut(FunctionCallBuffer &in, 
+                                                                            FunctionCallBuffer &out,
+                                                                            Propagate &propagate)
 {
 	NodePropagate s, curr_s, prev_s;
-	Propagate propagate;
+	// Propagate propagate;
 	unordered_set<Node, NodeHash> propagateRes;
 
 	unsigned long inBeginAddr;
@@ -619,7 +620,9 @@ LABEL_S_TWO:
 		prev_s = curr_s;
 		curr_s = initialBeginNode(in, inBeginAddr, m_logAesRec);
 		if(!isSameNode(prev_s, curr_s)){
-			propagateRes = propagate.getPropagateResult(s, m_logAesRec);
+			// propagateRes = propagate.getPropagateResult(s, m_logAesRec);
+            // should be curr_s?
+            propagateRes = propagate.getPropagateResult(curr_s, m_logAesRec);
 			vAvalOut = getAvalancheInRestByte(propagateRes, vAvalOut);
 		}
 

@@ -2,6 +2,7 @@
 #define XT_SEARCHAVALANCHE_H
 
 #include "xt_data.h"
+#include "xt_propagate.h"
 #include <string>
 #include <vector>
 #include <unordered_set>
@@ -85,7 +86,9 @@ private:
 	Buffer getAvalancheInRestByteOneBuffer(std::unordered_set<Node, NodeHash> &propagateRes, Buffer &avalOut);
 	std::vector<FunctionCallBuffer> getFunctionCallBuffer(std::vector<Func_Call_Cont_Buf_t> &v);	
 	NodePropagate initialBeginNode(FunctionCallBuffer &buf, unsigned long &addr, std::vector<Rec> &logRec);
-	AvalancheResBetweenInAndOut searchAvalancheBetweenInAndOut(FunctionCallBuffer &in, FunctionCallBuffer &out);
+	AvalancheResBetweenInAndOut searchAvalancheBetweenInAndOut(FunctionCallBuffer &in, 
+															   FunctionCallBuffer &out,
+															   Propagate &propagate);
 	void searchAvalancheBetweenInAndOut_IGNORE(FunctionCallBuffer &in, FunctionCallBuffer &out);
 	void searchAvalancheBetweenInAndOutDebug(FunctionCallBuffer &in, FunctionCallBuffer &out);
 

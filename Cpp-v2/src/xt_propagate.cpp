@@ -61,7 +61,21 @@ unordered_set<Node, NodeHash> Propagate::searchAvalanche(vector<string> &log,
 unordered_set<Node, NodeHash> Propagate::getPropagateResult(NodePropagate &s, 
                                                             std::vector<Rec> &vRec)
 {
-    return bfs_old(s, vRec);
+    std::unordered_set<Node, NodeHash> aPropagateRes;
+
+    PropagateRes p;
+    p.src = s;
+
+    std::unordered_set<PropagateRes, PropagateResHash>::const_iterator got = setOfPropagateRes.find(p);
+    if( got == setOfPropagateRes.end() ){
+        aPropagateRes = bfs_old(s, vRec);
+
+        p.propagateRes = aPropagateRes;
+        setOfPropagateRes.insert(p);
+        
+        return aPropagateRes;
+    } else
+        return got->propagateRes;
 }
 
 vector<Rec> Propagate::initRec(vector<string> &log)

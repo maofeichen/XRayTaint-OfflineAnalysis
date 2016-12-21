@@ -7,6 +7,24 @@
 #include <unordered_set>
 #include <vector>
 
+struct PropagateRes
+{
+    NodePropagate src;
+    std::unordered_set<Node, NodeHash> propagateRes;
+};
+
+struct PropagateResHash 
+{
+    std::size_t operator()(const PropagateRes &propagateRes) const {
+        size_t h1 ( std::hash<int>()(propagateRes.src.pos) );
+        return h1;
+    }
+};
+
+inline bool operator==(PropagateRes const& p1, PropagateRes const& p2){
+    return p1.src.pos == p2.src.pos && p1.src.isSrc == p2.src.isSrc;
+}
+
 class Propagate
 {
 private:
@@ -33,6 +51,8 @@ private:
                                                      std::vector<NodePropagate> &allPropgateRes);
 public:
     Propagate();
+
+    std::unordered_set<PropagateRes, PropagateResHash> setOfPropagateRes;
 
     // INGORE!!!
     std::unordered_set<Node, NodeHash> searchAvalanche(std::vector<std::string> &log, 
