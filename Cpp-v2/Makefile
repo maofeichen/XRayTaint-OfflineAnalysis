@@ -1,47 +1,37 @@
-# main : 
-# 	g++ -o bin/xt_main src/xt_main.cpp src/xt_file.cpp -Iinclude/
+OBJS = xt_main.o xt_data.o xt_file.o xt_liveness.o \
+		xt_preprocess.o xt_propagate.o xt_searchavalanche.o xt_util.o
 
-TARGET = xt_main
+CC = g++-4.9
+INC = -Iinclude
+CFLAG = -g -std=c++11
 
-CC := g++-4.9
-# CC := g++
-CFLAGS := -g -std=c++11
-# CFLAGS := -g -std=c++0x
-INC = -I include
-DEBUG = -DEBUG
+xt_main : $(OBJS)
+	$(CC) $(INC) -o ./bin/xt_main $(OBJS) $(CFLAG) -lboost_program_options 
 
-LINKER = g++-4.9 -o
-# LINKER = g++ -o
-LFLAGS = -g
+xt_main.o : src/xt_main.cpp
+	$(CC) $(INC) -c src/xt_main.cpp $(CFLAG)
 
-# OBJS = xt_main.o xt_file.o
-SRC_DIR := src
-HEADER_DIR = include
-BUILD_DIR := build
-BIN_DIR = bin
+xt_data.o : src/xt_data.cpp
+	$(CC) $(INC) -c src/xt_data.cpp $(CFLAG)
 
-SOURCES  := $(wildcard $(SRC_DIR)/*.cpp)
-INCLUDES := $(wildcard $(HEADER_DIR)/*.h)
-OBJECTS  := $(SOURCES:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o)
+xt_file.o : src/xt_file.cpp
+	$(CC) $(INC) -c src/xt_file.cpp $(CFLAG)
 
-$(BIN_DIR)/$(TARGET) : $(OBJECTS)
-	@$(LINKER) $@ $(LFLAGS) $(OBJECTS)
-	@echo "Linking complete!"
+xt_liveness.o : src/xt_liveness.cpp
+	$(CC) $(INC) -c src/xt_liveness.cpp $(CFLAG)
 
-$(OBJECTS): $(BUILD_DIR)/%.o : $(SRC_DIR)/%.cpp
-	@$(CC) $(CFLAGS) $(INC) $(DEBUG) -c $< -o $@
-	@echo "Compiled "$<" successfully!"
+xt_preprocess.o : src/xt_preprocess.cpp
+	$(CC) $(INC) -c src/xt_preprocess.cpp $(CFLAG)
 
+xt_propagate.o : src/xt_propagate.cpp
+	$(CC) $(INC) -c src/xt_propagate.cpp $(CFLAG)
 
-# xt_main : $(OBJS)
-# 	$(CC) -o bin/xt_main $(OBJS) -Iinclude
+xt_searchavalanche.o : src/xt_searchavalanche.cpp
+	$(CC) $(INC) -c src/xt_searchavalanche.cpp $(CFLAG)
 
-# xt_main.o : src/xt_main.cpp
-# 	$(CC) -c src/xt_main.cpp -Iinclude
-
-# xt_file.o : src/xt_file.cpp
-# 	$(CC) -c src/xt_file.cpp -Iinclude
+xt_util.o : src/xt_util.cpp
+	$(CC) $(INC) -c src/xt_util.cpp $(CFLAG)
 
 .PHONY : clean
-clean:
-	rm $(OBJECTS) $(BIN_DIR)/$(TARGET) #$(OBJS)
+clean :
+	-rm $(OBJS) ./bin/xt_main
