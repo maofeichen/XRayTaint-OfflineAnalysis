@@ -89,6 +89,7 @@ inline std::string XT_PreProcess::addBufSize(std::string &s, std::string size, i
 	return s_new;
 }
 
+// Not need
 vector<string> XT_PreProcess::clean_size_mark(vector<string> &v)
 {
     vector<string> v_new;
@@ -139,35 +140,40 @@ vector<string> XT_PreProcess::clean_size_mark(vector<string> &v)
 // return - new vector
 vector<string> XT_PreProcess::clean_empty_function_mark(vector<string> &v)
 {
-    vector<string> v_new, v_call, v_ret;
+    vector<string> vNew, vCall, vRet;
     string call, ret;
-    int sz, idx;
+    vector<string>::size_type sz;
+
+    cout << "Cleanning empty function call mark..." << endl;
 
     for(vector<string>::iterator it = v.begin(); it != v.end(); ++it){
         // if a 2nd ret insn mark
         if( (*it).substr(0,2).compare(flag::XT_RET_INSN_SEC) == 0){
-            ret = v_new.back();
-            sz = v_new.size();
-            call = v_new.at(sz - 3);
+            ret = vNew.back();
+            // !!!it assums the call must before ret, but this does NOT hold
+            if(vNew.size() < 3)
+                continue;
+
+            // if empty function, then -3 is call
+            call = vNew[vNew.size() - 3]; 
             // if an CALL insn mark
             if(call.substr(0,2).compare(flag::XT_CALL_INSN) == 0 || \
                 call.substr(0,2).compare(flag::XT_CALL_INSN_FF2) == 0 ){
                 // if matches
-                v_call = XT_Util::split(call.c_str(), '\t');
-                v_ret = XT_Util::split(ret.c_str(), '\t');
-                assert(v_call.size() == v_ret.size() );
-                sz = v_call.size();
-                if(v_call.at(sz - 2).compare(v_ret.at(sz - 2) ) == 0){
-                    // pop last three
-                    for(idx = 0; idx < 3; idx++)
-                        v_new.pop_back();
+                vCall = XT_Util::split(call.c_str(), '\t');
+                vRet = XT_Util::split(ret.c_str(), '\t');
+                // assert(vCall.size() == vRet.size() );
+                sz = vCall.size();
+                // If top of stack are same
+                if(vCall.at(sz - 2).compare(vRet.at(sz - 2) ) == 0){
+                    vNew.erase(vNew.end()-3, vNew.end() );
                     continue;
                 }
             }
         }
-        v_new.push_back(*it);
+        vNew.push_back(*it);
     }
-    return v_new;
+    return vNew;
 }
 
 inline bool XT_PreProcess::is_invalid_record(string &s)
@@ -189,6 +195,8 @@ vector<string> XT_PreProcess::clean_nonempty_function_mark(vector<string> &v)
     string call, ret;
     int sz, num_item;
     bool is_invalid_rec, is_del_marks;
+
+    cout << "Cleanning non-empty function call mark..." << endl;
     
     for(std::vector<string>::iterator it = v.begin(); it != v.end(); ++it){
         // if a 2nd RET insn mark
@@ -247,6 +255,8 @@ std::vector<Rec> XT_PreProcess::convertToRec(std::vector<std::string> &log)
     Node src, dst;
     int i;
 
+    std::cout << "Converting string xray taint log to Rec format..." << endl;
+
     for(vector<string>::iterator it = log.begin(); it != log.end(); ++it){
         v_single_rec = XT_Util::split( (*it).c_str(), '\t');
         if(XT_Util::isMarkRecord(v_single_rec[0]) ){
@@ -260,7 +270,6 @@ std::vector<Rec> XT_PreProcess::convertToRec(std::vector<std::string> &log)
         i++;
     }
 
-    std::cout << "finish: convert string xray taint log to Rec format..." << endl;
     return v_rec;
 } 
 
@@ -270,8 +279,9 @@ std::vector<string> XT_PreProcess::parseMemSizeInfo(std::vector<std::string> &v)
 	string recFlag, size;
 	string rec;
 	int iRecFlag, TCGEncode;
-
 	std::vector<std::string> v_new;
+
+    std::cout << "Parsing memory size info..." << endl;
 
 	for(vector<string>::iterator it = v.begin(); it != v.end(); ++it){
 		recFlag = (*it).substr(0,2);
@@ -289,7 +299,6 @@ std::vector<string> XT_PreProcess::parseMemSizeInfo(std::vector<std::string> &v)
 		v_new.push_back(*it);
 	}
 
-	std::cout << "finish parse memory size info..." << endl;
 	return v_new;
 }
 

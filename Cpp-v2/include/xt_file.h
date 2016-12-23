@@ -9,13 +9,7 @@
 using namespace std;
 
 const string XT_FILE_EXT    = ".txt";
-// const string XT_FILE_PATH   = "/Users/MChen/Workspace/XTaint/OfflineAnalysis/Cpp-v2/test-file/";
-// const string XT_FILE_PATH   = "/home/mchen/Workspace/XTaint/OfflineAnalysis/Cpp-v2/test-file/";
-// const string XT_FILE_PATH	= "/home/mchen/Workspace/XRayTaint-OfflineAnalysis/Cpp-v2/test-file/";
 const string XT_FILE_PATH	= "/home/xtaint/Workplace/XRayTaint-OfflineAnalysis/Cpp-v2/test-file/";
-
-// const string XT_RESULT_PATH = "/Users/MChen/Workspace/XTaint/OfflineAnalysis/Cpp-v2/test-result/";
-// const string XT_RESULT_PATH = "/home/mchen/Workspace/XTaint/OfflineAnalysis/Cpp-v2/test-result/";
 const string XT_RESULT_PATH = "/home/xtaint/Workplace/XRayTaint-OfflineAnalysis/Cpp-v2/test-result/";
 
 const string XT_FILE_FAKE_DATA  = "test-aes-128-1B-all-identify-in-out-buffer-fake-data";

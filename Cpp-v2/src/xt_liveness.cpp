@@ -24,6 +24,8 @@ vector<string> XT_Liveness::analyze_alive_buffer(vector<string> &v)
     vector<string> alive_buffer, tmp;
     vector<string>::iterator it_call, it_ret;
 
+    std::cout << "Analyzing alive buffers..." << endl;
+
     for(vector<string>::iterator it = v.begin(); it != v.end(); ++it){
         // If a function call END mark hit
         if(XT_Util::equal_mark(*it, flag::XT_RET_INSN_SEC) ){
@@ -60,7 +62,6 @@ vector<string> XT_Liveness::analyze_alive_buffer(vector<string> &v)
         }
     }
 
-    std::cout << "finish: analyze alive buffers..." << endl;
     return alive_buffer;
 }
 
@@ -205,6 +206,8 @@ vector<Func_Call_Cont_Buf_t> XT_Liveness::merge_continue_buffer(vector<string> &
     Func_Call_Cont_Buf_t func_call_cont_buf;
     vector<Func_Call_Cont_Buf_t> v_func_call_cont_buf;
 
+    std::cout << "Merging continue buffer..." << endl;
+
     for(vector<string>::iterator it = v.begin(); it != v.end(); ++it){
         if(XT_Util::equal_mark(*it, flag::XT_CALL_INSN) ||
             XT_Util::equal_mark(*it, flag::XT_CALL_INSN_FF2) ){
@@ -222,7 +225,6 @@ vector<Func_Call_Cont_Buf_t> XT_Liveness::merge_continue_buffer(vector<string> &
 
     }
 
-    std::cout << "finish merge continue buffer" << endl;
     return v_func_call_cont_buf;
 }
 
@@ -340,6 +342,8 @@ vector<Func_Call_Cont_Buf_t> XT_Liveness::filter_continue_buffer(vector<Func_Cal
     Func_Call_Cont_Buf_t func_call_cont_buf;
     vector<Func_Call_Cont_Buf_t> v_new;
 
+    std::cout << "Filtering continue buffers size > 4 bytes..." << endl;
+
     for(vector<Func_Call_Cont_Buf_t>::iterator it_func = v.begin(); it_func != v.end(); ++it_func){
         func_call_cont_buf.call_mark = (*it_func).call_mark;
         func_call_cont_buf.sec_call_mark = (*it_func).sec_call_mark;
@@ -355,7 +359,6 @@ vector<Func_Call_Cont_Buf_t> XT_Liveness::filter_continue_buffer(vector<Func_Cal
         func_call_cont_buf.cont_buf.clear();
     }
 
-    std::cout << "finish filter continue buffers size > 4 bytes" << endl;
     return v_new;
 }
 
