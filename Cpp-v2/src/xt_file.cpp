@@ -126,3 +126,17 @@ void XT_File::writeAvalancheResult(std::string p, std::vector<AvalancheResBetwee
     }
     fclose(stdout);
 }
+
+void XT_File::writeAvalResult(std::string p, std::vector<AvalResBetweenInOut> &vAvalRes)
+{
+    SearchAvalanche sa;
+
+    freopen(p.c_str(), "w", stdout);
+    if(!vAvalRes.empty() ){
+        vector<AvalResBetweenInOut>::iterator it = vAvalRes.begin();
+        for(; it != vAvalRes.end(); ++it){
+            cout << "---------- ---------- ---------- ----------" << endl;
+            sa.printAvalResBetweenInAndOutNew(*it);
+        }
+    }
+}

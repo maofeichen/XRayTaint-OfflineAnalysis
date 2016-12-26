@@ -48,7 +48,7 @@ int main(int argc, char const *argv[])
         vector<string> v_fp = XT_Util::split( vm["input-file"].as< string >().c_str(), '/' );
         fn = v_fp.back().substr(0, v_fp.back().size() - 4); // also remove ".txt"
 
-        detect_avalanche(fn, false, false);
+        detect_avalanche(fn, false, true);
     } 
     
     return 0;
@@ -60,7 +60,8 @@ void detect_avalanche(string logPath, bool isForceAddInput, bool isWriteFile)
     vector<string> xtLog, aliveBuf;
     vector<Rec> xtLogRec;
     vector<Func_Call_Cont_Buf_t> vFuncCallContBuf;
-    vector<AvalancheResBetweenInAndOut> vAvalResult;
+    // vector<AvalancheResBetweenInAndOut> vAvalResult;
+    vector<AvalResBetweenInOut> vAvalResult;
 
     XT_File xtFile =(XT_FILE_PATH + logPath + XT_FILE_EXT);
     xtLog = xtFile.read();
@@ -99,6 +100,8 @@ void detect_avalanche(string logPath, bool isForceAddInput, bool isWriteFile)
     // Searches avalanche effect
     SearchAvalanche sa(vFuncCallContBuf, xtLogRec);
     vAvalResult = sa.searchAvalanche();
-    if(isWriteFile)
-        xtFile.writeAvalancheResult(XT_RESULT_PATH + logPath + AVAL_RES + XT_FILE_EXT, vAvalResult);
+    if(isWriteFile){
+        // xtFile.writeAvalancheResult(XT_RESULT_PATH + logPath + AVAL_RES + XT_FILE_EXT, vAvalResult);
+        xtFile.writeAvalResult(XT_RESULT_PATH + logPath + AVAL_RES + XT_FILE_EXT, vAvalResult);
+    }
 }

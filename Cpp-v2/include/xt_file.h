@@ -43,5 +43,6 @@ public:
     void write_continue_buffer(string, vector<Func_Call_Cont_Buf_t> &);
     void write_all_propagate_result(string path, vector<NodePropagate> &allPropagateRes);
     void writeAvalancheResult(std::string p, std::vector<AvalancheResBetweenInAndOut> &vAvalRes);
+    void writeAvalResult(std::string p, std::vector<AvalResBetweenInOut> &vAvalRes);
 }; 
 #endif
