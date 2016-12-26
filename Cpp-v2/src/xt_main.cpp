@@ -48,7 +48,7 @@ int main(int argc, char const *argv[])
         vector<string> v_fp = XT_Util::split( vm["input-file"].as< string >().c_str(), '/' );
         fn = v_fp.back().substr(0, v_fp.back().size() - 4); // also remove ".txt"
 
-        detect_avalanche(fn, false, true);
+        detect_avalanche(fn, false, false);
     } 
     
     return 0;

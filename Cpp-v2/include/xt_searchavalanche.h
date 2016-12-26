@@ -34,6 +34,15 @@ struct AvalancheRes{
 	std::vector<Buffer> vAvalOut;
 };
 
+
+// new struct to represent avalanche
+// Uses Buffer directly instead of vector
+struct AvalRes
+{
+	Buffer avalIn;
+	Buffer avalOut;	
+};
+
 // Avalanche effect result
 // All bytes of buffer in can propagate to all bytes of buffer out
 struct AvalancheResBetweenInAndOut
@@ -41,6 +50,14 @@ struct AvalancheResBetweenInAndOut
 	FunctionCallBuffer in;
 	FunctionCallBuffer out;
 	std::vector<AvalancheRes> vAvalacheRes;
+};
+
+// New representation of avalanche result
+struct AvalResBetweenInOut
+{
+	FunctionCallBuffer in;
+	FunctionCallBuffer out;
+	std::vector<AvalRes> vAvalres;
 };
 
 class SearchAvalanche

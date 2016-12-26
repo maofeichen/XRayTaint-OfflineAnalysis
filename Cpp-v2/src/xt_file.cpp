@@ -125,13 +125,4 @@ void XT_File::writeAvalancheResult(std::string p, std::vector<AvalancheResBetwee
         }
     }
     fclose(stdout);
-
-    // ofstream file(p.c_str(), "w",stdout);
-    // if(file.is_open() ){
-    //     if(!vAvalRes.empty() ){
-    //         sa.printAvalResBetweenInAndOut(vAvalRes);
-    //     }
-    //     file.close();
-    // } else
-    //     cout << "error open file: " << p << endl;
 }

@@ -34,7 +34,7 @@ vector<AvalancheResBetweenInAndOut> SearchAvalanche::searchAvalanche()
 	// print all continue buffers
 	// printFuncCallContBuf(m_vFuncCallContBuf);
 
-	cout << "Begin to search avalanche between buffers:" << endl;
+	cout << "Searching avalanche between buffers..." << endl;
 	numSearch = 0;
 	vector<FunctionCallBuffer>::iterator in = v_functionCallBuffer.begin();
 	for(; in != v_functionCallBuffer.end(); ++in){
@@ -64,6 +64,7 @@ vector<AvalancheResBetweenInAndOut> SearchAvalanche::searchAvalanche()
 					   	cout << "Output buffer: " << endl;
 					   	printFunctionCallBuffer(*out);
 
+					   	// should pass hashmap of proproagate directly instead of propagate obj
 					   	avalResInOut = searchAvalancheBetweenInAndOut(*in, *out, propagate);
 					   	// printAvalResBetweenInAndOut(avalResInOut);
 					   	vAvalRes.push_back(avalResInOut);
@@ -416,6 +417,7 @@ Buffer SearchAvalanche::getAvalancheInRestByteOneBuffer(unordered_set<Node, Node
 
 	numPropagateByte = 0;
 	addr = avalOut.beginAddr;
+	
 	for(byteIndex = 0; byteIndex < (avalOut.size / BIT_TO_BYTE); byteIndex++){
 		isHit = false;
 		for(auto s : propagateRes){
@@ -605,9 +607,14 @@ LABEL_S_ONE:
 			avalIn.beginAddr = inBeginAddr;
 			avalIn.size = 1 * BIT_TO_BYTE;
 
+			// Init avalRes
+			avalRes.avalIn = avalIn;
+			avalRes.vAvalOut = vAvalOut;
+
 			byteIndex++;
 			numInByteAccumulate++;
 			inBeginAddr++;
+			curr_s = s;
 			goto LABEL_S_TWO;		
 		} else{
 			byteIndex++;
@@ -620,6 +627,9 @@ LABEL_S_TWO:
 		prev_s = curr_s;
 		curr_s = initialBeginNode(in, inBeginAddr, m_logAesRec);
 		if(!isSameNode(prev_s, curr_s)){
+			// update avalRes
+			avalRes.avalIn = avalIn;
+
 			// propagateRes = propagate.getPropagateResult(s, m_logAesRec);
             // should be curr_s?
             propagateRes = propagate.getPropagateResult(curr_s, m_logAesRec);
@@ -680,8 +690,10 @@ void SearchAvalanche::printAvalResBetweenInAndOut(AvalancheResBetweenInAndOut &a
 {
 	cout << "Search Avalache Input Buffer: " << endl;
 	printFunctionCallBuffer(avalResInOut.in);
+	cout << "----------" << endl;
 	cout << "Search Avalache Output Buffer: " << endl;
 	printFunctionCallBuffer(avalResInOut.out);
+	cout << "----------" << endl;
 	if(!avalResInOut.vAvalacheRes.empty() ){
 		for(auto s : avalResInOut.vAvalacheRes){
 			printAvalancheRes(s);
