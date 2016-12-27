@@ -73,7 +73,12 @@ vector<AvalResBetweenInOut> SearchAvalanche::searchAvalanche()
 					   	// printAvalResBetweenInAndOut(avalResInOut);
 					   	// vAvalRes.push_back(avalResInOut);
 
+					   	if(in->callMark == "14\tbffff4dc\t804a059\t" && \
+					   	   in->buffer.beginAddr == 0xbffff764)
+					   		cout << "Debug: in: 0xbffff764" << endl;
+
 					   	// Uses new search instead
+					   	// should pass hashmap of proproagate directly instead of propagate obj
 					   	avalResInOut_new = searchAvalancheBetweenInAndOut(*in, *out, propagate);
 					   	vAvalRes_new.push_back(avalResInOut_new);
 
@@ -81,15 +86,15 @@ vector<AvalResBetweenInOut> SearchAvalanche::searchAvalanche()
 				   	}
 	
 					// Debug
-				 //   	if(in->callMark == "1a\tbffff0a4\t4f1833\t" && \
-				 //   	   in->buffer.beginAddr == 0xbffff744){
-					// 	if(out->callMark == "14\tbffff0ac\t80c1aa3\t" && \
-					// 	   out->buffer.beginAddr == 0xbffff484){
-					// 		avalResInOut = searchAvalancheBetweenInAndOut(*in, *out);
-					// 		printAvalResBetweenInAndOut(avalResInOut);
-					// 	 	goto LABEL_OUTTER_LOOP;
-					// 	 }
-				 //   	}
+				  //  	if(in->callMark == "14\tbffff4dc\t804a059\t" && \
+				  //  	   in->buffer.beginAddr == 0xbffff764){
+						// if(out->callMark == "14\tbffff0ac\t80c1aa3\t" && \
+						//    out->buffer.beginAddr == 0xbffff484){
+						// 	avalResInOut = searchAvalancheBetweenInAndOut(*in, *out);
+						// 	printAvalResBetweenInAndOut(avalResInOut);
+						//  	goto LABEL_OUTTER_LOOP;
+						//  }
+				  //  	}
 
 					// search avalanche effect between in and out continuous buffer
 					// searchAvalancheBetweenInAndOut(*in, *out);

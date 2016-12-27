@@ -24,8 +24,6 @@ bool compare_res_node(const Node &a, const Node &b){
     return a.i_addr < b.i_addr;
 }
 
-void detect_avalanche(string logPath, bool isForceAddInput, bool isWriteFile);
-
 int main(int argc, char const *argv[])
 {
     string fn;
@@ -62,7 +60,7 @@ int main(int argc, char const *argv[])
     return 0;
 }
 
-// Duplicate detect_avalanche() for latest test
+// ! Not use
 void detect_avalanche(string logPath, bool isForceAddInput, bool isWriteFile)
 {
     vector<string> xtLog, aliveBuf;

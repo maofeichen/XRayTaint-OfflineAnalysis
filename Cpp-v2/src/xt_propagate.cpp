@@ -509,10 +509,17 @@ inline bool Propagate::is_valid_propagate(NodePropagate &currNode,
 
     // is the dst node a store operation, indicating node is a memory buffer
     // then only the addresses are same is valid?
-    // NO, both <addr, val> need to be same
+    //  1) val are also same
+    //  2) if one with large size contains value of another one 
     if(isStore){
-        if(currNode.n.addr == currRec.regular.src.addr && currNode.n.val == currRec.regular.src.val)
-            isValidPropagate = true;
+        if(currNode.n.addr == currRec.regular.src.addr ){
+            if(currNode.n.val == currRec.regular.src.val)
+                isValidPropagate = true;
+            else if(currNode.n.sz >= currRec.regular.src.sz && 
+                    currNode.n.val.find(currRec.regular.src.val) != string::npos)
+                isValidPropagate = true;
+            // Need the opposite?
+        } 
     }else{
         // case 1
         // dst node.addr == current node src.addr
