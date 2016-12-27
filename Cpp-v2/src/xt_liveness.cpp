@@ -363,18 +363,18 @@ vector<Func_Call_Cont_Buf_t> XT_Liveness::filter_continue_buffer(vector<Func_Cal
 }
 
 // Force add taint buffer as alive buffer into the liveness analysis result
-// Currently add it to the 1st buffer set
-void XT_Liveness::forceAddTaintBuffer(vector<Func_Call_Cont_Buf_t> &vFCallContBuf, 
+void XT_Liveness::forceAddTaintBuffer(vector<Func_Call_Cont_Buf_t> &vFCallContBuf,
+                                      string funcCallMark,
                                       unsigned long beginAddr, unsigned long size)
 {
-    // Func_Call_Cont_Buf_t fCallContBuf;
-    // vector<Func_Call_Cont_Buf_t> vRes;
-
     Cont_Buf_t contBuf;
     contBuf.begin_addr = beginAddr;
     contBuf.size = size;
 
-    vFCallContBuf[0].cont_buf.push_back(contBuf);
-
-    // return vRes;
+    vector<Func_Call_Cont_Buf_t>::iterator it = vFCallContBuf.begin();
+    for(; it != vFCallContBuf.end(); ++it){
+       if( (*it).call_mark == funcCallMark)
+           (*it).cont_buf.push_back(contBuf); 
+    }
+    // vFCallContBuf[0].cont_buf.push_back(contBuf);
 }

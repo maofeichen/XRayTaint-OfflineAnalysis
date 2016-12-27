@@ -1,5 +1,6 @@
 OBJS = xt_main.o xt_data.o xt_file.o xt_liveness.o \
-		xt_preprocess.o xt_propagate.o xt_searchavalanche.o xt_util.o
+		xt_preprocess.o xt_propagate.o xt_searchavalanche.o \
+		xt_util.o xt_detectAvalanche.o
 
 CC = g++-4.9
 INC = -Iinclude
@@ -31,6 +32,9 @@ xt_searchavalanche.o : src/xt_searchavalanche.cpp
 
 xt_util.o : src/xt_util.cpp
 	$(CC) $(INC) -c src/xt_util.cpp $(CFLAG)
+
+xt_detectAvalanche.o : src/xt_detectAvalanche.cpp
+	$(CC) $(INC) -c src/xt_detectAvalanche.cpp $(CFLAG)
 
 .PHONY : clean
 clean :
