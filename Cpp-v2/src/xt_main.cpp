@@ -53,8 +53,6 @@ int main(int argc, char const *argv[])
                                 TAINT_BUF_BEGIN_ADDR, 
                                 TAINT_BUF_SIZE);
         da.detect_avalanche(fn, true);
-
-        // detect_avalanche(fn, false, true);
     } 
     
     return 0;
