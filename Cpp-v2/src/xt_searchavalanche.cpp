@@ -11,7 +11,7 @@ using namespace std;
 
 SearchAvalanche::SearchAvalanche(){}
 SearchAvalanche::SearchAvalanche(vector<Func_Call_Cont_Buf_t> v_funcCallContBuf,
-								 vector<Rec> logAesRec)
+								 vector<Record> logAesRec)
 {
 	m_vFuncCallContBuf = v_funcCallContBuf;
 	m_logAesRec = logAesRec;
@@ -171,7 +171,7 @@ inline bool SearchAvalanche::isDuplBufInOut(BufferInOut &bufInOut, vector<Buffer
 	return false;
 }
 
-inline string SearchAvalanche::getInsnAddr(unsigned int &idx, vector<Rec> &vRec)
+inline string SearchAvalanche::getInsnAddr(unsigned int &idx, vector<Record> &vRec)
 {
 	unsigned int i = idx;
 	while(i > 0){
@@ -192,7 +192,7 @@ inline bool SearchAvalanche::isKernelAddress(unsigned int addr)
 		return false;
 }
 
-inline bool SearchAvalanche::isMarkMatch(string &mark, Rec &r)
+inline bool SearchAvalanche::isMarkMatch(string &mark, Record &r)
 {
 	vector<string> vMark;
 
@@ -284,7 +284,7 @@ void SearchAvalanche::assignFunctionCallBuffer(FunctionCallBuffer &a, FunctionCa
 
 NodePropagate SearchAvalanche::initialBeginNode(FunctionCallBuffer &buf, 
 												unsigned long &addr,
-												vector<Rec> &logRec)
+												vector<Record> &logRec)
 {
 	NodePropagate s;
 	Node node;
@@ -293,7 +293,7 @@ NodePropagate SearchAvalanche::initialBeginNode(FunctionCallBuffer &buf,
 	unsigned int recordIdx = 0;
 
 	// locate the function call position
-	vector<Rec>::iterator it = logRec.begin();
+	vector<Record>::iterator it = logRec.begin();
 	for(; it != logRec.end(); ++it){
 		if(it->isMark){
 			if(isMarkMatch(buf.callMark, *it) && 
@@ -311,7 +311,7 @@ NodePropagate SearchAvalanche::initialBeginNode(FunctionCallBuffer &buf,
 #endif
 
 	if(functionCallIdx != 0){
-		vector<Rec>::iterator it = logRec.begin() + functionCallIdx;
+		vector<Record>::iterator it = logRec.begin() + functionCallIdx;
 		for(; it != logRec.end(); ++it){
 			if(!it->isMark){
 				if(XT_Util::equal_mark(it->regular.src.flag, flag::TCG_QEMU_LD) ){

@@ -29,7 +29,7 @@ XT_DetectAvalanche::XT_DetectAvalanche(bool isAddInputBuffer,
 void XT_DetectAvalanche::detect_avalanche(string logPath, bool isWriteFile)
 {
 	vector<string> xtLog, aliveBuf;
-    vector<Rec> xtLogRec;
+    vector<Record> xtLogRec;
     vector<Func_Call_Cont_Buf_t> vFuncCallContBuf;
     vector<AvalResBetweenInOut> vAvalResult;
 
@@ -63,7 +63,7 @@ void XT_DetectAvalanche::detect_avalanche(string logPath, bool isWriteFile)
     if(isWriteFile)
         xtFile.write_continue_buffer(XT_RESULT_PATH + logPath + CONT_BUF + XT_FILE_EXT, vFuncCallContBuf);
 
-    // Converts string format to Rec format
+    // Converts string format to Record format
     xtLogRec = xtPreProc.convertToRec(xtLog);
 
     // Searches avalanche effect

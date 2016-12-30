@@ -1,6 +1,7 @@
 OBJS = xt_main.o xt_data.o xt_file.o xt_liveness.o \
 		xt_preprocess.o xt_propagate.o xt_searchavalanche.o \
-		xt_util.o xt_detectAvalanche.o
+		xt_util.o xt_detectAvalanche.o xt_log.o xt_taintpropagate.o \
+		xt_node.o
 
 CC = g++-4.9
 INC = -Iinclude
@@ -35,6 +36,15 @@ xt_util.o : src/xt_util.cpp
 
 xt_detectAvalanche.o : src/xt_detectAvalanche.cpp
 	$(CC) $(INC) -c src/xt_detectAvalanche.cpp $(CFLAG)
+
+xt_log.o : src/xt_log.cpp
+	$(CC) $(INC) -c src/xt_log.cpp $(CFLAG)
+
+xt_taintpropagate.o : src/xt_taintpropagate.cpp
+	$(CC) $(INC) -c src/xt_taintpropagate.cpp $(CFLAG)
+
+xt_node.o : src/xt_node.cpp
+	$(CC) $(INC) -c src/xt_node.cpp $(CFLAG)
 
 .PHONY : clean
 clean :

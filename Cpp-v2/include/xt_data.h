@@ -47,6 +47,30 @@ struct Node{
     unsigned int sz;
 };
 
+struct RegularRecord
+{
+    struct Node src;
+    struct Node dst;
+};
+
+// if a mark, then src becomes the mark
+struct Record
+{
+    bool isMark;
+    struct RegularRecord regular;
+};
+
+struct NodePropagate
+{
+    unsigned long id;
+    unsigned long parentId;
+    unsigned long layer;
+    std::string insnAddr;
+    bool isSrc;
+    unsigned int pos;
+    struct Node n; 
+};
+
 inline bool operator==(Node a, Node b)
 {
     return a.flag == b.flag &&
@@ -63,38 +87,4 @@ struct NodeHash
         return h1 ^ (h2 << 1);    
     }
 };
-
-struct RegularRec
-{
-    struct Node src;
-    struct Node dst;
-};
-
-struct MarkRec
-{
-    struct Node mark;
-};
-
-// if a mark, then src becomes the mark
-struct Rec
-{
-    bool isMark;
-    struct RegularRec regular;
-    // union{
-    //     struct RegularRec regular;
-    //     struct MarkRec mark;
-    // };
-};
-
-struct NodePropagate
-{
-    unsigned long id;
-    unsigned long parentId;
-    unsigned long layer;
-    std::string insnAddr;
-    bool isSrc;
-    unsigned int pos;
-    struct Node n; 
-};
-
 #endif

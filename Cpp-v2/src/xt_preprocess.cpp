@@ -245,17 +245,17 @@ vector<string> XT_PreProcess::clean_nonempty_function_mark(vector<string> &v)
 }
 
 
-// Convert string xt log format to Rec format
-std::vector<Rec> XT_PreProcess::convertToRec(std::vector<std::string> &log)
+// Convert string xt log format to Record format
+std::vector<Record> XT_PreProcess::convertToRec(std::vector<std::string> &log)
 {
-    vector<Rec> v_rec;
+    vector<Record> v_rec;
     vector<string> v_log, v_single_rec;
 
-    Rec rec;
+    Record rec;
     Node src, dst;
     int i;
 
-    std::cout << "Converting string xray taint log to Rec format..." << endl;
+    std::cout << "Converting string xray taint log to Record format..." << endl;
 
     for(vector<string>::iterator it = log.begin(); it != log.end(); ++it){
         v_single_rec = XT_Util::split( (*it).c_str(), '\t');
@@ -336,9 +336,9 @@ vector<string> XT_PreProcess::add_mem_size_info(vector<string> &v)
     return v_new;
 }
 
-inline RegularRec XT_PreProcess::initMarkRecord(vector<string> &singleRec)
+inline RegularRecord XT_PreProcess::initMarkRecord(vector<string> &singleRec)
 {
-    RegularRec mark;
+    RegularRecord mark;
 
     mark.src.flag = singleRec[0];
     mark.src.addr = singleRec[1];
@@ -349,9 +349,9 @@ inline RegularRec XT_PreProcess::initMarkRecord(vector<string> &singleRec)
     return mark;
 }
 
-inline RegularRec XT_PreProcess::initRegularRecord(vector<string> &singleRec)
+inline RegularRecord XT_PreProcess::initRegularRecord(vector<string> &singleRec)
 {
-    RegularRec reg;
+    RegularRecord reg;
 
     reg.src.flag = singleRec[0];
     reg.src.addr = singleRec[1];

@@ -66,7 +66,7 @@ public:
 	SearchAvalanche();
 	// ~SearchAvalanche();
 	SearchAvalanche(std::vector<Func_Call_Cont_Buf_t> v_funcCallContBuf, 
-					std::vector<Rec> logAesRec);
+					std::vector<Record> logAesRec);
 	// std::vector<AvalancheResBetweenInAndOut> searchAvalanche();
 	std::vector<AvalResBetweenInOut> searchAvalanche();
 
@@ -88,9 +88,9 @@ private:
 	inline BufferInOut assignBufInOut(FunctionCallBuffer &in, FunctionCallBuffer &out);
 	inline void clearAvalacheResult(AvalancheRes &avalRes, Buffer &avalIn, std::vector<Buffer> &vAvalOut);
 	inline bool isDuplBufInOut(BufferInOut &bufInOut, std::vector<BufferInOut> &vBufInOut);
-	inline std::string getInsnAddr(unsigned int &idx, std::vector<Rec> &vRec);
+	inline std::string getInsnAddr(unsigned int &idx, std::vector<Record> &vRec);
 	inline bool isKernelAddress(unsigned int addr);
-	inline bool isMarkMatch(std::string &mark, Rec &r);
+	inline bool isMarkMatch(std::string &mark, Record &r);
 	inline bool isInRange(unsigned long &addr, Node &node);
 	inline bool isSameBuffer(FunctionCallBuffer &a, FunctionCallBuffer &b);
 	inline bool isSameFunctionCall(FunctionCallBuffer &a, FunctionCallBuffer &b);
@@ -116,7 +116,7 @@ private:
 
 	Buffer getAvalancheInRestByteOneBuffer(std::unordered_set<Node, NodeHash> &propagateRes, Buffer &avalOut);
 	std::vector<FunctionCallBuffer> getFunctionCallBuffer(std::vector<Func_Call_Cont_Buf_t> &v);	
-	NodePropagate initialBeginNode(FunctionCallBuffer &buf, unsigned long &addr, std::vector<Rec> &logRec);
+	NodePropagate initialBeginNode(FunctionCallBuffer &buf, unsigned long &addr, std::vector<Record> &logRec);
 
 	AvalancheResBetweenInAndOut old_searchAvalancheBetweenInAndOut(FunctionCallBuffer &in, 
 															   	   FunctionCallBuffer &out,
@@ -128,6 +128,6 @@ private:
 	void searchAvalancheBetweenInAndOutDebug(FunctionCallBuffer &in, FunctionCallBuffer &out);
 
 	std::vector<Func_Call_Cont_Buf_t> m_vFuncCallContBuf;
-	std::vector<Rec> m_logAesRec;
+	std::vector<Record> m_logAesRec;
 };
 #endif

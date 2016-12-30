@@ -20,7 +20,7 @@ unordered_set<Node, NodeHash> Propagate::searchAvalanche(vector<string> &log,
                                                          vector<NodePropagate> &allPropgateRes)
 {
     unordered_set<Node, NodeHash> propagate_res;
-    vector<Rec> v_rec;
+    vector<Record> v_rec;
     NodePropagate s;
     bool isFound = false;
 
@@ -37,7 +37,7 @@ unordered_set<Node, NodeHash> Propagate::searchAvalanche(vector<string> &log,
     s.n.sz = 8;
 
     unsigned int i = 0;
-    for(vector<Rec>::iterator it = v_rec.begin(); it != v_rec.end(); ++it){
+    for(vector<Record>::iterator it = v_rec.begin(); it != v_rec.end(); ++it){
         if(!(*it).isMark){
             if(s.n.flag == (*it).regular.src.flag &&
                s.n.addr == (*it).regular.src.addr &&
@@ -58,8 +58,9 @@ unordered_set<Node, NodeHash> Propagate::searchAvalanche(vector<string> &log,
     return propagate_res;
 }
 
+// If in hashset, return result; else search propagation.
 unordered_set<Node, NodeHash> Propagate::getPropagateResult(NodePropagate &s, 
-                                                            std::vector<Rec> &vRec)
+                                                            std::vector<Record> &vRec)
 {
     std::unordered_set<Node, NodeHash> aPropagateRes;
 
@@ -78,12 +79,12 @@ unordered_set<Node, NodeHash> Propagate::getPropagateResult(NodePropagate &s,
         return got->propagateRes;
 }
 
-vector<Rec> Propagate::initRec(vector<string> &log)
+vector<Record> Propagate::initRec(vector<string> &log)
 {
-    vector<Rec> v_rec;
+    vector<Record> v_rec;
     vector<string> v_log, v_single_rec;
 
-    Rec rec;
+    Record rec;
     Node src, dst;
     int i;
 
@@ -125,13 +126,13 @@ vector<Rec> Propagate::initRec(vector<string> &log)
 } 
 
 // UNFINISHED !!!
-unordered_set<Node, NodeHash> Propagate::bfs(NodePropagate &s, vector<Rec> &r)
+unordered_set<Node, NodeHash> Propagate::bfs(NodePropagate &s, vector<Record> &r)
 {
     queue<NodePropagate> q_propagate;
     unordered_set<Node, NodeHash> res;
 
     NodePropagate currNode, nextNode;
-    struct Rec currRec;
+    struct Record currRec;
     int numHit;
     bool isValidPropagate, isSameInsn;
 
@@ -156,7 +157,7 @@ unordered_set<Node, NodeHash> Propagate::bfs(NodePropagate &s, vector<Rec> &r)
             // find valid propagation from dst -> src for afterwards records
             numHit = 0;
             isSameInsn = true;  // assume belongs to same insn at first
-            vector<Rec>::size_type i = currNode.pos + 1;
+            vector<Record>::size_type i = currNode.pos + 1;
             for(; i != r.size(); i++) {
                 isValidPropagate = false;
                 currRec = r[i];
@@ -182,14 +183,14 @@ unordered_set<Node, NodeHash> Propagate::bfs(NodePropagate &s, vector<Rec> &r)
     return res;
 }
 
-unordered_set<Node, NodeHash> Propagate::bfs_old(NodePropagate &s, vector<Rec> &v_rec)
+unordered_set<Node, NodeHash> Propagate::bfs_old(NodePropagate &s, vector<Record> &v_rec)
 {
     unordered_set<Node, NodeHash> res_buffer;
     vector<NodePropagate> v_propagate_buffer;
     queue<NodePropagate> q_propagate;
 
     NodePropagate currNode, nextNode;
-    struct Rec currRec;
+    struct Record currRec;
     int numHit;
     bool isValidPropagate, isSameInsn;
 
@@ -233,7 +234,7 @@ unordered_set<Node, NodeHash> Propagate::bfs_old(NodePropagate &s, vector<Rec> &
             else{
                 numHit = 0;
                 isSameInsn = true;  // assume belongs to same insn at first
-                vector<Rec>::size_type i = currNode.pos + 1;
+                vector<Record>::size_type i = currNode.pos + 1;
                 for(; i != v_rec.size(); i++) {
                     isValidPropagate = false;
                     currRec = v_rec[i];
@@ -305,7 +306,7 @@ unordered_set<Node, NodeHash> Propagate::bfs_old(NodePropagate &s, vector<Rec> &
 } 
 
 unordered_set<Node, NodeHash> Propagate::bfs_old_debug(NodePropagate &s,
-                                                       vector<Rec> &v_rec,
+                                                       vector<Record> &v_rec,
                                                        vector<NodePropagate> &allPropgateRes)
 {
     unordered_set<Node, NodeHash> res_buffer;
@@ -313,7 +314,7 @@ unordered_set<Node, NodeHash> Propagate::bfs_old_debug(NodePropagate &s,
     queue<NodePropagate> q_propagate;
 
     NodePropagate currNode, nextNode;
-    struct Rec currRec;
+    struct Record currRec;
     int numHit;
     bool isValidPropagate, isSameInsn;
 
@@ -353,7 +354,7 @@ unordered_set<Node, NodeHash> Propagate::bfs_old_debug(NodePropagate &s,
             else{
                 numHit = 0;
                 isSameInsn = true;  // assume belongs to same insn at first
-                vector<Rec>::size_type i = currNode.pos + 1;
+                vector<Record>::size_type i = currNode.pos + 1;
                 for(; i != v_rec.size(); i++) {
                     isValidPropagate = false;
                     currRec = v_rec[i];
@@ -424,7 +425,7 @@ unordered_set<Node, NodeHash> Propagate::bfs_old_debug(NodePropagate &s,
     return res_buffer;
 }
 
-inline string Propagate::getInsnAddr(unsigned int &idx, vector<Rec> &v_rec)
+inline string Propagate::getInsnAddr(unsigned int &idx, vector<Record> &v_rec)
 {
    unsigned int i = idx;
    while(i > 0){
@@ -437,7 +438,7 @@ inline string Propagate::getInsnAddr(unsigned int &idx, vector<Rec> &v_rec)
 }
 
 
-inline NodePropagate Propagate::propagate_dst(NodePropagate &s, vector<Rec> &r)
+inline NodePropagate Propagate::propagate_dst(NodePropagate &s, vector<Record> &r)
 {
     NodePropagate d;
     unsigned int i = s.pos;
@@ -458,7 +459,7 @@ inline NodePropagate Propagate::propagate_dst(NodePropagate &s, vector<Rec> &r)
     return d;
 }
 
-inline NodePropagate Propagate::propagte_src(NodePropagate &d, std::vector<Rec> &v_rec, int i)
+inline NodePropagate Propagate::propagte_src(NodePropagate &d, std::vector<Record> &v_rec, int i)
 {
     NodePropagate s;
 
@@ -496,8 +497,8 @@ inline void Propagate::insert_propagate_result(Node &n, std::unordered_set<Node,
 //      case 1 - dst.addr == current record src.addr
 // Previous rule: ignore!!!
 inline bool Propagate::is_valid_propagate(NodePropagate &currNode, 
-                                          Rec &currRec,
-                                          vector<Rec> &v_rec)
+                                          Record &currRec,
+                                          vector<Record> &v_rec)
 {
     bool isValidPropagate, isStore; 
 
@@ -590,9 +591,9 @@ inline bool Propagate::is_save_to_q_propagate(bool isSameInsn, int &numHit)
     return isSave;
 }
 
-inline RegularRec Propagate::initMarkRecord(vector<string> &singleRec)
+inline RegularRecord Propagate::initMarkRecord(vector<string> &singleRec)
 {
-    RegularRec mark;
+    RegularRecord mark;
 
     mark.src.flag = singleRec[0];
     mark.src.addr = singleRec[1];
@@ -603,9 +604,9 @@ inline RegularRec Propagate::initMarkRecord(vector<string> &singleRec)
     return mark;
 }
 
-inline RegularRec Propagate::initRegularRecord(vector<string> &singleRec)
+inline RegularRecord Propagate::initRegularRecord(vector<string> &singleRec)
 {
-    RegularRec reg;
+    RegularRecord reg;
 
     reg.src.flag = singleRec[0];
     reg.src.addr = singleRec[1];
