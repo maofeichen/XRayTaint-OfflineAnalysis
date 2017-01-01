@@ -5,14 +5,22 @@
 
 class TaintPropagate
 {
-private:
-	bool isStoreMemoryFlag(std::string &flag);
-	bool isRegisterTemporary(std::string &addr);
 public:
 	TaintPropagate();
 
 	bool isValidPropagate(XTNode &prevDestination, XTNode &nextSource);
-	
+private:
+	enum e_MemorySize
+	{
+		XT_BYTE		= 1,
+		XT_WORD 	= 2,
+		XT_DWORD 	= 4
+	};
+
+	bool isStoreMemoryFlag(std::string &flag);
+	bool isRegisterTemporary(std::string &addr);
+
+	bool compareMemoryValue(XTNode &nodeFirst, XTNode &nodeSecond);
 };
 
 #endif

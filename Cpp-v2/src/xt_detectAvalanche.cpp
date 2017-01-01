@@ -8,6 +8,7 @@
 #include "xt_detectAvalanche.h"
 #include "xt_file.h"
 #include "xt_liveness.h"
+#include "xt_log.h"
 #include "xt_preprocess.h"
 #include "xt_propagate.h"
 #include "xt_searchavalanche.h"
@@ -47,6 +48,9 @@ void XT_DetectAvalanche::detect_avalanche(string logPath, bool isWriteFile)
     xtLog = xtPreProc.parseMemSizeInfo(xtLog);
     if(isWriteFile)
         xtFile.write(XT_RESULT_PATH + logPath + XT_ADD_SIZE_INFO + XT_FILE_EXT, xtLog);
+
+    // Initialize XTLog object
+    XTLog o_xtLog(xtLog);
 
     // buffer liveness analysis
     aliveBuf = XT_Liveness::analyze_alive_buffer(xtLog);
