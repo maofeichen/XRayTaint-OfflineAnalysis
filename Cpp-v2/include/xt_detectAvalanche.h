@@ -11,9 +11,9 @@ private:
 	unsigned int m_size;
 public:
 	XT_DetectAvalanche(bool isAddInputBuffer,
-						std::string funcCallMark,
-						unsigned int beginAddress,
-						unsigned int size);
+					   std::string funcCallMark,
+					   unsigned int beginAddress,
+					   unsigned int size);
 
 	void detect_avalanche(std::string logPath, bool isWriteFile);	
 };

@@ -60,28 +60,80 @@ bool TaintPropagate::compareMemoryValue(XTNode &nodeFirst,
 {
 	bool isMatch = false;
 
-	unsigned int ByteNodeFirst 	= nodeFirst.getBitSize() / BIT_TO_BYTE;
-	unsigned int ByteNodeSecond = nodeSecond.getBitSize() / BIT_TO_BYTE;
+	unsigned int byteNodeFirst 	= nodeFirst.getBitSize() / BIT_TO_BYTE;
+	unsigned int byteNodeSecond = nodeSecond.getBitSize() / BIT_TO_BYTE;
 
-	size_t lenNodeFirst 	= nodeFirst.getVal().length();
-	size_t lenNodeSecond 	= nodeSecond.getVal().length();
+	if(byteNodeFirst < byteNodeSecond)
+		isMatch = isValueMatch(nodeFirst, nodeSecond);
+	else
+		isMatch = isValueMatch(nodeSecond, nodeFirst);
 
-	unsigned int smallSize = ((ByteNodeFirst < ByteNodeSecond) ? ByteNodeFirst : ByteNodeSecond);
-	switch(smallSize){
+	// unsigned int smallSize = ((byteNodeFirst < byteNodeSecond) ? byteNodeFirst : byteNodeSecond);
+	// switch(smallSize){
+	// 	case XT_BYTE:
+	// 	{
+	// 		string byteValNodeFirst = nodeFirst.getVal().substr(valLenNodeFirst - 2, 2);
+	// 		if(nodeFirst.getVal().substr(valLenNodeFirst - 2, 2) == 
+	// 		   nodeSecond.getVal().substr(valLenNodeSecond - 2, 2) )
+	// 			isMatch = true;
+	// 	}
+	// 		break;
+	// 	case XT_WORD:
+	// 		if(nodeFirst.getVal().substr(valLenNodeFirst - 4, 4) == 
+	// 		   nodeSecond.getVal().substr(valLenNodeSecond - 4, 4) )
+	// 			isMatch = true;
+	// 		break;
+	// 	default:
+	// 		// other cases should not be possible
+	// 		break;
+	// }
+
+	return isMatch;
+}
+
+bool TaintPropagate::isValueMatch(XTNode &nodeSmallSize, XTNode &nodeLargeSize)
+{
+	bool isMatch = false;
+
+	unsigned int byteSizeNodeSmall = nodeSmallSize.getByteSize();
+
+	unsigned int valLenNodeSmallSize = nodeSmallSize.getVal().length();
+	unsigned int valLenNodeLargeSize = nodeLargeSize.getVal().length();
+
+	string valNodeSmall = "";
+	string valNodeLarge = "";
+
+	unsigned int iValNodeSmall = 0;
+	unsigned int iValNodeLarge = 0;
+
+	switch(byteSizeNodeSmall){
 		case XT_BYTE:
-			if(nodeFirst.getVal().substr(lenNodeFirst - 2, 2) == 
-			   nodeSecond.getVal().substr(lenNodeSecond - 2, 2) )
-				isMatch = true;
+		{
+			if(valLenNodeSmallSize > 1)
+				valNodeSmall = nodeSmallSize.getVal().substr(valLenNodeSmallSize - 2, 2);
+			else
+				valNodeSmall = nodeSmallSize.getVal();
+			valNodeLarge = nodeLargeSize.getVal().substr(valLenNodeLargeSize - 2, 2);
+		}
 			break;
 		case XT_WORD:
-			if(nodeFirst.getVal().substr(lenNodeFirst - 4, 4) == 
-				   nodeSecond.getVal().substr(lenNodeSecond - 4, 4) )
-					isMatch = true;
+		{
+			if(valLenNodeSmallSize > 3)
+				valNodeSmall = nodeSmallSize.getVal().substr(valLenNodeSmallSize - 4, 4);
+			else
+				valNodeSmall = nodeSmallSize.getVal().substr(valLenNodeSmallSize - 3, 3);
+			valNodeLarge = nodeLargeSize.getVal().substr(valLenNodeLargeSize - 4, 4);
+		}
 			break;
 		default:
-			// other cases should not be possible
 			break;
 	}
+
+	iValNodeSmall = stoul(valNodeSmall, nullptr, 16);
+	iValNodeLarge = stoul(valNodeLarge, nullptr, 16);
+
+	if(iValNodeSmall == iValNodeLarge)
+		isMatch = true;
 
 	return isMatch;
 }

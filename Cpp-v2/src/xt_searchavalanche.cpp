@@ -10,11 +10,21 @@
 using namespace std;
 
 SearchAvalanche::SearchAvalanche(){}
+
 SearchAvalanche::SearchAvalanche(vector<Func_Call_Cont_Buf_t> v_funcCallContBuf,
 								 vector<Record> logAesRec)
 {
 	m_vFuncCallContBuf = v_funcCallContBuf;
 	m_logAesRec = logAesRec;
+}
+
+SearchAvalanche::SearchAvalanche(std::vector<Func_Call_Cont_Buf_t> v_funcCallContBuf, 
+								 std::vector<Record> logAesRec,
+								 XTLog &xtLog)
+{
+	m_vFuncCallContBuf = v_funcCallContBuf;
+	m_logAesRec = logAesRec;
+	m_xtLog = xtLog;
 }
 
 // vector<AvalancheResBetweenInAndOut> 
@@ -27,7 +37,7 @@ vector<AvalResBetweenInOut> SearchAvalanche::searchAvalanche()
 	AvalResBetweenInOut avalResInOut_new;
 	vector<AvalResBetweenInOut> vAvalRes_new;
 
-    Propagate propagate;
+    Propagate propagate(m_xtLog);
 
 	BufferInOut bufInOut;
 	vector<BufferInOut> vBufInOut;	// Duplicate In Out buffers check

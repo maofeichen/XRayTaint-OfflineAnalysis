@@ -17,9 +17,9 @@
 using namespace std;
 
 XT_DetectAvalanche::XT_DetectAvalanche(bool isAddInputBuffer,
-									     string funcCallMark,
-									     unsigned int beginAddress,
-									     unsigned int size)
+									   string funcCallMark,
+									   unsigned int beginAddress,
+									   unsigned int size)
 {
 	m_isAddInputBuffer = isAddInputBuffer;
 	string m_funcCallMark = funcCallMark;
@@ -71,7 +71,7 @@ void XT_DetectAvalanche::detect_avalanche(string logPath, bool isWriteFile)
     xtLogRec = xtPreProc.convertToRec(xtLog);
 
     // Searches avalanche effect
-    SearchAvalanche sa(vFuncCallContBuf, xtLogRec);
+    SearchAvalanche sa(vFuncCallContBuf, xtLogRec, o_xtLog);
     vAvalResult = sa.searchAvalanche();
     if(isWriteFile){
         xtFile.writeAvalResult(XT_RESULT_PATH + logPath + AVAL_RES + XT_FILE_EXT, vAvalResult);

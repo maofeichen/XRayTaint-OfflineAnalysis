@@ -9,6 +9,7 @@
 class XTLog
 {
 public:
+	XTLog();
 	XTLog(std::vector<std::string> &vXTLog);
 
 	XTRecord getRecord(std::size_t index);

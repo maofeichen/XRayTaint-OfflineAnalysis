@@ -139,4 +139,5 @@ void XT_File::writeAvalResult(std::string p, std::vector<AvalResBetweenInOut> &v
             sa.printAvalResBetweenInAndOutNew(*it);
         }
     }
+    fclose(stdout);
 }

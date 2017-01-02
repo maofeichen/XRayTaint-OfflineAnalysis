@@ -1,6 +1,9 @@
 #include "xt_flag.h"
+#include "xt_log.h"
 #include "xt_propagate.h"
+#include "xt_node.h"
 #include "xt_util.h"
+#include "xt_taintpropagate.h"
 
 #include <algorithm>
 #include <cassert>
@@ -15,6 +18,11 @@
 using namespace std;
 
 Propagate::Propagate(){}
+
+Propagate::Propagate(XTLog &xtLog)
+{
+    m_xtLog = xtLog;
+}
 
 unordered_set<Node, NodeHash> Propagate::searchAvalanche(vector<string> &log,
                                                          vector<NodePropagate> &allPropgateRes)
@@ -246,7 +254,19 @@ unordered_set<Node, NodeHash> Propagate::bfs_old(NodePropagate &s, vector<Record
                             isSameInsn = false;
 
                     if(!currRec.isMark){
-                        isValidPropagate = is_valid_propagate(currNode, currRec, v_rec);
+                        // Not use!!!
+                        // isValidPropagate = is_valid_propagate(currNode, currRec, v_rec);
+
+                        XTNode prevDestination;
+                        XTNode nextSource;
+
+                        size_t dstIndex = currNode.pos;
+                        size_t srcIndex = i;
+                        prevDestination = m_xtLog.getRecord(dstIndex).getDestinationNode();
+                        nextSource = m_xtLog.getRecord(srcIndex).getSourceNode();
+
+                        TaintPropagate tp;
+                        isValidPropagate = tp.isValidPropagate(prevDestination, nextSource);
 
                         if(isValidPropagate){
                             nextNode = propagte_src(currNode, v_rec, i);

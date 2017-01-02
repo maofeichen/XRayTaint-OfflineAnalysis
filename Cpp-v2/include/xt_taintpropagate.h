@@ -21,6 +21,7 @@ private:
 	bool isRegisterTemporary(std::string &addr);
 
 	bool compareMemoryValue(XTNode &nodeFirst, XTNode &nodeSecond);
+	bool isValueMatch(XTNode &nodeSmallSize, XTNode &nodeLargeSize);
 };
 
 #endif

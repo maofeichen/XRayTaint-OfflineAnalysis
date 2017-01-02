@@ -44,10 +44,10 @@ int main(int argc, char const *argv[])
         fn = v_fp.back().substr(0, v_fp.back().size() - 4); // also remove ".txt"
 
         XT_DetectAvalanche da(true, 
-                                TAINT_FUNC_CALL_MARK, 
-                                TAINT_BUF_BEGIN_ADDR, 
-                                TAINT_BUF_SIZE);
-        da.detect_avalanche(fn, false);
+                              TAINT_FUNC_CALL_MARK, 
+                              TAINT_BUF_BEGIN_ADDR, 
+                              TAINT_BUF_SIZE);
+        da.detect_avalanche(fn, true);
     } 
     
     return 0;

@@ -1,6 +1,7 @@
 #ifndef XT_PROPAGATE_H
 #define XT_PROPAGATE_H 
 
+#include "xt_log.h"
 #include "xt_data.h"
 
 #include <string>
@@ -28,6 +29,8 @@ inline bool operator==(PropagateRes const& p1, PropagateRes const& p2){
 class Propagate
 {
 private:
+    XTLog m_xtLog;
+
     inline std::string getInsnAddr(unsigned int &idx, std::vector<Record> &v_rec);
     inline NodePropagate propagate_dst(NodePropagate &s, std::vector<Record> &r);
     inline NodePropagate propagte_src(NodePropagate &d, std::vector<Record> &v_rec, int i);
@@ -51,6 +54,7 @@ private:
                                                      std::vector<NodePropagate> &allPropgateRes);
 public:
     Propagate();
+    Propagate(XTLog &xtLog);
 
     std::unordered_set<PropagateRes, PropagateResHash> setOfPropagateRes;
 

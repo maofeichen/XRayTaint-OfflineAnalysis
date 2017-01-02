@@ -5,12 +5,12 @@
 
 using namespace std;
 
+XTLog::XTLog() {}
+
 XTLog::XTLog(vector<string> &vXTLog)
 {
-	m_vXTLog = vXTLog;
-
-	vector<string>::iterator it = m_vXTLog.begin();
-	for(; it != m_vXTLog.end(); ++it){
+	vector<string>::iterator it = vXTLog.begin();
+	for(; it != vXTLog.end(); ++it){
 		XTRecord xtRecord(*it);
 		m_vXTRecord.push_back(xtRecord);	
 	}

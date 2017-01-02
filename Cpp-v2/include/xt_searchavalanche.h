@@ -2,6 +2,7 @@
 #define XT_SEARCHAVALANCHE_H
 
 #include "xt_data.h"
+#include "xt_log.h"
 #include "xt_propagate.h"
 #include <string>
 #include <vector>
@@ -64,9 +65,11 @@ class SearchAvalanche
 {
 public:
 	SearchAvalanche();
-	// ~SearchAvalanche();
 	SearchAvalanche(std::vector<Func_Call_Cont_Buf_t> v_funcCallContBuf, 
 					std::vector<Record> logAesRec);
+	SearchAvalanche(std::vector<Func_Call_Cont_Buf_t> v_funcCallContBuf, 
+					std::vector<Record> logAesRec,
+					XTLog &xtLog);
 	// std::vector<AvalancheResBetweenInAndOut> searchAvalanche();
 	std::vector<AvalResBetweenInOut> searchAvalanche();
 
@@ -84,6 +87,8 @@ private:
 	const unsigned int 	BUFFER_LEN			= 64;
 	const unsigned long KERNEL_ADDR			= 0xC0000000;
 	const unsigned int 	VALID_AVALANCHE_LEN	= 8;
+
+	XTLog m_xtLog;
 
 	inline BufferInOut assignBufInOut(FunctionCallBuffer &in, FunctionCallBuffer &out);
 	inline void clearAvalacheResult(AvalancheRes &avalRes, Buffer &avalIn, std::vector<Buffer> &vAvalOut);
