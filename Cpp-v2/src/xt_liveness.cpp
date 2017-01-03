@@ -392,3 +392,56 @@ void XT_Liveness::forceAddTaintBuffer(vector<Func_Call_Cont_Buf_t> &vFCallContBu
     }
     // vFCallContBuf[0].cont_buf.push_back(contBuf);
 }
+
+// Given results of analyze_alive_buffer, in first function call
+// completion, insert all qemu load buffers that before this
+// function call
+vector<string> XT_Liveness::insert_load_buffer(
+    vector<string> &alive_buffer, 
+    vector<string> &xtLog
+    )
+{
+    bool firstHit = false;
+
+    string firstRetMark = "";
+    string flag = ""; 
+    
+    vector<string> vRecord;
+    vector<string> new_alive_buffer;
+
+    cout << "Inserting load buffers at first function call completion..." << endl;
+
+    // found first return mark in alive buffers
+    vector<string>::iterator it_ab = alive_buffer.begin();
+    for(; it_ab != alive_buffer.end(); ++it_ab){
+        vRecord = XT_Util::split((*it_ab).c_str(), '\t');
+        flag = vRecord[0];
+
+        if(XT_Util::equal_mark(flag, flag::XT_RET_INSN) &&
+           !firstHit){
+            firstRetMark = *it_ab;
+
+            // Begin from xtLog:
+            // if find first ret mark, break
+            // else if find qemu load operation, add
+            vector<string>::iterator it_xt = xtLog.begin();
+            for(; it_xt != xtLog.end(); ++it_xt){
+                if(firstRetMark == *it_xt)
+                    break;
+
+                vRecord = XT_Util::split((*it_xt).c_str(), '\t');
+                flag = vRecord[0];
+                                
+                if(XT_Util::equal_mark(flag, flag::TCG_QEMU_LD) ){
+                    new_alive_buffer.push_back(*it_xt);
+                }
+            }
+
+            firstHit = true;
+        }
+
+        new_alive_buffer.push_back(*it_ab);
+    }
+
+    return new_alive_buffer; 
+}

@@ -1,7 +1,7 @@
 OBJS = xt_main.o xt_data.o xt_file.o xt_liveness.o \
 		xt_preprocess.o xt_propagate.o xt_searchavalanche.o \
 		xt_util.o xt_detectAvalanche.o xt_log.o xt_taintpropagate.o \
-		xt_node.o xt_record.o
+		xt_node.o xt_record.o xt_alivebuffer.o xt_functioncall.o
 
 CC = g++-4.9
 INC = -Iinclude
@@ -48,6 +48,12 @@ xt_node.o : src/xt_node.cpp
 
 xt_record.o : src/xt_record.cpp
 	$(CC) $(INC) -c src/xt_record.cpp $(CFLAG)
+
+xt_alivebuffer.o : src/xt_alivebuffer.cpp
+	$(CC) $(INC) -c src/xt_alivebuffer.cpp $(CFLAG)
+
+xt_functioncall.o : src/xt_functioncall.cpp
+	$(CC) $(INC) -c src/xt_functioncall.cpp $(CFLAG)
 
 .PHONY : clean
 clean :

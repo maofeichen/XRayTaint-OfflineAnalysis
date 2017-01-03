@@ -35,6 +35,9 @@ class XT_Liveness
                               std::string funcCallMark, 
                               unsigned long beginAddr, 
                               unsigned long size);
+
+     std::vector<string> insert_load_buffer(std::vector<string> &alive_buffer, 
+                                            std::vector<string> &xtLog);
      
  }; 
 #endif
