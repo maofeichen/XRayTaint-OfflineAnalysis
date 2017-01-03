@@ -29,48 +29,52 @@ XT_DetectAvalanche::XT_DetectAvalanche(bool isAddInputBuffer,
 
 void XT_DetectAvalanche::detect_avalanche(string logPath, bool isWriteFile)
 {
-	vector<string> xtLog, aliveBuf;
-    vector<Record> xtLogRec;
-    vector<Func_Call_Cont_Buf_t> vFuncCallContBuf;
-    vector<AvalResBetweenInOut> vAvalResult;
+	vector<string> xtLog;
 
+    // Read file
     XT_File xtFile =(XT_FILE_PATH + logPath + XT_FILE_EXT);
     xtLog = xtFile.read();
 
-	// preprocess
+	// Preprocess
     XT_PreProcess xtPreProc;
     xtLog = xtPreProc.clean_empty_function_mark(xtLog);
     xtLog = xtPreProc.clean_nonempty_function_mark(xtLog);
     if(isWriteFile)
         xtFile.write(XT_RESULT_PATH + logPath + XT_PREPROCESS + XT_FILE_EXT, xtLog);
 
-    // add memory size infomation
+    // Add memory size infomation
     xtLog = xtPreProc.parseMemSizeInfo(xtLog);
     if(isWriteFile)
         xtFile.write(XT_RESULT_PATH + logPath + XT_ADD_SIZE_INFO + XT_FILE_EXT, xtLog);
 
-    // Initialize XTLog object
+    // Initialize XTLog object after adding memory size
     XTLog o_xtLog(xtLog);
 
-    // buffer liveness analysis
+    // Buffer liveness analysis
+    vector<string> aliveBuf;
     aliveBuf = XT_Liveness::analyze_alive_buffer(xtLog);
     if(isWriteFile)
         xtFile.write(XT_RESULT_PATH + logPath + XT_ALIVE_BUF + XT_FILE_EXT, aliveBuf);
 
     // Merges continuous buffers
     XT_Liveness xtLiveness;
+    vector<Func_Call_Cont_Buf_t> vFuncCallContBuf;
+
     vFuncCallContBuf = XT_Liveness::merge_continue_buffer(aliveBuf);
     vFuncCallContBuf = XT_Liveness::filter_continue_buffer(vFuncCallContBuf);
     if(m_isAddInputBuffer)
         xtLiveness.forceAddTaintBuffer(vFuncCallContBuf,TAINT_FUNC_CALL_MARK, 
         								TAINT_BUF_BEGIN_ADDR, TAINT_BUF_SIZE);
     if(isWriteFile)
-        xtFile.write_continue_buffer(XT_RESULT_PATH + logPath + CONT_BUF + XT_FILE_EXT, vFuncCallContBuf);
+        xtFile.write_continue_buffer(XT_RESULT_PATH + logPath + CONT_BUF + XT_FILE_EXT, 
+                                     vFuncCallContBuf);
 
+    vector<Record> xtLogRec;
     // Converts string format to Record format
     xtLogRec = xtPreProc.convertToRec(xtLog);
 
     // Searches avalanche effect
+    vector<AvalResBetweenInOut> vAvalResult;
     SearchAvalanche sa(vFuncCallContBuf, xtLogRec, o_xtLog);
     vAvalResult = sa.searchAvalanche();
     if(isWriteFile){

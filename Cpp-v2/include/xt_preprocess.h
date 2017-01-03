@@ -24,8 +24,5 @@ public:
     vector<string> clean_nonempty_function_mark(vector<string> &);
 	std::vector<Record> convertToRec(std::vector<std::string> &log); 
 	std::vector<string> parseMemSizeInfo(std::vector<std::string> &v);
-
-	// !!!IGNORE
-    static vector<string> add_mem_size_info(vector<string> &);
 };
 #endif

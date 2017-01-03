@@ -17,44 +17,58 @@ XT_Liveness::XT_Liveness(){}
 // return:
 //      - alive_buffer: a vector contaiins all alive buffers of each function
 //          call. And function calls are sorted with ended first order.
-vector<string> XT_Liveness::analyze_alive_buffer(vector<string> &v)
+vector<string> XT_Liveness::analyze_alive_buffer(vector<string> &xtLog)
 {
-    int idx, idx_call, idx_ret;
-    string ret, call;
-    vector<string> alive_buffer, tmp;
-    vector<string>::iterator it_call, it_ret;
+    int index;
+    int indexCall;
+    int indexRet;
+    unsigned int funcCallIndex = 0;
+    string ret;
+    string call;
+    vector<string> alive_buffer;
+    vector<string> temp;
+    vector<string>::iterator it_call;
+    vector<string>::iterator it_ret;
 
     std::cout << "Analyzing alive buffers..." << endl;
 
-    for(vector<string>::iterator it = v.begin(); it != v.end(); ++it){
+    for(vector<string>::iterator it = xtLog.begin(); it != xtLog.end(); ++it){
         // If a function call END mark hit
         if(XT_Util::equal_mark(*it, flag::XT_RET_INSN_SEC) ){
-            ret = *(it - 1);    // ret is previous of 2nd ret mark
-            idx = v.end() - it;
-            // cout << "Index of ret mark to end is: " << idx << endl;
+            // ret is previous of 2nd ret mark
+            ret = *(it - 1);    
+            index = xtLog.end() - it;
 
             // scan backward to the begin
-            vector<string>::reverse_iterator rit = v.rbegin() + idx - 1;
-            for(; rit != v.rend(); ++rit){
+            vector<string>::reverse_iterator rit = xtLog.rbegin() + index - 1;
+            for(; rit != xtLog.rend(); ++rit){
                 // if a CALL mark hits
                 if(XT_Util::equal_mark(*rit, flag::XT_CALL_INSN) || 
                     XT_Util::equal_mark(*rit, flag::XT_CALL_INSN_FF2) ){
                     call = *rit;
                     // if a matched CALL & RET marks
                     if(XT_Util::is_pair_function_mark(call, ret) ){
-                        idx_call = v.rend() - rit;
-                        idx_ret = it - v.begin();
+                        indexCall = xtLog.rend() - rit;
+                        indexRet = it - xtLog.begin();
 
-                        it_call = v.begin() + idx_call - 1;
-                        it_ret = v.begin() + idx_ret + 1;
+                        it_call = xtLog.begin() + indexCall - 1;
+                        it_ret = xtLog.begin() + indexRet + 1;
                         vector<string> v_function_call(it_call, it_ret);
-                        // tmp = XT_Liveness::analyze_function_alive_buffer(v_function_call);
-                        tmp = XT_Liveness::analyze_alive_buffer_per_function(v_function_call);
 
-                        if(tmp.size() > 4){
-                            for(vector<string>::iterator tmp_it = tmp.begin(); tmp_it != tmp.end(); ++tmp_it)
-                                alive_buffer.push_back(*tmp_it);
+                        temp = XT_Liveness::analyze_alive_buffer_per_function(v_function_call);
+
+                        if(funcCallIndex == 0){
+                            // Only for first matched function call, 
+                            // collects all previous Qemu Load buffers
                         }
+
+                        // Indicates the function call contains valid buffers
+                        if(temp.size() > 4){
+                            for(vector<string>::iterator tempIt = temp.begin(); tempIt != temp.end(); ++tempIt)
+                                alive_buffer.push_back(*tempIt);
+                        }
+
+                        funcCallIndex++;
                         break;  // break search backward
                     }
                 }

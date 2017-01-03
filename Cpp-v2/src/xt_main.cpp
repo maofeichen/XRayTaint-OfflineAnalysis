@@ -41,13 +41,14 @@ int main(int argc, char const *argv[])
         cout << "input log: " << vm["input-file"].as< string >() << endl;
 
         vector<string> v_fp = XT_Util::split( vm["input-file"].as< string >().c_str(), '/' );
-        fn = v_fp.back().substr(0, v_fp.back().size() - 4); // also remove ".txt"
+        // also remove ".txt"
+        fn = v_fp.back().substr(0, v_fp.back().size() - 4); 
 
         XT_DetectAvalanche da(true, 
                               TAINT_FUNC_CALL_MARK, 
                               TAINT_BUF_BEGIN_ADDR, 
                               TAINT_BUF_SIZE);
-        da.detect_avalanche(fn, true);
+        da.detect_avalanche(fn, false);
     } 
     
     return 0;

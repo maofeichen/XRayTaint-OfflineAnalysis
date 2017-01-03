@@ -25,13 +25,16 @@ class XT_Liveness
 
     static vector<Cont_Buf_t> create_continue_buffer(vector<Buf_Rec_t> &);
     static Func_Call_Cont_Buf_t analyze_continue_buffer_per_function(vector<string> &);
+
  public:
      XT_Liveness();
-     static std::vector<std::string> analyze_alive_buffer(std::vector<std::string> &);
-     void forceAddTaintBuffer(std::vector<Func_Call_Cont_Buf_t> &vFCallContBuf,
-                                std::string funcCallMark, unsigned long beginAddr, unsigned long size);
+     static std::vector<std::string> analyze_alive_buffer(std::vector<std::string> &xtLog);
      static std::vector<Func_Call_Cont_Buf_t> merge_continue_buffer(std::vector<std::string> &);
      static std::vector<Func_Call_Cont_Buf_t> filter_continue_buffer(std::vector<Func_Call_Cont_Buf_t> &);
+     void forceAddTaintBuffer(std::vector<Func_Call_Cont_Buf_t> &vFCallContBuf,
+                              std::string funcCallMark, 
+                              unsigned long beginAddr, 
+                              unsigned long size);
      
  }; 
 #endif
