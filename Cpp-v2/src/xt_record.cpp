@@ -15,6 +15,7 @@ XTRecord::XTRecord(std::string &record, unsigned int index)
 
 	if(isMark() ){
 		m_sourceNode = XTNode(v_record, true, m_index);
+		// m_sourceNode = XTNode(v_record, true);
 	} else{
 		vector<string>::iterator first;
 		vector<string>::iterator last;
@@ -36,8 +37,11 @@ XTRecord::XTRecord(std::string &record, unsigned int index)
 			v_destination.push_back(size);
 		}
 
-		m_sourceNode = XTNode(v_source, true, m_index);
-		m_destinationNode = XTNode(v_destination, false, m_index);
+		m_sourceNode 		= XTNode(v_source, true, m_index);
+		m_destinationNode 	= XTNode(v_destination, false, m_index);
+
+		// m_sourceNode = XTNode(v_source, true);
+		// m_destinationNode = XTNode(v_destination, false);
 	}
 }
 

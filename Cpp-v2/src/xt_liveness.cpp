@@ -447,7 +447,7 @@ vector<string> XT_Liveness::insert_load_buffer(
     return new_alive_buffer; 
 }
 
-vector<XT_FunctionCall> XT_Liveness::getFunctionCallBuffer() 
+vector<XT_FunctionCall> XT_Liveness::getAliveFunctionCall() 
 { 
     return m_vAliveBuffer; 
 }

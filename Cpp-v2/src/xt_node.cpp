@@ -7,6 +7,21 @@ using namespace std;
 
 XTNode::XTNode() {}
 
+XTNode::XTNode(std::vector<std::string> &str_vNode, bool isSrc)
+{
+	m_flag = str_vNode[0];
+	m_addr = str_vNode[1];
+	m_val  = str_vNode[2];
+
+	m_isMark = XT_Util::isMarkRecord(m_flag);
+
+	if( (XT_Util::equal_mark(m_flag, flag::TCG_QEMU_LD) && isSrc) || 
+	    (XT_Util::equal_mark(m_flag, flag::TCG_QEMU_ST) && !isSrc) ){
+		m_intAddr = stoul(m_addr, nullptr, 16);
+		m_bitSize = stoul(str_vNode[3], nullptr, 10);
+	}
+}
+
 // If Qemu_ld/st, it must be the case that node[3] indicating the size
 XTNode::XTNode(vector<string> &node, bool isSrc, unsigned int index)
 {

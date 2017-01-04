@@ -47,7 +47,7 @@ public:
     std::vector<string> insert_load_buffer(std::vector<string> &alive_buffer, 
                                         std::vector<string> &xtLog);
 
-    std::vector<XT_FunctionCall> getFunctionCallBuffer();
+    std::vector<XT_FunctionCall> getAliveFunctionCall();
     void create_function_call_buffer(XTLog &xtLog);
 }; 
 #endif

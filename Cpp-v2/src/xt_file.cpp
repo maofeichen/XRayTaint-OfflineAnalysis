@@ -75,6 +75,49 @@ void XT_File::write_continue_buffer(string p, vector<Func_Call_Cont_Buf_t> &v)
         cout << "error open file: " << p << std::endl;
 }
 
+void XT_File::write_continuous_buffer(
+    std::string path, 
+    XT_Liveness &function_call_liveness
+    )
+{
+    ofstream xt_file(path.c_str() );
+
+    cout << "Writing continuous buffers..." << endl;
+
+    if(xt_file.is_open() ){
+        vector<XT_FunctionCall> vFunctionCall = function_call_liveness.getAliveFunctionCall();
+
+        unsigned int index = 0;
+        vector<XT_FunctionCall>::iterator it = vFunctionCall.begin();
+        for(; it != vFunctionCall.end(); ++it){
+            xt_file << "---------- ----------" << '\n';
+            xt_file << "Function Call " << index << '\n';
+            xt_file << "---------- ----------" << '\n';
+
+            xt_file << "First Call Mark: " << (*it).getFirstCallMark() << '\n';
+            xt_file << "Second Call Mark: " << (*it).getSecondCallMark() << '\n';
+            xt_file << "----------" << '\n';
+
+            vector<XT_AliveBuffer> vAliveBuffer = (*it).getAliveBuffers();
+            vector<XT_AliveBuffer>::iterator it_alive_buffer = vAliveBuffer.begin();
+            for(; it_alive_buffer != vAliveBuffer.end(); ++it_alive_buffer){
+                xt_file << "Begin Address: " << hex << (*it_alive_buffer).getBeginAddr() << '\n';
+                xt_file << "Byte Size: " << dec << (*it_alive_buffer).getBufferByteSize() << '\n';
+                xt_file << "----------" << '\n';
+            }
+
+            xt_file << "First Ret Mark: " << (*it).getFirstRetMark() << '\n';
+            xt_file << "Second Ret Mark: " << (*it).getSecondRetMark() << '\n';
+
+            index++;
+        }
+
+    } else
+        cout << "error open file: " << path << endl;
+
+    xt_file.close();
+}
+
 void XT_File::write_all_propagate_result(string path, vector<NodePropagate> &allPropagateRes)
 {
     int layer = 0;

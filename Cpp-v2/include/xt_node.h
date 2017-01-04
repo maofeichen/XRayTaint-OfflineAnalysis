@@ -19,6 +19,7 @@ class XTNode
  
  public:
  	XTNode();
+ 	XTNode(std::vector<std::string> &str_vNode, bool isSrc);
  	XTNode(std::vector<std::string> &node, bool isSrc, unsigned int index);
  
  	bool isMark();
