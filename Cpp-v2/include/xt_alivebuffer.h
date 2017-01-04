@@ -2,6 +2,7 @@
 #define XT_ALIVEBUFFER_H
 
 #include <vector>
+#include "xt_node.h"
 
 // Why can't declare in private?
 struct t_AliveNode
@@ -16,13 +17,22 @@ private:
 	unsigned int m_beginAddr 	= 0;
 	unsigned int m_bitSize 		= 0;
 
+	// Not used!!!
 	std::vector<t_AliveNode> m_vAliveNode;
+	std::vector<XTNode> m_vNode;
 
 public:
 	XT_AliveBuffer();
 
+	void clearAliveBuffer();
+	void setBeginAddr(unsigned int beginAddr);
+	void setBitSize(unsigned int bitSize);
+	void increaseBitSize(unsigned int bitSize);
+	void addNode(XTNode &node);
+
 	unsigned int getBeginAddr();
 	unsigned int getBufferBitSize();
+	unsigned int getBufferByteSize();
 	std::vector<t_AliveNode> getVecAliveNode();
 }; 
 #endif

@@ -13,6 +13,7 @@ public:
 	XTLog(std::vector<std::string> &vXTLog);
 
 	XTRecord getRecord(std::size_t index);
+	unsigned int findRecord(std::string &s_record);	
 
 private:
 	// std::vector<std::string> m_vXTLog;

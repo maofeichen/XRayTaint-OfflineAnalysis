@@ -8,7 +8,7 @@ using namespace std;
 XTNode::XTNode() {}
 
 // If Qemu_ld/st, it must be the case that node[3] indicating the size
-XTNode::XTNode(vector<string> &node, bool isSrc)
+XTNode::XTNode(vector<string> &node, bool isSrc, unsigned int index)
 {
 	// TODO: add try error
 	m_flag 	= node[0];
@@ -16,6 +16,7 @@ XTNode::XTNode(vector<string> &node, bool isSrc)
 	m_val	= node[2];
 
 	m_isMark = XT_Util::isMarkRecord(m_flag);
+	m_index = index;
 
 	if( (XT_Util::equal_mark(m_flag, flag::TCG_QEMU_LD) && isSrc) || 
 	    (XT_Util::equal_mark(m_flag, flag::TCG_QEMU_ST) && !isSrc) ){
@@ -25,6 +26,8 @@ XTNode::XTNode(vector<string> &node, bool isSrc)
 }
 
 bool XTNode::isMark(){return m_isMark; }	
+
+unsigned int XTNode::getIndex() { return m_index; }	
 
 string XTNode::getFlag(){return m_flag; }
 

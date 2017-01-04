@@ -8,6 +8,8 @@ class XTNode
  {
  private:
  	bool m_isMark;
+ 	unsigned int m_index = 0;
+
  	std::string m_flag;
  	std::string m_addr;
  	std::string m_val;
@@ -17,9 +19,10 @@ class XTNode
  
  public:
  	XTNode();
- 	XTNode(std::vector<std::string> &node, bool isSrc);
+ 	XTNode(std::vector<std::string> &node, bool isSrc, unsigned int index);
  
- 	bool isMark();	
+ 	bool isMark();
+ 	unsigned int getIndex();	
  	std::string getFlag();
  	std::string getAddr();
  	std::string getVal();

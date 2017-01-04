@@ -9,6 +9,11 @@
 
 XT_Liveness::XT_Liveness(){}
 
+XT_Liveness::XT_Liveness(std::vector<std::string> &s_vAliveBuffer)
+{
+    m_s_vAliveBuffer = s_vAliveBuffer;
+}
+
 // analyzes alive buffers for each function call given a xtlog.
 // For those buffers are alive for multiple nested function call,
 // they are ONLY considerred alive in the innermost function call.
@@ -401,29 +406,25 @@ vector<string> XT_Liveness::insert_load_buffer(
     vector<string> &xtLog
     )
 {
-    bool firstHit = false;
-
-    string firstRetMark = "";
-    string flag = ""; 
-    
-    vector<string> vRecord;
     vector<string> new_alive_buffer;
 
     cout << "Inserting load buffers at first function call completion..." << endl;
 
-    // found first return mark in alive buffers
+    bool firstHit = false;
+    string firstRetMark = "";
+    string flag = ""; 
+    vector<string> vRecord;
+
     vector<string>::iterator it_ab = alive_buffer.begin();
     for(; it_ab != alive_buffer.end(); ++it_ab){
         vRecord = XT_Util::split((*it_ab).c_str(), '\t');
         flag = vRecord[0];
 
+        // found first return mark in alive buffers
         if(XT_Util::equal_mark(flag, flag::XT_RET_INSN) &&
            !firstHit){
             firstRetMark = *it_ab;
 
-            // Begin from xtLog:
-            // if find first ret mark, break
-            // else if find qemu load operation, add
             vector<string>::iterator it_xt = xtLog.begin();
             for(; it_xt != xtLog.end(); ++it_xt){
                 if(firstRetMark == *it_xt)
@@ -444,4 +445,36 @@ vector<string> XT_Liveness::insert_load_buffer(
     }
 
     return new_alive_buffer; 
+}
+
+vector<XT_FunctionCall> XT_Liveness::getFunctionCallBuffer() 
+{ 
+    return m_vAliveBuffer; 
+}
+
+// Create continuous buffers for each function call
+void XT_Liveness::create_function_call_buffer(XTLog &xtLog)
+{
+    vector<string>::iterator itCall;
+    vector<string>::iterator itRet;
+
+    std::cout << "Creating continue buffer for function calls..." << endl;
+
+    vector<string>::iterator it = m_s_vAliveBuffer.begin();
+    for(; it != m_s_vAliveBuffer.end(); ++it){
+        if(XT_Util::equal_mark(*it, flag::XT_CALL_INSN) || 
+           XT_Util::equal_mark(*it, flag::XT_CALL_INSN_FF2) ){
+            itCall = it;
+
+            for(itRet = itCall + 1; itRet != m_s_vAliveBuffer.end(); ++itRet){
+                // find matched ret marks
+                if(XT_Util::equal_mark(*itRet, flag::XT_RET_INSN_SEC) ){
+                    vector<string> s_aFunctionCallBuffer(itCall, itRet + 1);
+                    XT_FunctionCall aFunctionCallBuffer(s_aFunctionCallBuffer, xtLog);
+                    m_vAliveBuffer.push_back(aFunctionCallBuffer);
+                    break; 
+                }
+            }
+        }
+    }
 }
