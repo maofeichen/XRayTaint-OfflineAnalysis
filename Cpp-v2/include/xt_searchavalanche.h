@@ -72,6 +72,7 @@ public:
 					XTLog &xtLog);
 	// std::vector<AvalancheResBetweenInAndOut> searchAvalanche();
 	std::vector<AvalResBetweenInOut> searchAvalanche();
+	std::vector<AvalResBetweenInOut> detect_avalanche();
 
 	void searchAvalancheDebug();
 	void printAvalResBetweenInAndOut(AvalancheResBetweenInAndOut &avalResInOut);
@@ -89,6 +90,9 @@ private:
 	const unsigned int 	VALID_AVALANCHE_LEN	= 8;
 
 	XTLog m_xtLog;
+
+	std::vector<t_AliveFunctionCall> m_vFuncCallContBuf;
+	std::vector<Record> m_logAesRec;
 
 	inline BufferInOut assignBufInOut(FunctionCallBuffer &in, FunctionCallBuffer &out);
 	inline void clearAvalacheResult(AvalancheRes &avalRes, Buffer &avalIn, std::vector<Buffer> &vAvalOut);
@@ -127,12 +131,9 @@ private:
 															   	   FunctionCallBuffer &out,
 															       Propagate &propagate);
 	AvalResBetweenInOut searchAvalancheBetweenInAndOut(FunctionCallBuffer &in, 
-															   FunctionCallBuffer &out,
-															   Propagate &propagate);
+													   FunctionCallBuffer &out,
+													   Propagate &propagate);
 	void searchAvalancheBetweenInAndOut_IGNORE(FunctionCallBuffer &in, FunctionCallBuffer &out);
 	void searchAvalancheBetweenInAndOutDebug(FunctionCallBuffer &in, FunctionCallBuffer &out);
-
-	std::vector<t_AliveFunctionCall> m_vFuncCallContBuf;
-	std::vector<Record> m_logAesRec;
 };
 #endif

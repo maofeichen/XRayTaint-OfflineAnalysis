@@ -91,6 +91,7 @@ void XT_DetectAvalanche::detect_avalanche(string logPath, bool isWriteFile)
     vector<AvalResBetweenInOut> vAvalResult;
     SearchAvalanche sa(vAliveFunctionCall, xtLogRec, o_xtLog);
     // vAvalResult = sa.searchAvalanche();
+    vAvalResult = sa.detect_avalanche();
     // if(isWriteFile){
     //     xtFile.writeAvalResult(XT_RESULT_PATH + logPath + AVAL_RES + XT_FILE_EXT, vAvalResult);
     // }

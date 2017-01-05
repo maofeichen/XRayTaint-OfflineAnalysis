@@ -31,8 +31,6 @@ SearchAvalanche::SearchAvalanche(std::vector<t_AliveFunctionCall> v_funcCallCont
 vector<AvalResBetweenInOut> SearchAvalanche::searchAvalanche()
 {
 	vector<FunctionCallBuffer> v_functionCallBuffer;
-	AvalancheResBetweenInAndOut avalResInOut;
-	vector<AvalancheResBetweenInAndOut> vAvalRes;
 
 	AvalResBetweenInOut avalResInOut_new;
 	vector<AvalResBetweenInOut> vAvalRes_new;
@@ -49,15 +47,17 @@ vector<AvalResBetweenInOut> SearchAvalanche::searchAvalanche()
 	// printFuncCallContBuf(m_vFuncCallContBuf);
 
 	cout << "Searching avalanche between buffers..." << endl;
+
 	numSearch = 0;
 	vector<FunctionCallBuffer>::iterator in = v_functionCallBuffer.begin();
-	for(; in != v_functionCallBuffer.end(); ++in){
+	for(; in != v_functionCallBuffer.end() - 1; ++in){
 		// if NOT kernel address and larger than 8 bytes
 		if(in->buffer.size >= BUFFER_LEN && 
 		   !isKernelAddress(in->buffer.beginAddr) ){
 
 			vector<FunctionCallBuffer>::iterator out = in + 1;
 			for(; out != v_functionCallBuffer.end(); ++out){
+
 				if(!isSameFunctionCall(*in, *out) && 
 				   out->buffer.size >= BUFFER_LEN && 
 				   !isKernelAddress(out->buffer.beginAddr) && 
@@ -78,10 +78,6 @@ vector<AvalResBetweenInOut> SearchAvalanche::searchAvalanche()
 					   	cout << "Output buffer: " << endl;
 					   	printFunctionCallBuffer(*out);
 
-					   	// should pass hashmap of proproagate directly instead of propagate obj
-					   	// avalResInOut = old_searchAvalancheBetweenInAndOut(*in, *out, propagate);
-					   	// printAvalResBetweenInAndOut(avalResInOut);
-					   	// vAvalRes.push_back(avalResInOut);
 
 					   	if(in->callMark == "14\tbffff4dc\t804a059\t" && \
 					   	   in->buffer.beginAddr == 0xbffff764)
@@ -94,20 +90,6 @@ vector<AvalResBetweenInOut> SearchAvalanche::searchAvalanche()
 
 					   	numSearch++;
 				   	}
-	
-					// Debug
-				  //  	if(in->callMark == "14\tbffff4dc\t804a059\t" && \
-				  //  	   in->buffer.beginAddr == 0xbffff764){
-						// if(out->callMark == "14\tbffff0ac\t80c1aa3\t" && \
-						//    out->buffer.beginAddr == 0xbffff484){
-						// 	avalResInOut = searchAvalancheBetweenInAndOut(*in, *out);
-						// 	printAvalResBetweenInAndOut(avalResInOut);
-						//  	goto LABEL_OUTTER_LOOP;
-						//  }
-				  //  	}
-
-					// search avalanche effect between in and out continuous buffer
-					// searchAvalancheBetweenInAndOut(*in, *out);
 				}
 			} // end inner for
 		}
@@ -116,8 +98,67 @@ LABEL_OUTTER_LOOP:
 	cout << "Total numbfer of seaching: " << numSearch << endl;
 	cout << "search finish" << endl;
 
-	// return vAvalRes;
 	return vAvalRes_new;
+}
+
+std::vector<AvalResBetweenInOut> 
+SearchAvalanche::detect_avalanche()
+{
+	cout << "Detecting avalahce between alive function calls..." << endl;
+
+	AvalResBetweenInOut avalResInOut;
+	vector<AvalResBetweenInOut> vAvalRes;
+
+	Propagate pg(m_xtLog);
+
+	vector<t_AliveFunctionCall>::iterator itInFunction = m_vFuncCallContBuf.begin();
+	for(; itInFunction != m_vFuncCallContBuf.end() - 1; ++itInFunction){
+
+		vector<t_AliveFunctionCall>::iterator itOutFunction = itInFunction + 1;
+		for(; itOutFunction != m_vFuncCallContBuf.end(); ++itOutFunction){
+
+			// iterate each alive buffer in in function call
+			vector<t_AliveContinueBuffer> v_current_in_buf = (*itInFunction).vAliveContinueBuffer;
+			vector<t_AliveContinueBuffer>::iterator itInBuf = v_current_in_buf.begin();
+			for(; itInBuf != v_current_in_buf.end(); ++itInBuf){
+				if( (*itInBuf).size >= BUFFER_LEN && 
+					!isKernelAddress( (*itInBuf).beginAddress) ){
+
+					// iterate each alive buffer in out function call
+					vector<t_AliveContinueBuffer> v_current_out_buf = (*itOutFunction).vAliveContinueBuffer;
+					vector<t_AliveContinueBuffer>::iterator itOutBuf = v_current_out_buf.begin();
+					for(; itOutBuf != v_current_out_buf.end(); ++itOutBuf){
+
+						if( (*itOutBuf).size >= BUFFER_LEN && 
+							!isKernelAddress( (*itOutBuf).beginAddress) && 
+							(*itInBuf).beginAddress != (*itOutBuf).beginAddress ){
+							FunctionCallBuffer in;
+							FunctionCallBuffer out;
+
+							in.callMark 	= (*itInFunction).call_mark;
+							in.callSecMark 	= (*itInFunction).sec_call_mark;
+							in.retMark 		= (*itInFunction).ret_mark;
+							in.retSecMark 	= (*itInFunction).sec_ret_mark;
+							in.buffer.beginAddr = (*itInBuf).beginAddress;
+							in.buffer.size 		= (*itInBuf).size;
+
+							out.callMark 	= (*itOutFunction).call_mark;
+							out.callSecMark = (*itOutFunction).sec_call_mark;
+							out.retMark 	= (*itOutFunction).ret_mark;
+							out.retSecMark 	= (*itOutFunction).sec_ret_mark;
+							out.buffer.beginAddr = (*itOutBuf).beginAddress;
+							out.buffer.size 	 = (*itOutBuf).size;	
+
+							avalResInOut = searchAvalancheBetweenInAndOut(in, out, pg);
+							vAvalRes.push_back(avalResInOut);
+						}
+					}	
+				}
+			}
+		}
+	}
+
+	return vAvalRes;
 }
 
 void SearchAvalanche::searchAvalancheDebug()
