@@ -11,14 +11,14 @@ using namespace std;
 
 SearchAvalanche::SearchAvalanche(){}
 
-SearchAvalanche::SearchAvalanche(vector<Func_Call_Cont_Buf_t> v_funcCallContBuf,
+SearchAvalanche::SearchAvalanche(vector<t_AliveFunctionCall> v_funcCallContBuf,
 								 vector<Record> logAesRec)
 {
 	m_vFuncCallContBuf = v_funcCallContBuf;
 	m_logAesRec = logAesRec;
 }
 
-SearchAvalanche::SearchAvalanche(std::vector<Func_Call_Cont_Buf_t> v_funcCallContBuf, 
+SearchAvalanche::SearchAvalanche(std::vector<t_AliveFunctionCall> v_funcCallContBuf, 
 								 std::vector<Record> logAesRec,
 								 XTLog &xtLog)
 {
@@ -515,23 +515,23 @@ Buffer SearchAvalanche::getAvalancheInRestByteOneBuffer(unordered_set<Node, Node
 	return buf;
 }
 
-// Transfers Func_Call_Cont_Buf_t to FunctionCallBuffer.
-// In Func_Call_Cont_Buf_t, each pair of call and ret mark may have multiple
+// Transfers t_AliveFunctionCall to FunctionCallBuffer.
+// In t_AliveFunctionCall, each pair of call and ret mark may have multiple
 // continuous buffers.
 // But in FunctionCallBuffer, each pair of call and ret mark only have one
 // continous buffer, even there might be repeated marks in the results.
-vector<FunctionCallBuffer> SearchAvalanche::getFunctionCallBuffer(vector<Func_Call_Cont_Buf_t> &v)
+vector<FunctionCallBuffer> SearchAvalanche::getFunctionCallBuffer(vector<t_AliveFunctionCall> &v)
 {
 	vector<FunctionCallBuffer> v_new;
 	FunctionCallBuffer f;
 
 	for(auto s : v){
-		for(auto t : s.cont_buf){
+		for(auto t : s.vAliveContinueBuffer){
 			f.callMark = s.call_mark;
 			f.callSecMark = s.sec_call_mark;
 			f.retMark = s.ret_mark;
 			f.retSecMark = s.sec_ret_mark;
-			f.buffer.beginAddr = t.begin_addr;
+			f.buffer.beginAddr = t.beginAddress;
 			f.buffer.size = t.size;
 
 			v_new.push_back(f);
@@ -939,7 +939,7 @@ void SearchAvalanche::printAvalancheResNew(AvalRes &avalRes)
 	cout << "-----" << endl;
 }
 
-void SearchAvalanche::printFuncCallContBuf(std::vector<Func_Call_Cont_Buf_t> &vFuncCallContBuf)
+void SearchAvalanche::printFuncCallContBuf(std::vector<t_AliveFunctionCall> &vFuncCallContBuf)
 {
 	int funcCallIndex;
 	int contBufIndex;
@@ -958,10 +958,10 @@ void SearchAvalanche::printFuncCallContBuf(std::vector<Func_Call_Cont_Buf_t> &vF
 
 		cout << "continuous buffers in this function call: " << endl;
 		contBufIndex = 0;
-		for(auto t : s.cont_buf){
+		for(auto t : s.vAliveContinueBuffer){
 			if(t.size / BIT_TO_BYTE > VALID_AVALANCHE_LEN && 
-			   !isKernelAddress(t.begin_addr)){
-				cout << "Begin Addr: " << hex << t.begin_addr << endl;
+			   !isKernelAddress(t.beginAddress)){
+				cout << "Begin Addr: " << hex << t.beginAddress << endl;
 				cout << "Size: " << dec << t.size / BIT_TO_BYTE << endl;
 				cout << "----------" << endl;
 				contBufIndex++;

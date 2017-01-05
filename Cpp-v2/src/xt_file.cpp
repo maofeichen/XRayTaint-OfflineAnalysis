@@ -49,20 +49,20 @@ void XT_File::write(string p, vector<string> &v)
         cout << "error open file: " << p << endl;
 }
 
-void XT_File::write_continue_buffer(string p, vector<Func_Call_Cont_Buf_t> &v)
+void XT_File::write_continue_buffer(string p, vector<t_AliveFunctionCall> &v)
 {
     ofstream f(p.c_str());
 
     if(f.is_open()){
-        for(vector<Func_Call_Cont_Buf_t>::iterator it_func = v.begin();
+        for(vector<t_AliveFunctionCall>::iterator it_func = v.begin();
             it_func != v.end(); ++it_func){
             f << "Function Call: " << '\n';
             f << (*it_func).call_mark << '\n';
             f << (*it_func).sec_call_mark << '\n';
 
-            for(vector<Cont_Buf_t>::iterator it_cont_buf = (*it_func).cont_buf.begin();
-                it_cont_buf != (*it_func).cont_buf.end(); ++it_cont_buf){
-                f << "Begin_Addr: " << hex << (*it_cont_buf).begin_addr << '\n';
+            for(vector<t_AliveContinueBuffer>::iterator it_cont_buf = (*it_func).vAliveContinueBuffer.begin();
+                it_cont_buf != (*it_func).vAliveContinueBuffer.end(); ++it_cont_buf){
+                f << "Begin_Addr: " << hex << (*it_cont_buf).beginAddress << '\n';
                 f << "Size: " << dec << (*it_cont_buf).size / 8  << " bytes" << '\n';
             }
 

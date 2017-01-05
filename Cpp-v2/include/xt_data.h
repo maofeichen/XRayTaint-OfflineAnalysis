@@ -22,20 +22,20 @@ struct Buf_Rec_t{
 };
 
 // Continue Buffer
-struct Cont_Buf_t
+struct t_AliveContinueBuffer
 {
-    unsigned long begin_addr;
+    unsigned long beginAddress;
     unsigned long size;
 };
 
 // Continues Buffers per function call
-struct Func_Call_Cont_Buf_t
+struct t_AliveFunctionCall
 {
     std::string call_mark;
     std::string sec_call_mark;
     std::string ret_mark;
     std::string sec_ret_mark;
-    std::vector<Cont_Buf_t> cont_buf;
+    std::vector<t_AliveContinueBuffer> vAliveContinueBuffer;
 };
 
 struct Node{

@@ -65,9 +65,9 @@ class SearchAvalanche
 {
 public:
 	SearchAvalanche();
-	SearchAvalanche(std::vector<Func_Call_Cont_Buf_t> v_funcCallContBuf, 
+	SearchAvalanche(std::vector<t_AliveFunctionCall> v_funcCallContBuf, 
 					std::vector<Record> logAesRec);
-	SearchAvalanche(std::vector<Func_Call_Cont_Buf_t> v_funcCallContBuf, 
+	SearchAvalanche(std::vector<t_AliveFunctionCall> v_funcCallContBuf, 
 					std::vector<Record> logAesRec,
 					XTLog &xtLog);
 	// std::vector<AvalancheResBetweenInAndOut> searchAvalanche();
@@ -79,7 +79,7 @@ public:
 	void printAvalancheRes(AvalancheRes &avalRes);
 	void printAvalancheResNew(AvalRes &avalRes);
 	void printFunctionCallBuffer(FunctionCallBuffer &a);
-	void printFuncCallContBuf(std::vector<Func_Call_Cont_Buf_t> &vFuncCallContBuf);
+	void printFuncCallContBuf(std::vector<t_AliveFunctionCall> &vFuncCallContBuf);
 	void printBuffer(Buffer &a);
 
 private:
@@ -120,7 +120,7 @@ private:
 										  std::vector<Buffer> &vAvalOut);
 
 	Buffer getAvalancheInRestByteOneBuffer(std::unordered_set<Node, NodeHash> &propagateRes, Buffer &avalOut);
-	std::vector<FunctionCallBuffer> getFunctionCallBuffer(std::vector<Func_Call_Cont_Buf_t> &v);	
+	std::vector<FunctionCallBuffer> getFunctionCallBuffer(std::vector<t_AliveFunctionCall> &v);	
 	NodePropagate initialBeginNode(FunctionCallBuffer &buf, unsigned long &addr, std::vector<Record> &logRec);
 
 	AvalancheResBetweenInAndOut old_searchAvalancheBetweenInAndOut(FunctionCallBuffer &in, 
@@ -132,7 +132,7 @@ private:
 	void searchAvalancheBetweenInAndOut_IGNORE(FunctionCallBuffer &in, FunctionCallBuffer &out);
 	void searchAvalancheBetweenInAndOutDebug(FunctionCallBuffer &in, FunctionCallBuffer &out);
 
-	std::vector<Func_Call_Cont_Buf_t> m_vFuncCallContBuf;
+	std::vector<t_AliveFunctionCall> m_vFuncCallContBuf;
 	std::vector<Record> m_logAesRec;
 };
 #endif

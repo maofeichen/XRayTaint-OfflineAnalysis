@@ -61,15 +61,18 @@ void XT_DetectAvalanche::detect_avalanche(string logPath, bool isWriteFile)
     // Create continuous buffers in each function call
     XT_Liveness functionCallLiveness(aliveBuf);
     functionCallLiveness.create_function_call_buffer(o_xtLog);
+    // Todo: filter out size < 8 bytes
+    // Todo: filter out kernel address
     functionCallLiveness.propagate_alive_buffer();
     if(isWriteFile)
         xtFile.write_continuous_buffer(XT_RESULT_PATH + logPath + CONT_BUF + XT_FILE_EXT, 
                                        functionCallLiveness);
 
     // Merges continuous buffers
-    // vector<Func_Call_Cont_Buf_t> vFuncCallContBuf;
+    // vector<t_AliveFunctionCall> vFuncCallContBuf;
     // vFuncCallContBuf = XT_Liveness::merge_continue_buffer(aliveBuf);
     // vFuncCallContBuf = XT_Liveness::filter_continue_buffer(vFuncCallContBuf);
+
     // if(m_isAddInputBuffer)
     //     xtLiveness.forceAddTaintBuffer(vFuncCallContBuf,
     //                                    TAINT_FUNC_CALL_MARK, 

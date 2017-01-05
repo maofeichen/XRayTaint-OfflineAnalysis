@@ -219,11 +219,11 @@ inline bool XT_Liveness::is_heap_mem_alive()
 }
 
 // merge continue buffers for all function calls in xtaint log
-vector<Func_Call_Cont_Buf_t> XT_Liveness::merge_continue_buffer(vector<string> &v)
+vector<t_AliveFunctionCall> XT_Liveness::merge_continue_buffer(vector<string> &v)
 {
     vector<string>::iterator it_call, it_ret;
-    Func_Call_Cont_Buf_t func_call_cont_buf;
-    vector<Func_Call_Cont_Buf_t> v_func_call_cont_buf;
+    t_AliveFunctionCall func_call_cont_buf;
+    vector<t_AliveFunctionCall> v_func_call_cont_buf;
 
     std::cout << "Merging continue buffer..." << endl;
 
@@ -248,10 +248,10 @@ vector<Func_Call_Cont_Buf_t> XT_Liveness::merge_continue_buffer(vector<string> &
 }
 
 // merge continues buffer if any for a particular function call
-Func_Call_Cont_Buf_t XT_Liveness::analyze_continue_buffer_per_function(vector<string> &v)
+t_AliveFunctionCall XT_Liveness::analyze_continue_buffer_per_function(vector<string> &v)
 {
-    Func_Call_Cont_Buf_t func_call_cont_buf;
-    vector<Cont_Buf_t> v_cont_buf;
+    t_AliveFunctionCall func_call_cont_buf;
+    vector<t_AliveContinueBuffer> v_cont_buf;
     Buf_Rec_t buf_rec;
     vector<Buf_Rec_t> v_buf_rec;
 
@@ -271,7 +271,7 @@ Func_Call_Cont_Buf_t XT_Liveness::analyze_continue_buffer_per_function(vector<st
 
     std::sort(v_buf_rec.begin(), v_buf_rec.end(), XT_Liveness::compare_buf_rec);
     v_cont_buf = XT_Liveness::create_continue_buffer(v_buf_rec);
-    func_call_cont_buf.cont_buf = v_cont_buf;
+    func_call_cont_buf.vAliveContinueBuffer = v_cont_buf;
 
     func_call_cont_buf.ret_mark = v[v.size() - 2];
     func_call_cont_buf.sec_ret_mark = v[v.size() - 1];
@@ -330,25 +330,25 @@ bool XT_Liveness::compare_buf_rec(Buf_Rec_t &b1, Buf_Rec_t &b2)
     return b1.addr < b2.addr;
 }
 
-vector<Cont_Buf_t> XT_Liveness::create_continue_buffer(vector<Buf_Rec_t> &v_buf_rec)
+vector<t_AliveContinueBuffer> XT_Liveness::create_continue_buffer(vector<Buf_Rec_t> &v_buf_rec)
 {
-    vector<Cont_Buf_t> v_cont_buf;
-    Cont_Buf_t cont_buf;
+    vector<t_AliveContinueBuffer> v_cont_buf;
+    t_AliveContinueBuffer vAliveContinueBuffer;
 
-    cont_buf.begin_addr = v_buf_rec[0].addr;
-    cont_buf.size = v_buf_rec[0].size;
+    vAliveContinueBuffer.beginAddress = v_buf_rec[0].addr;
+    vAliveContinueBuffer.size = v_buf_rec[0].size;
     for(vector<Buf_Rec_t>::iterator it = v_buf_rec.begin() + 1; it != v_buf_rec.end(); ++it){
         // if addr already contain
-        if((cont_buf.begin_addr + cont_buf.size / 8) > (*it).addr)
+        if((vAliveContinueBuffer.beginAddress + vAliveContinueBuffer.size / 8) > (*it).addr)
             continue;
         // if continue
-        else if((cont_buf.begin_addr + cont_buf.size / 8) == (*it).addr )
-            cont_buf.size += (*it).size;
+        else if((vAliveContinueBuffer.beginAddress + vAliveContinueBuffer.size / 8) == (*it).addr )
+            vAliveContinueBuffer.size += (*it).size;
         // if discontinue
-        else if((cont_buf.begin_addr + cont_buf.size / 8) < (*it).addr){
-            v_cont_buf.push_back(cont_buf);
-            cont_buf.begin_addr = (*it).addr;
-            cont_buf.size = (*it).size;
+        else if((vAliveContinueBuffer.beginAddress + vAliveContinueBuffer.size / 8) < (*it).addr){
+            v_cont_buf.push_back(vAliveContinueBuffer);
+            vAliveContinueBuffer.beginAddress = (*it).addr;
+            vAliveContinueBuffer.size = (*it).size;
         }
     }
 
@@ -356,46 +356,46 @@ vector<Cont_Buf_t> XT_Liveness::create_continue_buffer(vector<Buf_Rec_t> &v_buf_
 }
 
 // fliter continue buffers that size larger than 4 bytes
-vector<Func_Call_Cont_Buf_t> XT_Liveness::filter_continue_buffer(vector<Func_Call_Cont_Buf_t> &v)
+vector<t_AliveFunctionCall> XT_Liveness::filter_continue_buffer(vector<t_AliveFunctionCall> &v)
 {
-    Func_Call_Cont_Buf_t func_call_cont_buf;
-    vector<Func_Call_Cont_Buf_t> v_new;
+    t_AliveFunctionCall func_call_cont_buf;
+    vector<t_AliveFunctionCall> v_new;
 
     std::cout << "Filtering continue buffers size > 4 bytes..." << endl;
 
-    for(vector<Func_Call_Cont_Buf_t>::iterator it_func = v.begin(); it_func != v.end(); ++it_func){
+    for(vector<t_AliveFunctionCall>::iterator it_func = v.begin(); it_func != v.end(); ++it_func){
         func_call_cont_buf.call_mark = (*it_func).call_mark;
         func_call_cont_buf.sec_call_mark = (*it_func).sec_call_mark;
         func_call_cont_buf.ret_mark = (*it_func).ret_mark;
         func_call_cont_buf.sec_ret_mark = (*it_func).sec_ret_mark;
 
-        for(vector<Cont_Buf_t>::iterator it_cont_buf = (*it_func).cont_buf.begin();
-            it_cont_buf != (*it_func).cont_buf.end(); ++it_cont_buf){
+        for(vector<t_AliveContinueBuffer>::iterator it_cont_buf = (*it_func).vAliveContinueBuffer.begin();
+            it_cont_buf != (*it_func).vAliveContinueBuffer.end(); ++it_cont_buf){
             if((*it_cont_buf).size > 32)
-                func_call_cont_buf.cont_buf.push_back(*it_cont_buf);
+                func_call_cont_buf.vAliveContinueBuffer.push_back(*it_cont_buf);
         }
         v_new.push_back(func_call_cont_buf);
-        func_call_cont_buf.cont_buf.clear();
+        func_call_cont_buf.vAliveContinueBuffer.clear();
     }
 
     return v_new;
 }
 
 // Force add taint buffer as alive buffer into the liveness analysis result
-void XT_Liveness::forceAddTaintBuffer(vector<Func_Call_Cont_Buf_t> &vFCallContBuf,
+void XT_Liveness::forceAddTaintBuffer(vector<t_AliveFunctionCall> &vFCallContBuf,
                                       string funcCallMark,
                                       unsigned long beginAddr, unsigned long size)
 {
-    Cont_Buf_t contBuf;
-    contBuf.begin_addr = beginAddr;
+    t_AliveContinueBuffer contBuf;
+    contBuf.beginAddress = beginAddr;
     contBuf.size = size;
 
-    vector<Func_Call_Cont_Buf_t>::iterator it = vFCallContBuf.begin();
+    vector<t_AliveFunctionCall>::iterator it = vFCallContBuf.begin();
     for(; it != vFCallContBuf.end(); ++it){
        if( (*it).call_mark == funcCallMark)
-           (*it).cont_buf.push_back(contBuf); 
+           (*it).vAliveContinueBuffer.push_back(contBuf); 
     }
-    // vFCallContBuf[0].cont_buf.push_back(contBuf);
+    // vFCallContBuf[0].vAliveContinueBuffer.push_back(contBuf);
 }
 
 // Given results of analyze_alive_buffer, in first function call
