@@ -69,26 +69,27 @@ void XT_DetectAvalanche::detect_avalanche(string logPath, bool isWriteFile)
                                        functionCallLiveness);
 
     // Merges continuous buffers
-    // vector<t_AliveFunctionCall> vFuncCallContBuf;
-    // vFuncCallContBuf = XT_Liveness::merge_continue_buffer(aliveBuf);
-    // vFuncCallContBuf = XT_Liveness::filter_continue_buffer(vFuncCallContBuf);
+    vector<t_AliveFunctionCall> vAliveFunctionCall;
+    vAliveFunctionCall = functionCallLiveness.convert_alive_function_call();
 
+    // vAliveFunctionCall = XT_Liveness::merge_continue_buffer(aliveBuf);
+    // vAliveFunctionCall = XT_Liveness::filter_continue_buffer(vAliveFunctionCall);
     // if(m_isAddInputBuffer)
-    //     xtLiveness.forceAddTaintBuffer(vFuncCallContBuf,
+    //     xtLiveness.forceAddTaintBuffer(vAliveFunctionCall,
     //                                    TAINT_FUNC_CALL_MARK, 
     //     							   TAINT_BUF_BEGIN_ADDR, 
     //                                    TAINT_BUF_SIZE);
     // if(isWriteFile)
     //     xtFile.write_continue_buffer(XT_RESULT_PATH + logPath + CONT_BUF + XT_FILE_EXT, 
-    //                                  vFuncCallContBuf);
+    //                                  vAliveFunctionCall);
 
     // Converts string format to Record format
-    // vector<Record> xtLogRec;
-    // xtLogRec = xtPreProc.convertToRec(xtLog);
+    vector<Record> xtLogRec;
+    xtLogRec = xtPreProc.convertToRec(xtLog);
 
     // Searches avalanche effect
-    // vector<AvalResBetweenInOut> vAvalResult;
-    // SearchAvalanche sa(vFuncCallContBuf, xtLogRec, o_xtLog);
+    vector<AvalResBetweenInOut> vAvalResult;
+    SearchAvalanche sa(vAliveFunctionCall, xtLogRec, o_xtLog);
     // vAvalResult = sa.searchAvalanche();
     // if(isWriteFile){
     //     xtFile.writeAvalResult(XT_RESULT_PATH + logPath + AVAL_RES + XT_FILE_EXT, vAvalResult);

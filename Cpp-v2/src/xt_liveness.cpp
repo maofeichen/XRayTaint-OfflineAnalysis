@@ -502,3 +502,38 @@ void XT_Liveness::propagate_alive_buffer()
         }
     } 
 }
+
+// Converts m_vAliveFunction to struct t_AliveFunctionCall for
+// further search avalanche 
+vector<t_AliveFunctionCall> XT_Liveness::convert_alive_function_call()
+{
+    cout << "Converting to struct t_AliveFunctionCall..." << endl;
+
+    vector<t_AliveFunctionCall> v_alive_function_call;
+    t_AliveFunctionCall alive_function_call;
+
+    t_AliveContinueBuffer alive_continue_buffer;
+
+    vector<XT_FunctionCall>::iterator it_fc = m_vAliveFunctionCall.begin();
+    for(; it_fc != m_vAliveFunctionCall.end(); ++it_fc){
+
+        alive_function_call.call_mark       = (*it_fc).getFirstCallMark();
+        alive_function_call.sec_call_mark   = (*it_fc).getSecondCallMark();
+        alive_function_call.ret_mark        = (*it_fc).getFirstRetMark();
+        alive_function_call.sec_ret_mark    = (*it_fc).getSecondRetMark();
+
+        vector<XT_AliveBuffer> v_alive_buffer = (*it_fc).getAliveBuffers();
+        vector<XT_AliveBuffer>::iterator it_ab = v_alive_buffer.begin();
+
+        for(; it_ab != v_alive_buffer.end(); ++it_ab){
+            alive_continue_buffer.beginAddress  = (*it_ab).getBeginAddr();
+            alive_continue_buffer.size          = (*it_ab).getBufferBitSize();
+            alive_function_call.vAliveContinueBuffer.push_back(alive_continue_buffer);
+        }
+
+        v_alive_function_call.push_back(alive_function_call);
+        alive_function_call.vAliveContinueBuffer.clear();
+    }
+
+    return v_alive_function_call;
+}

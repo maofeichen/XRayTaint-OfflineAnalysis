@@ -45,10 +45,12 @@ public:
                           unsigned long size);
 
     std::vector<string> insert_load_buffer(std::vector<string> &alive_buffer, 
-                                        std::vector<string> &xtLog);
+                                           std::vector<string> &xtLog);
 
     std::vector<XT_FunctionCall> getAliveFunctionCall();
     void create_function_call_buffer(XTLog &xtLog);
     void propagate_alive_buffer();
+
+    std::vector<t_AliveFunctionCall> convert_alive_function_call();
 }; 
 #endif
