@@ -16,7 +16,7 @@ private:
     static const unsigned long STACK_BEGIN_ADDR = 0xb0000000;
 
     std::vector<std::string> m_s_vAliveBuffer;
-    std::vector<XT_FunctionCall> m_vAliveBuffer; 
+    std::vector<XT_FunctionCall> m_vAliveFunctionCall; 
 
     static inline bool is_mem_alive(unsigned long &, unsigned long &);
     static inline bool is_heap_mem_alive();
@@ -49,5 +49,6 @@ public:
 
     std::vector<XT_FunctionCall> getAliveFunctionCall();
     void create_function_call_buffer(XTLog &xtLog);
+    void propagate_alive_buffer();
 }; 
 #endif

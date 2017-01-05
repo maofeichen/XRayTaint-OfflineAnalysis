@@ -449,7 +449,7 @@ vector<string> XT_Liveness::insert_load_buffer(
 
 vector<XT_FunctionCall> XT_Liveness::getAliveFunctionCall() 
 { 
-    return m_vAliveBuffer; 
+    return m_vAliveFunctionCall; 
 }
 
 // Create continuous buffers for each function call
@@ -471,10 +471,34 @@ void XT_Liveness::create_function_call_buffer(XTLog &xtLog)
                 if(XT_Util::equal_mark(*itRet, flag::XT_RET_INSN_SEC) ){
                     vector<string> s_aFunctionCallBuffer(itCall, itRet + 1);
                     XT_FunctionCall aFunctionCallBuffer(s_aFunctionCallBuffer, xtLog);
-                    m_vAliveBuffer.push_back(aFunctionCallBuffer);
+                    m_vAliveFunctionCall.push_back(aFunctionCallBuffer);
                     break; 
                 }
             }
         }
     }
+}
+
+// If any alive buffer still alive in next function call,
+// propagate to next
+void XT_Liveness::propagate_alive_buffer()
+{
+    cout << "Propagating alive buffers to next function call..." << endl;
+
+    vector<XT_FunctionCall>::iterator it = m_vAliveFunctionCall.begin();
+    for(; it != m_vAliveFunctionCall.end() - 1; ++it){
+
+        vector<XT_AliveBuffer> vAliveBuffer = (*it).getAliveBuffers();
+        vector<XT_AliveBuffer>::iterator it_alive_buf = vAliveBuffer.begin();
+        for(; it_alive_buf != vAliveBuffer.end(); ++it_alive_buf){
+            vector<XT_FunctionCall>::iterator itNext = it + 1;
+
+            // If still alive in next function call
+            if( (*it_alive_buf).getBeginAddr() >= (*itNext).getFunctionCAllEsp() ){
+                if( !(*itNext).isHasAliveBuffer(*it_alive_buf) ){
+                    (*itNext).addAliveBuffer(*it_alive_buf);
+                }
+            }
+        }
+    } 
 }

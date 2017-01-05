@@ -33,7 +33,10 @@ public:
 	std::string getSecondCallMark();
 	std::string getFirstRetMark();
 	std::string getSecondRetMark();
+	unsigned int getFunctionCAllEsp();
 
+	bool isHasAliveBuffer(XT_AliveBuffer &aAliveBuffer);
+	void addAliveBuffer(XT_AliveBuffer &aAliveBuffer);	
 	std::vector<XT_AliveBuffer> getAliveBuffers();	
 };
 

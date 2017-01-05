@@ -61,6 +61,7 @@ void XT_DetectAvalanche::detect_avalanche(string logPath, bool isWriteFile)
     // Create continuous buffers in each function call
     XT_Liveness functionCallLiveness(aliveBuf);
     functionCallLiveness.create_function_call_buffer(o_xtLog);
+    functionCallLiveness.propagate_alive_buffer();
     if(isWriteFile)
         xtFile.write_continuous_buffer(XT_RESULT_PATH + logPath + CONT_BUF + XT_FILE_EXT, 
                                        functionCallLiveness);

@@ -12,6 +12,13 @@ XT_FunctionCall::XT_FunctionCall(vector<string> &s_vAliveBuffer,
 {
 	m_str_vAliveBuffer = s_vAliveBuffer;
 	m_xtLog = xtLog;
+
+	size_t len = m_str_vAliveBuffer.size();
+	m_callMarkFirst		= m_str_vAliveBuffer[0];
+	m_callMarkSecond 	= m_str_vAliveBuffer[1];
+	m_retMarkFirst 		= m_str_vAliveBuffer[len - 2];
+	m_retMarkSecond 	= m_str_vAliveBuffer[len - 1];
+
 	merge_continuous_buffer();
 }
 
@@ -23,18 +30,47 @@ string XT_FunctionCall::getFirstRetMark() {return m_retMarkFirst; }
 
 string XT_FunctionCall::getSecondRetMark() {return m_retMarkSecond; }
 
-std::vector<XT_AliveBuffer> XT_FunctionCall::getAliveBuffers() {return m_vAliveBuffer; }
+unsigned int XT_FunctionCall::getFunctionCAllEsp()
+{
+	string funcESP = "";
+	vector<string> vFirstCallMark;
+	unsigned int i_funcESP = 0;
+
+	vFirstCallMark = XT_Util::split(m_callMarkFirst.c_str(), '\t');
+	funcESP = vFirstCallMark[1];
+	i_funcESP = stoul(funcESP, nullptr, 16);
+
+	return i_funcESP;	
+}
+
+bool XT_FunctionCall::isHasAliveBuffer(XT_AliveBuffer &aAliveBuffer)
+{
+	bool isHas = false;
+
+	vector<XT_AliveBuffer>::iterator it = m_vAliveBuffer.begin();
+	for(; it != m_vAliveBuffer.end(); ++it){
+		if( (*it).getBeginAddr() == aAliveBuffer.getBeginAddr() && 
+			(*it).getBufferBitSize() == aAliveBuffer.getBufferBitSize() ){
+			isHas = true;
+			break;
+		}
+	}
+
+	return isHas;
+}
+
+void XT_FunctionCall::addAliveBuffer(XT_AliveBuffer &aAliveBuffer)
+{
+	m_vAliveBuffer.push_back(aAliveBuffer);	
+}
+
+vector<XT_AliveBuffer> XT_FunctionCall::getAliveBuffers() {return m_vAliveBuffer; }
+
 
 // Merge all continuous buffers if any for the particular function call
 void XT_FunctionCall::merge_continuous_buffer()
 {
 	vector<XTNode> vNode;
-	size_t len = m_str_vAliveBuffer.size();
-
-	string m_callMarkFirst 	= m_str_vAliveBuffer[0];
-	string m_callMarkSecond = m_str_vAliveBuffer[1];
-	string m_retMarkFirst 	= m_str_vAliveBuffer[len - 2];
-	string m_retMarkSecond 	= m_str_vAliveBuffer[len - 1];
 
 	vector<string>::iterator it = m_str_vAliveBuffer.begin() + 2;
 	for(; it != m_str_vAliveBuffer.end() - 2; ++it){
