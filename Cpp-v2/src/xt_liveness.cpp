@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stack>
 #include <string>
+#include "xt_constant.h"
 #include "xt_flag.h"
 #include "xt_liveness.h"
 #include "xt_util.h"
@@ -479,6 +480,24 @@ void XT_Liveness::create_function_call_buffer(XTLog &xtLog)
     }
 }
 
+// Filter out buffer size smaller than 8 bytes
+void XT_Liveness::filter_small_continuous_buffer()
+{
+    cout << "Filtering out small continuous buffer..." << endl;
+
+    vector<XT_FunctionCall>::iterator itFunction = m_vAliveFunctionCall.begin();
+    for(; itFunction != m_vAliveFunctionCall.end(); ++itFunction){
+
+        vector<XT_AliveBuffer> vAliveBuffer = (*itFunction).getAliveBuffers();
+        vector<XT_AliveBuffer>::iterator itBuffer = vAliveBuffer.begin(); 
+        for(; itBuffer != vAliveBuffer.end(); ++itBuffer){
+            if( (*itBuffer).getBufferByteSize() < VALID_BYTE_SIZE){
+                (*itFunction).removeAliveBuffer(*itBuffer);
+            }
+        }
+    }
+}
+
 // If any alive buffer still alive in next function call,
 // propagate to next
 void XT_Liveness::propagate_alive_buffer()
@@ -491,12 +510,12 @@ void XT_Liveness::propagate_alive_buffer()
         vector<XT_AliveBuffer> vAliveBuffer = (*it).getAliveBuffers();
         vector<XT_AliveBuffer>::iterator it_alive_buf = vAliveBuffer.begin();
         for(; it_alive_buf != vAliveBuffer.end(); ++it_alive_buf){
-            vector<XT_FunctionCall>::iterator itNext = it + 1;
+            vector<XT_FunctionCall>::iterator itNextFunction = it + 1;
 
             // If still alive in next function call
-            if( (*it_alive_buf).getBeginAddr() >= (*itNext).getFunctionCAllEsp() ){
-                if( !(*itNext).isHasAliveBuffer(*it_alive_buf) ){
-                    (*itNext).addAliveBuffer(*it_alive_buf);
+            if( (*it_alive_buf).getBeginAddr() >= (*itNextFunction).getFunctionCAllEsp() ){
+                if( !(*itNextFunction).isHasAliveBuffer(*it_alive_buf) ){
+                    (*itNextFunction).addAliveBuffer(*it_alive_buf);
                 }
             }
         }

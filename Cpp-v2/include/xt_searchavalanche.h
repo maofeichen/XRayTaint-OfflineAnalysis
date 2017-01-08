@@ -1,7 +1,9 @@
 #ifndef XT_SEARCHAVALANCHE_H
 #define XT_SEARCHAVALANCHE_H
 
+#include "xt_alivebuffer.h"
 #include "xt_data.h"
+#include "xt_functioncall.h"
 #include "xt_log.h"
 #include "xt_propagate.h"
 #include <string>
@@ -12,6 +14,8 @@ struct Buffer
 {
 	unsigned long beginAddr;
 	unsigned int size;
+
+	std::vector<XTNode> vNode;
 };
 
 struct BufferInOut
@@ -70,6 +74,11 @@ public:
 	SearchAvalanche(std::vector<t_AliveFunctionCall> v_funcCallContBuf, 
 					std::vector<Record> logAesRec,
 					XTLog &xtLog);
+	SearchAvalanche(std::vector<XT_FunctionCall> vAliveFunctionCall, 
+					std::vector<t_AliveFunctionCall> v_funcCallContBuf, 
+					std::vector<Record> logAesRec,
+					XTLog &xtLog);
+
 	// std::vector<AvalancheResBetweenInAndOut> searchAvalanche();
 	std::vector<AvalResBetweenInOut> searchAvalanche();
 	std::vector<AvalResBetweenInOut> detect_avalanche();
@@ -93,6 +102,7 @@ private:
 
 	std::vector<t_AliveFunctionCall> m_vFuncCallContBuf;
 	std::vector<Record> m_logAesRec;
+	std::vector<XT_FunctionCall> m_vAliveFunctionCall; 
 
 	inline BufferInOut assignBufInOut(FunctionCallBuffer &in, FunctionCallBuffer &out);
 	inline void clearAvalacheResult(AvalancheRes &avalRes, Buffer &avalIn, std::vector<Buffer> &vAvalOut);
@@ -124,8 +134,10 @@ private:
 										  std::vector<Buffer> &vAvalOut);
 
 	Buffer getAvalancheInRestByteOneBuffer(std::unordered_set<Node, NodeHash> &propagateRes, Buffer &avalOut);
-	std::vector<FunctionCallBuffer> getFunctionCallBuffer(std::vector<t_AliveFunctionCall> &v);	
+	std::vector<FunctionCallBuffer> getFunctionCallBuffer(std::vector<t_AliveFunctionCall> &v);
+
 	NodePropagate initialBeginNode(FunctionCallBuffer &buf, unsigned long &addr, std::vector<Record> &logRec);
+	NodePropagate initPropagateSourceNode(XTNode &node, vector<Record> &logRecord);
 
 	AvalancheResBetweenInAndOut old_searchAvalancheBetweenInAndOut(FunctionCallBuffer &in, 
 															   	   FunctionCallBuffer &out,

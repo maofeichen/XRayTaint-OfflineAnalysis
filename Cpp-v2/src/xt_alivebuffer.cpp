@@ -26,4 +26,4 @@ unsigned int XT_AliveBuffer::getBufferBitSize() {return m_bitSize; }
 
 unsigned int XT_AliveBuffer::getBufferByteSize() { return m_bitSize / BIT_TO_BYTE ; }
 
-vector<t_AliveNode> XT_AliveBuffer::getVecAliveNode() {return m_vAliveNode; }
+vector<XTNode> XT_AliveBuffer::getVecAliveNode() {return m_vNode; }

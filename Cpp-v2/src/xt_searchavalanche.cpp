@@ -1,3 +1,4 @@
+#include "xt_alivebuffer.h"
 #include "xt_flag.h"
 #include "xt_searchavalanche.h"
 #include "xt_util.h"
@@ -22,6 +23,18 @@ SearchAvalanche::SearchAvalanche(std::vector<t_AliveFunctionCall> v_funcCallCont
 								 std::vector<Record> logAesRec,
 								 XTLog &xtLog)
 {
+	m_vFuncCallContBuf = v_funcCallContBuf;
+	m_logAesRec = logAesRec;
+	m_xtLog = xtLog;
+}
+
+SearchAvalanche::SearchAvalanche(
+	vector<XT_FunctionCall> vAliveFunctionCall, 
+	vector<t_AliveFunctionCall> v_funcCallContBuf, 
+	vector<Record> logAesRec,
+	XTLog &xtLog)
+{
+	m_vAliveFunctionCall = vAliveFunctionCall;
 	m_vFuncCallContBuf = v_funcCallContBuf;
 	m_logAesRec = logAesRec;
 	m_xtLog = xtLog;
@@ -111,44 +124,63 @@ SearchAvalanche::detect_avalanche()
 
 	Propagate pg(m_xtLog);
 
-	vector<t_AliveFunctionCall>::iterator itInFunction = m_vFuncCallContBuf.begin();
-	for(; itInFunction != m_vFuncCallContBuf.end() - 1; ++itInFunction){
+	unsigned int numSearch = 1;
 
-		vector<t_AliveFunctionCall>::iterator itOutFunction = itInFunction + 1;
-		for(; itOutFunction != m_vFuncCallContBuf.end(); ++itOutFunction){
+	// Debug
+	size_t lenFunctionCall = m_vAliveFunctionCall.size();
+	vector<XT_FunctionCall>::iterator itInFunction = m_vAliveFunctionCall.begin() + lenFunctionCall - 3;
+
+	// vector<XT_FunctionCall>::iterator itInFunction = m_vAliveFunctionCall.begin();
+	for(; itInFunction != m_vAliveFunctionCall.end() - 1; ++itInFunction){
+
+		vector<XT_FunctionCall>::iterator itOutFunction = itInFunction + 1;
+		for(; itOutFunction != m_vAliveFunctionCall.end(); ++itOutFunction){
 
 			// iterate each alive buffer in in function call
-			vector<t_AliveContinueBuffer> v_current_in_buf = (*itInFunction).vAliveContinueBuffer;
-			vector<t_AliveContinueBuffer>::iterator itInBuf = v_current_in_buf.begin();
+			vector<XT_AliveBuffer> v_current_in_buf = (*itInFunction).getAliveBuffers();
+			vector<XT_AliveBuffer>::iterator itInBuf = v_current_in_buf.begin();
 			for(; itInBuf != v_current_in_buf.end(); ++itInBuf){
-				if( (*itInBuf).size >= BUFFER_LEN && 
-					!isKernelAddress( (*itInBuf).beginAddress) ){
+				if( (*itInBuf).getBufferBitSize() >= BUFFER_LEN && 
+					!isKernelAddress( (*itInBuf).getBeginAddr() ) ){
 
 					// iterate each alive buffer in out function call
-					vector<t_AliveContinueBuffer> v_current_out_buf = (*itOutFunction).vAliveContinueBuffer;
-					vector<t_AliveContinueBuffer>::iterator itOutBuf = v_current_out_buf.begin();
+					vector<XT_AliveBuffer> v_current_out_buf = (*itOutFunction).getAliveBuffers();
+					vector<XT_AliveBuffer>::iterator itOutBuf = v_current_out_buf.begin();
 					for(; itOutBuf != v_current_out_buf.end(); ++itOutBuf){
 
-						if( (*itOutBuf).size >= BUFFER_LEN && 
-							!isKernelAddress( (*itOutBuf).beginAddress) && 
-							(*itInBuf).beginAddress != (*itOutBuf).beginAddress ){
+						if( (*itOutBuf).getBufferBitSize() >= BUFFER_LEN && 
+							!isKernelAddress( (*itOutBuf).getBeginAddr() ) && 
+							(*itInBuf).getBeginAddr()  != (*itOutBuf).getBeginAddr()  ){
 							FunctionCallBuffer in;
 							FunctionCallBuffer out;
 
-							in.callMark 	= (*itInFunction).call_mark;
-							in.callSecMark 	= (*itInFunction).sec_call_mark;
-							in.retMark 		= (*itInFunction).ret_mark;
-							in.retSecMark 	= (*itInFunction).sec_ret_mark;
-							in.buffer.beginAddr = (*itInBuf).beginAddress;
-							in.buffer.size 		= (*itInBuf).size;
+							in.callMark 	= (*itInFunction).getFirstCallMark();
+							in.callSecMark 	= (*itInFunction).getSecondCallMark();
+							in.retMark 		= (*itInFunction).getFirstRetMark();
+							in.retSecMark 	= (*itInFunction).getSecondRetMark();
+							in.buffer.beginAddr = (*itInBuf).getBeginAddr() ;
+							in.buffer.size 		= (*itInBuf).getBufferBitSize();
+							in.buffer.vNode 	= (*itInBuf).getVecAliveNode();
 
-							out.callMark 	= (*itOutFunction).call_mark;
-							out.callSecMark = (*itOutFunction).sec_call_mark;
-							out.retMark 	= (*itOutFunction).ret_mark;
-							out.retSecMark 	= (*itOutFunction).sec_ret_mark;
-							out.buffer.beginAddr = (*itOutBuf).beginAddress;
-							out.buffer.size 	 = (*itOutBuf).size;	
+							out.callMark 	= (*itOutFunction).getFirstCallMark();
+							out.callSecMark = (*itOutFunction).getSecondCallMark();
+							out.retMark 	= (*itOutFunction).getFirstRetMark();
+							out.retSecMark 	= (*itOutFunction).getSecondRetMark();
+							out.buffer.beginAddr = (*itOutBuf).getBeginAddr() ;
+							out.buffer.size 	 = (*itOutBuf).getBufferBitSize();
+							out.buffer.vNode 	 = (*itOutBuf).getVecAliveNode();
 
+							cout << "----------------------------------------" << endl;
+							cout << "Searching " << numSearch << " time..." << endl;
+							numSearch++;
+
+							// DEBUG
+							// if(in.buffer.beginAddr == 0xbffff764 && 
+							//    out.buffer.beginAddr == 0xbffff744){
+							//    	avalResInOut = searchAvalancheBetweenInAndOut(in, out, pg);
+							// 	vAvalRes.push_back(avalResInOut);
+							// }
+							
 							avalResInOut = searchAvalancheBetweenInAndOut(in, out, pg);
 							vAvalRes.push_back(avalResInOut);
 						}
@@ -157,6 +189,8 @@ SearchAvalanche::detect_avalanche()
 			}
 		}
 	}
+
+	cout << "Total numbfer of search: " << numSearch << endl;
 
 	return vAvalRes;
 }
@@ -405,6 +439,36 @@ NodePropagate SearchAvalanche::initialBeginNode(FunctionCallBuffer &buf,
 	}
 
 	return s;
+}
+
+NodePropagate 
+SearchAvalanche::initPropagateSourceNode(
+	XTNode &node,
+	vector<Record> &logRecord)
+{
+	NodePropagate source;
+	unsigned int recordIndex = node.getIndex();
+
+	string sflag = node.getFlag();
+	if(XT_Util::equal_mark(sflag, flag::TCG_QEMU_LD) ){
+		source.isSrc 	= true;
+		source.id 		= node.getIndex() * 2;
+	}else if(XT_Util::equal_mark(sflag, flag::TCG_QEMU_ST) ){
+		source.isSrc 	= false;
+		source.id 		= node.getIndex() * 2 + 1;
+	}
+
+	source.parentId 	= 0;
+	source.layer 		= 0;
+	source.pos 			= recordIndex;
+	source.insnAddr 	= getInsnAddr(recordIndex, logRecord);
+	source.n.flag 		= node.getFlag();
+	source.n.addr 		= node.getAddr();
+	source.n.val 		= node.getVal();
+	source.n.i_addr 	= node.getIntAddr();
+	source.n.sz 		= node.getBitSize();
+
+	return source;
 }
 
 // Given the propagate result of in, and continuous out buffer,
@@ -779,16 +843,20 @@ LABEL_S_TWO:
 	return avalResInOut;
 }
 
-AvalResBetweenInOut SearchAvalanche::searchAvalancheBetweenInAndOut(FunctionCallBuffer &in, 
-                                                                    FunctionCallBuffer &out,
-                                                                    Propagate &propagate)
+AvalResBetweenInOut 
+SearchAvalanche::searchAvalancheBetweenInAndOut(
+	FunctionCallBuffer &in, 
+    FunctionCallBuffer &out,
+    Propagate &propagate)
 {
-	NodePropagate s, curr_s, prev_s;
-	// Propagate propagate;
+	NodePropagate s;
+	NodePropagate curr_s;
+	NodePropagate prev_s;
 	unordered_set<Node, NodeHash> propagateRes;
 
 	unsigned long inBeginAddr;
-	unsigned int numInByteAccumulate, byteIndex;
+	unsigned int numInByteAccumulate; 
+	unsigned int byteIndex;
 
 	Buffer avalIn;
 	vector<Buffer> vAvalOut;
@@ -811,18 +879,23 @@ AvalResBetweenInOut SearchAvalanche::searchAvalancheBetweenInAndOut(FunctionCall
 	assignFunctionCallBuffer(avalResInOut_new.in, in);
 	assignFunctionCallBuffer(avalResInOut_new.out, out);
 
-	assignFunctionCallBuffer(avalResInOut.in, in);
-	assignFunctionCallBuffer(avalResInOut.out, out);
+	// assignFunctionCallBuffer(avalResInOut.in, in);
+	// assignFunctionCallBuffer(avalResInOut.out, out);
 	avalResInOut.vAvalacheRes.clear();
 
 	byteIndex = 0;
 	numInByteAccumulate = 0;
 	inBeginAddr = in.buffer.beginAddr;
 
+	vector<XTNode>::iterator itNode = in.buffer.vNode.begin();
+
 // Process first stage
 LABEL_S_ONE:
-	while(byteIndex < in.buffer.size / BIT_TO_BYTE){
-		s = initialBeginNode(in, inBeginAddr, m_logAesRec);
+	// XTNode inNode = in.buffer.vNode[0];
+	// while(byteIndex < in.buffer.size / BIT_TO_BYTE){
+	while(itNode != in.buffer.vNode.end() ){
+		// s = initialBeginNode(in, inBeginAddr, m_logAesRec);
+		s = initPropagateSourceNode(*itNode, m_logAesRec);
 		propagateRes = propagate.getPropagateResult(s, m_logAesRec);
 		vFuncAvalOut = getAvalancheInNewSearch(propagateRes, out);
 
@@ -839,23 +912,35 @@ LABEL_S_ONE:
 			}
 			// 1st byte has propagate result, init avalIn
 			avalIn.beginAddr = inBeginAddr;
-			avalIn.size = 1 * BIT_TO_BYTE;
+			// avalIn.size = 1 * BIT_TO_BYTE;
+			avalIn.size = (*itNode).getBitSize();
 
-			byteIndex++;
-			numInByteAccumulate++;
-			inBeginAddr++;
+			// byteIndex++;
+			// numInByteAccumulate++;
+			// inBeginAddr++;
+
+			byteIndex += (*itNode).getByteSize();
+			numInByteAccumulate += (*itNode).getByteSize();
+			inBeginAddr += (*itNode).getByteSize();
+
 			curr_s = s;
+			++itNode;
 			goto LABEL_S_TWO;		
 		} else{
-			byteIndex++;
-			inBeginAddr++;
+			// byteIndex++;
+			// inBeginAddr++;
+			byteIndex += (*itNode).getByteSize();
+			inBeginAddr += (*itNode).getByteSize();
+			++itNode;
 		}
 	}
 
 LABEL_S_TWO:
-	while(byteIndex < in.buffer.size / BIT_TO_BYTE){
+	// while(byteIndex < in.buffer.size / BIT_TO_BYTE){
+	while( itNode != in.buffer.vNode.end() ){
 		prev_s = curr_s;
-		curr_s = initialBeginNode(in, inBeginAddr, m_logAesRec);
+		// curr_s = initialBeginNode(in, inBeginAddr, m_logAesRec);
+		curr_s = initPropagateSourceNode(*itNode, m_logAesRec);
 		if(!isSameNode(prev_s, curr_s)){
 			// propagateRes = propagate.getPropagateResult(s, m_logAesRec);
             // should be curr_s?
@@ -865,11 +950,17 @@ LABEL_S_TWO:
 
 		if(!vAvalOut.empty() ){
 			// can propagate, accumulate size
-			avalIn.size += 1 * BIT_TO_BYTE;
+			// avalIn.size += 1 * BIT_TO_BYTE;
+			// byteIndex++;
+			// numInByteAccumulate++;
+			// inBeginAddr++;
 
-			byteIndex++;
-			numInByteAccumulate++;
-			inBeginAddr++;
+			avalIn.size += (*itNode).getBitSize();
+			byteIndex += (*itNode).getByteSize();
+			numInByteAccumulate += (*itNode).getByteSize();
+			inBeginAddr += (*itNode).getByteSize();
+
+			++itNode;
 		} else{
 			// no need?
 			// clear avalIn, vAvalOut
@@ -879,9 +970,14 @@ LABEL_S_TWO:
 				avalResInOut.vAvalacheRes.push_back(avalRes);
 			}
 			clearAvalacheResult(avalRes, avalIn, vAvalOut);
-			byteIndex++;
+
 			numInByteAccumulate = 0;
-			inBeginAddr++;
+			// byteIndex++;
+			// inBeginAddr++;
+
+			numInByteAccumulate += (*itNode).getByteSize();
+			inBeginAddr += (*itNode).getByteSize();
+			++itNode;
 			goto LABEL_S_ONE;
 		}
 	}
@@ -889,6 +985,7 @@ LABEL_S_TWO:
 	// if all bytes of in can propagate to all of out
 	if(avalIn.beginAddr != 0 && 
 	   avalIn.size / BIT_TO_BYTE >= VALID_AVALANCHE_LEN && 
+	   // avalIn.size >= VALID_AVALANCHE_LEN && 
 	   !vAvalOut.empty() ){
 	   	saveAvalResult(avalResInOut_new, avalIn, vAvalOut);
 		// saveAvalancheResult(avalRes, avalIn, vAvalOut);

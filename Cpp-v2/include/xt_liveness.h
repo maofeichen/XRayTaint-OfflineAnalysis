@@ -49,6 +49,7 @@ public:
 
     std::vector<XT_FunctionCall> getAliveFunctionCall();
     void create_function_call_buffer(XTLog &xtLog);
+    void filter_small_continuous_buffer();
     void propagate_alive_buffer();
 
     std::vector<t_AliveFunctionCall> convert_alive_function_call();

@@ -18,7 +18,7 @@ private:
 	unsigned int m_bitSize 		= 0;
 
 	// Not used!!!
-	std::vector<t_AliveNode> m_vAliveNode;
+	// std::vector<t_AliveNode> m_vAliveNode;
 	std::vector<XTNode> m_vNode;
 
 public:
@@ -33,6 +33,6 @@ public:
 	unsigned int getBeginAddr();
 	unsigned int getBufferBitSize();
 	unsigned int getBufferByteSize();
-	std::vector<t_AliveNode> getVecAliveNode();
+	std::vector<XTNode> getVecAliveNode();
 }; 
 #endif

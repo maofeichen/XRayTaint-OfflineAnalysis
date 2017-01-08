@@ -36,8 +36,10 @@ public:
 	unsigned int getFunctionCAllEsp();
 
 	bool isHasAliveBuffer(XT_AliveBuffer &aAliveBuffer);
-	void addAliveBuffer(XT_AliveBuffer &aAliveBuffer);	
+	void addAliveBuffer(XT_AliveBuffer &aAliveBuffer);
+	void removeAliveBuffer(XT_AliveBuffer &aAliveBuffer);	
 	std::vector<XT_AliveBuffer> getAliveBuffers();	
+	// std::vector<XT_AliveBuffer>& getAliveBufferReference();
 };
 
 #endif

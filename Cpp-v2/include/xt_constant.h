@@ -13,5 +13,6 @@ const unsigned long TAINT_BUF_SIZE = 128;
 // const unsigned long TAINT_BUF_BEGIN_ADDR 	= 0xbffff78c;
 // const unsigned long TAINT_BUF_SIZE 			= 128;
 
-const unsigned int BIT_TO_BYTE = 8;
+const unsigned int BIT_TO_BYTE 		= 8;
+const unsigned int VALID_BYTE_SIZE 	= 8; 
 #endif

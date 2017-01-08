@@ -64,8 +64,21 @@ void XT_FunctionCall::addAliveBuffer(XT_AliveBuffer &aAliveBuffer)
 	m_vAliveBuffer.push_back(aAliveBuffer);	
 }
 
+void XT_FunctionCall::removeAliveBuffer(XT_AliveBuffer &aAliveBuffer)
+{
+	vector<XT_AliveBuffer>::iterator itAliveBuf = m_vAliveBuffer.begin();
+	for(; itAliveBuf != m_vAliveBuffer.end(); ++itAliveBuf){
+		if(aAliveBuffer.getBeginAddr() == (*itAliveBuf).getBeginAddr() && 
+		   aAliveBuffer.getBufferBitSize() == (*itAliveBuf).getBufferBitSize() ){
+			m_vAliveBuffer.erase(itAliveBuf);
+			break;
+		}
+	}
+}	
+
 vector<XT_AliveBuffer> XT_FunctionCall::getAliveBuffers() {return m_vAliveBuffer; }
 
+// vector<XT_AliveBuffer>& XT_FunctionCall::getAliveBufferReference() { return &m_vAliveBuffer; }
 
 // Merge all continuous buffers if any for the particular function call
 void XT_FunctionCall::merge_continuous_buffer()
