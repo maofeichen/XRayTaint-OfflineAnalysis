@@ -26,6 +26,7 @@ struct t_AliveContinueBuffer
 {
     unsigned long beginAddress;
     unsigned long size;
+    std::vector<unsigned long> vNodeIndex;
 };
 
 // Continues Buffers per function call

@@ -28,6 +28,7 @@ const string AES_1B_ENC_LCOMP_TAINT_MEM_IN_FIX_ADD = "aes-1B-enc-LComp-taint_mem
 
 const string XT_PREPROCESS      = "-preprocess";
 const string XT_ADD_SIZE_INFO   = "-add-size-info";
+const string XT_ADD_INDEX       = "-add_index";
 const string XT_ALIVE_BUF       = "-alive-buf";
 const string CONT_BUF           = "-cont-buf";
 const string ALL_PROPAGATE_RES  = "-all-propagate-res";

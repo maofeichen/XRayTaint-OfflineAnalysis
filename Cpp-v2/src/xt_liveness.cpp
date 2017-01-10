@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stack>
 #include <string>
+
 #include "xt_constant.h"
 #include "xt_flag.h"
 #include "xt_liveness.h"
@@ -185,7 +186,8 @@ vector<string> XT_Liveness::analyze_alive_buffer_per_function(vector<string> &v)
             v_st = XT_Util::split((*it).c_str(), '\t');
             s_mem_addr = v_st[4];
             i_mem_addr = std::stoul(s_mem_addr, nullptr, 16);
-            if(is_mem_alive(i_func_esp, i_mem_addr))
+            // !!! Hacking should also consider kernel address
+            if(is_mem_alive(i_func_esp, i_mem_addr) /* && i_mem_addr < KERNEL_ADDRESS*/ )
                 v_new.push_back(*it);
         }
     }
@@ -246,6 +248,20 @@ vector<t_AliveFunctionCall> XT_Liveness::merge_continue_buffer(vector<string> &v
     }
 
     return v_func_call_cont_buf;
+}
+
+inline bool XT_Liveness::isHasAliveBuffer(t_AliveFunctionCall &aliveFunction, t_AliveContinueBuffer &aliveBuffer)
+{
+    bool isHas = false;
+
+    vector<t_AliveContinueBuffer>::iterator itAliveBuf = aliveFunction.vAliveContinueBuffer.begin();
+    for(; itAliveBuf != aliveFunction.vAliveContinueBuffer.end(); ++itAliveBuf){
+        if(aliveBuffer.beginAddress == (*itAliveBuf).beginAddress && 
+           aliveBuffer.size == (*itAliveBuf).size)
+            isHas = true;
+    } 
+
+    return isHas;
 }
 
 // merge continues buffer if any for a particular function call
@@ -454,13 +470,17 @@ vector<XT_FunctionCall> XT_Liveness::getAliveFunctionCall()
 }
 
 // Create continuous buffers for each function call
-void XT_Liveness::create_function_call_buffer(XTLog &xtLog)
+vector<t_AliveFunctionCall> XT_Liveness::create_function_call_buffer(XTLog &xtLog)
 {
+    vector<t_AliveFunctionCall> vAliveFunction;
+    t_AliveFunctionCall aAliveFunction;
+
     vector<string>::iterator itCall;
     vector<string>::iterator itRet;
 
     std::cout << "Creating continue buffer for function calls..." << endl;
 
+    unsigned int numFunction = 1;
     vector<string>::iterator it = m_s_vAliveBuffer.begin();
     for(; it != m_s_vAliveBuffer.end(); ++it){
         if(XT_Util::equal_mark(*it, flag::XT_CALL_INSN) || 
@@ -472,12 +492,23 @@ void XT_Liveness::create_function_call_buffer(XTLog &xtLog)
                 if(XT_Util::equal_mark(*itRet, flag::XT_RET_INSN_SEC) ){
                     vector<string> s_aFunctionCallBuffer(itCall, itRet + 1);
                     XT_FunctionCall aFunctionCallBuffer(s_aFunctionCallBuffer, xtLog);
-                    m_vAliveFunctionCall.push_back(aFunctionCallBuffer);
+
+                    aAliveFunction = aFunctionCallBuffer.merge_continuous_buffer();
+                    vAliveFunction.push_back(aAliveFunction);
+
+                    // Not used! 
+                    // m_vAliveFunctionCall.push_back(aFunctionCallBuffer);
+
+                    cout << "Liveness Analysis: Num of function call had been scanned: " << numFunction << endl;
+                    numFunction++;
                     break; 
                 }
             }
         }
     }
+    cout << "Liveness Analysis: total number of function calls: " << numFunction << endl;
+
+    return vAliveFunction;
 }
 
 // Filter out buffer size smaller than 8 bytes
@@ -498,24 +529,68 @@ void XT_Liveness::filter_small_continuous_buffer()
     }
 }
 
+vector<t_AliveFunctionCall> 
+XT_Liveness::filter_kernel_buffer(vector<t_AliveFunctionCall> &vAliveFunction)
+{
+    cout << "Filtering out kernel continuous buffer..." << endl;
+
+    vector<t_AliveFunctionCall> vAliveFunctionNew;
+    t_AliveFunctionCall aliveFunction;
+
+    vector<t_AliveFunctionCall>::iterator itFunction = vAliveFunction.begin();
+    for(; itFunction != vAliveFunction.end(); ++itFunction){
+
+        aliveFunction.call_mark     = (*itFunction).call_mark;
+        aliveFunction.sec_call_mark = (*itFunction).sec_call_mark;
+        aliveFunction.ret_mark      = (*itFunction).ret_mark;
+        aliveFunction.sec_ret_mark  = (*itFunction).sec_ret_mark;
+
+        aliveFunction.vAliveContinueBuffer.clear();
+
+        vector<t_AliveContinueBuffer>::iterator itBuffer = (*itFunction).vAliveContinueBuffer.begin();
+        for(; itBuffer != (*itFunction).vAliveContinueBuffer.end(); ++itBuffer){
+            if( (*itBuffer).beginAddress < KERNEL_ADDRESS){
+                // (*itFunction).vAliveContinueBuffer.erase(itBuffer);
+                aliveFunction.vAliveContinueBuffer.push_back(*itBuffer);
+            } 
+        }
+        if(!aliveFunction.vAliveContinueBuffer.empty() ){
+            vAliveFunctionNew.push_back(aliveFunction);
+        }
+        // vAliveFunctionNew.push_back(aliveFunction); 
+    }
+
+    return vAliveFunctionNew;
+}
+
+void clean_empty_function(std::vector<t_AliveFunctionCall> &vAliveFunction)
+{
+
+}
+
 // If any alive buffer still alive in next function call,
-// propagate to next
-void XT_Liveness::propagate_alive_buffer()
+// propagate to all next function calls
+void XT_Liveness::propagate_alive_buffer(vector<t_AliveFunctionCall> &vAliveFunction)
 {
     cout << "Propagating alive buffers to next function call..." << endl;
 
-    vector<XT_FunctionCall>::iterator it = m_vAliveFunctionCall.begin();
-    for(; it != m_vAliveFunctionCall.end() - 1; ++it){
+    vector<t_AliveFunctionCall>::iterator itFunction = vAliveFunction.begin();
+    for(; itFunction != vAliveFunction.end() - 1; ++itFunction){
 
-        vector<XT_AliveBuffer> vAliveBuffer = (*it).getAliveBuffers();
-        vector<XT_AliveBuffer>::iterator it_alive_buf = vAliveBuffer.begin();
+        vector<t_AliveContinueBuffer> vAliveBuffer = (*itFunction).vAliveContinueBuffer;
+        vector<t_AliveContinueBuffer>::iterator it_alive_buf = vAliveBuffer.begin();
+
         for(; it_alive_buf != vAliveBuffer.end(); ++it_alive_buf){
-            vector<XT_FunctionCall>::iterator itNextFunction = it + 1;
-
-            // If still alive in next function call
-            if( (*it_alive_buf).getBeginAddr() >= (*itNextFunction).getFunctionCAllEsp() ){
-                if( !(*itNextFunction).isHasAliveBuffer(*it_alive_buf) ){
-                    (*itNextFunction).addAliveBuffer(*it_alive_buf);
+            vector<t_AliveFunctionCall>::iterator itNextFunction = itFunction + 1;
+            // If still alive in all next function call
+            for(; itNextFunction != vAliveFunction.end(); ++itNextFunction){
+                vector<string> vCallMark = XT_Util::split((*itNextFunction).call_mark.c_str(), '\t');
+                string sESP = vCallMark[1];
+                unsigned long esp = stoul(sESP, nullptr, 16);
+                if( (*it_alive_buf).beginAddress >= esp ){
+                    if(!isHasAliveBuffer(*itNextFunction, *it_alive_buf) ){
+                        (*itNextFunction).vAliveContinueBuffer.push_back(*it_alive_buf);
+                    }
                 }
             }
         }

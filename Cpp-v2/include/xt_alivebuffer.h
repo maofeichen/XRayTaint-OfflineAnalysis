@@ -17,9 +17,8 @@ private:
 	unsigned int m_beginAddr 	= 0;
 	unsigned int m_bitSize 		= 0;
 
-	// Not used!!!
-	// std::vector<t_AliveNode> m_vAliveNode;
 	std::vector<XTNode> m_vNode;
+	std::vector<unsigned long> m_vIndex;
 
 public:
 	XT_AliveBuffer();
@@ -29,6 +28,7 @@ public:
 	void setBitSize(unsigned int bitSize);
 	void increaseBitSize(unsigned int bitSize);
 	void addNode(XTNode &node);
+	void addIndex(unsigned long index);
 
 	unsigned int getBeginAddr();
 	unsigned int getBufferBitSize();

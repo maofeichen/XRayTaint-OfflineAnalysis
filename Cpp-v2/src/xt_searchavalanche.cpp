@@ -124,13 +124,16 @@ SearchAvalanche::detect_avalanche()
 
 	Propagate pg(m_xtLog);
 
+	// Store which IN and OUT buffer had been searched already
+	vector<BufferInOut> vBufferInOut;
+
 	unsigned int numSearch = 1;
 
 	// Debug
-	size_t lenFunctionCall = m_vAliveFunctionCall.size();
-	vector<XT_FunctionCall>::iterator itInFunction = m_vAliveFunctionCall.begin() + lenFunctionCall - 3;
+	// size_t lenFunctionCall = m_vAliveFunctionCall.size();
+	// vector<XT_FunctionCall>::iterator itInFunction = m_vAliveFunctionCall.begin() + lenFunctionCall - 5;
 
-	// vector<XT_FunctionCall>::iterator itInFunction = m_vAliveFunctionCall.begin();
+	vector<XT_FunctionCall>::iterator itInFunction = m_vAliveFunctionCall.begin();
 	for(; itInFunction != m_vAliveFunctionCall.end() - 1; ++itInFunction){
 
 		vector<XT_FunctionCall>::iterator itOutFunction = itInFunction + 1;
@@ -170,19 +173,30 @@ SearchAvalanche::detect_avalanche()
 							out.buffer.size 	 = (*itOutBuf).getBufferBitSize();
 							out.buffer.vNode 	 = (*itOutBuf).getVecAliveNode();
 
-							cout << "----------------------------------------" << endl;
-							cout << "Searching " << numSearch << " time..." << endl;
-							numSearch++;
+							BufferInOut bufInOut;
+							bufInOut.in.beginAddr 	= in.buffer.beginAddr;
+							bufInOut.in.size 		= in.buffer.size;
+							bufInOut.out.beginAddr 	= out.buffer.beginAddr;
+							bufInOut.out.size 		= out.buffer.size;
 
-							// DEBUG
-							// if(in.buffer.beginAddr == 0xbffff764 && 
-							//    out.buffer.beginAddr == 0xbffff744){
-							//    	avalResInOut = searchAvalancheBetweenInAndOut(in, out, pg);
-							// 	vAvalRes.push_back(avalResInOut);
-							// }
-							
-							avalResInOut = searchAvalancheBetweenInAndOut(in, out, pg);
-							vAvalRes.push_back(avalResInOut);
+
+							if(isDuplBufInOut(bufInOut, vBufferInOut) ){
+								cout << "In and Out buffers had been searched, skip..." << endl;
+							}else{
+								cout << "IN buffer: " << endl;
+								printFunctionCallBuffer(in);
+							   	cout << "----------" << endl;
+							   	cout << "Output buffer: " << endl;
+							   	printFunctionCallBuffer(out);
+
+								vBufferInOut.push_back(bufInOut);
+								avalResInOut = searchAvalancheBetweenInAndOut(in, out, pg);
+								vAvalRes.push_back(avalResInOut);
+
+								cout << "Searching " << numSearch << " time..." << endl;
+								cout << "----------------------------------------" << endl;
+								numSearch++;
+							}
 						}
 					}	
 				}

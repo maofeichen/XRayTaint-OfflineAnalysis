@@ -39,6 +39,7 @@ void XT_DetectAvalanche::detect_avalanche(string logPath, bool isWriteFile)
     XT_PreProcess xtPreProc;
     xtLog = xtPreProc.clean_empty_function_mark(xtLog);
     xtLog = xtPreProc.clean_nonempty_function_mark(xtLog);
+    xtLog = xtPreProc.clean_empty_instruction_mark(xtLog);
     if(isWriteFile)
         xtFile.write(XT_RESULT_PATH + logPath + XT_PREPROCESS + XT_FILE_EXT, xtLog);
 
@@ -47,6 +48,12 @@ void XT_DetectAvalanche::detect_avalanche(string logPath, bool isWriteFile)
     if(isWriteFile)
         xtFile.write(XT_RESULT_PATH + logPath + XT_ADD_SIZE_INFO + XT_FILE_EXT, xtLog);
 
+    // Add index for each record
+    xtLog = xtPreProc.addRecordIndex(xtLog);
+    if(isWriteFile)
+        xtFile.write(XT_RESULT_PATH + logPath + XT_ADD_INDEX + XT_FILE_EXT, xtLog);
+
+    
     // Initialize XTLog object after adding memory size
     XTLog o_xtLog(xtLog);
 
@@ -59,18 +66,26 @@ void XT_DetectAvalanche::detect_avalanche(string logPath, bool isWriteFile)
         xtFile.write(XT_RESULT_PATH + logPath + XT_ALIVE_BUF + XT_FILE_EXT, aliveBuf);
 
     // Create continuous buffers in each function call
-    XT_Liveness functionCallLiveness(aliveBuf);
-    functionCallLiveness.create_function_call_buffer(o_xtLog);
-    // Todo: filter out kernel address
-    functionCallLiveness.filter_small_continuous_buffer();
-    functionCallLiveness.propagate_alive_buffer();
+    vector<t_AliveFunctionCall> vAliveFunction;
+    XT_Liveness functionLiveness(aliveBuf);
+    vAliveFunction = functionLiveness.create_function_call_buffer(o_xtLog);
+    functionLiveness.propagate_alive_buffer(vAliveFunction);
+    vAliveFunction = functionLiveness.filter_kernel_buffer(vAliveFunction);
+    if(isWriteFile)
+        xtFile.write_continue_buffer(XT_RESULT_PATH + logPath + CONT_BUF + XT_FILE_EXT,
+                                     vAliveFunction);
+
+    /*
+    functionLiveness.filter_small_continuous_buffer();
+    functionLiveness.filter_kernel_buffer();
+    functionLiveness.propagate_alive_buffer();
     if(isWriteFile)
         xtFile.write_continuous_buffer(XT_RESULT_PATH + logPath + CONT_BUF + XT_FILE_EXT, 
-                                       functionCallLiveness);
-
+                                       functionLiveness);
+    
     // Merges continuous buffers
     vector<t_AliveFunctionCall> vAliveFunctionCall;
-    vAliveFunctionCall = functionCallLiveness.convert_alive_function_call();
+    vAliveFunctionCall = functionLiveness.convert_alive_function_call();
 
     // vAliveFunctionCall = XT_Liveness::merge_continue_buffer(aliveBuf);
     // vAliveFunctionCall = XT_Liveness::filter_continue_buffer(vAliveFunctionCall);
@@ -84,15 +99,16 @@ void XT_DetectAvalanche::detect_avalanche(string logPath, bool isWriteFile)
     //                                  vAliveFunctionCall);
 
     // Converts string format to Record format
-    // vector<Record> xtLogRec;
-    // xtLogRec = xtPreProc.convertToRec(xtLog);
+    vector<Record> xtLogRec;
+    xtLogRec = xtPreProc.convertToRec(xtLog);
 
     // Searches avalanche effect
-    // vector<AvalResBetweenInOut> vAvalResult;
-    // vector<XT_FunctionCall> v_xtFunctionCall = functionCallLiveness.getAliveFunctionCall();
-    // SearchAvalanche sa(v_xtFunctionCall, vAliveFunctionCall, xtLogRec, o_xtLog);
-    // vAvalResult = sa.detect_avalanche();
-    // if(isWriteFile){
-    //     xtFile.writeAvalResult(XT_RESULT_PATH + logPath + AVAL_RES + XT_FILE_EXT, vAvalResult);
-    // }
+    vector<AvalResBetweenInOut> vAvalResult;
+    vector<XT_FunctionCall> v_xtFunctionCall = functionLiveness.getAliveFunctionCall();
+    SearchAvalanche sa(v_xtFunctionCall, vAliveFunctionCall, xtLogRec, o_xtLog);
+    vAvalResult = sa.detect_avalanche();
+    if(isWriteFile){
+        xtFile.writeAvalResult(XT_RESULT_PATH + logPath + AVAL_RES + XT_FILE_EXT, vAvalResult);
+    }
+    */
 }	

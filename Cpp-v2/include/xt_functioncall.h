@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "xt_alivebuffer.h"
+#include "xt_data.h"
 #include "xt_log.h"
 
 class XT_FunctionCall
@@ -19,9 +20,9 @@ private:
 	std::vector<XT_AliveBuffer> m_vAliveBuffer;
 
 	XTLog m_xtLog;
-
-	void merge_continuous_buffer();
-	void create_continuous_buffer(std::vector<XTNode> &vNode);
+	
+	void create_continuous_buffer(std::vector<XTNode> &vNode, 
+												   t_AliveFunctionCall &aliveFunction);
 	static bool compare_node(XTNode &firstNode, XTNode &secondNode);
 	
 public:
@@ -35,11 +36,12 @@ public:
 	std::string getSecondRetMark();
 	unsigned int getFunctionCAllEsp();
 
+	t_AliveFunctionCall merge_continuous_buffer();
+
 	bool isHasAliveBuffer(XT_AliveBuffer &aAliveBuffer);
 	void addAliveBuffer(XT_AliveBuffer &aAliveBuffer);
 	void removeAliveBuffer(XT_AliveBuffer &aAliveBuffer);	
 	std::vector<XT_AliveBuffer> getAliveBuffers();	
-	// std::vector<XT_AliveBuffer>& getAliveBufferReference();
 };
 
 #endif

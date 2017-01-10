@@ -14,5 +14,6 @@ const unsigned long TAINT_BUF_SIZE = 128;
 // const unsigned long TAINT_BUF_SIZE 			= 128;
 
 const unsigned int BIT_TO_BYTE 		= 8;
-const unsigned int VALID_BYTE_SIZE 	= 8; 
+const unsigned int VALID_BYTE_SIZE 	= 8;
+const unsigned long KERNEL_ADDRESS	= 0xC0000000;
 #endif

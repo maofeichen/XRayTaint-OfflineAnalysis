@@ -22,6 +22,8 @@ private:
     static inline bool is_heap_mem_alive();
     static inline bool is_stack_mem_alive(unsigned long &, unsigned long &);
 
+    inline bool isHasAliveBuffer(t_AliveFunctionCall &aliveFunction, t_AliveContinueBuffer &aliveBuffer);
+
     static vector<string> analyze_function_alive_buffer(vector<string> &); // IGNORE
     static vector<string> analyze_alive_buffer_per_function(vector<string> &);
 
@@ -48,9 +50,11 @@ public:
                                            std::vector<string> &xtLog);
 
     std::vector<XT_FunctionCall> getAliveFunctionCall();
-    void create_function_call_buffer(XTLog &xtLog);
+    vector<t_AliveFunctionCall> create_function_call_buffer(XTLog &xtLog);
     void filter_small_continuous_buffer();
-    void propagate_alive_buffer();
+    std::vector<t_AliveFunctionCall> filter_kernel_buffer(std::vector<t_AliveFunctionCall> &vAliveFunction);
+    void clean_empty_function(std::vector<t_AliveFunctionCall> &vAliveFunction);
+    void propagate_alive_buffer(vector<t_AliveFunctionCall> &vAliveFunction);
 
     std::vector<t_AliveFunctionCall> convert_alive_function_call();
 }; 

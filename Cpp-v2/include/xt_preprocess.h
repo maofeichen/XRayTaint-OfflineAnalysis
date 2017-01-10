@@ -22,7 +22,10 @@ public:
     vector<string> clean_size_mark(vector<string> &);
     vector<string> clean_empty_function_mark(vector<string> &);
     vector<string> clean_nonempty_function_mark(vector<string> &);
+    std::vector<std::string> clean_empty_instruction_mark(std::vector<std::string> &s_vXTLog);
+
 	std::vector<Record> convertToRec(std::vector<std::string> &log); 
 	std::vector<string> parseMemSizeInfo(std::vector<std::string> &v);
+    std::vector<string> addRecordIndex(std::vector<std::string> &s_vXTLog);
 };
 #endif
