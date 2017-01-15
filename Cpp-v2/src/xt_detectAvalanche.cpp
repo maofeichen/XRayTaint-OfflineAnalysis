@@ -75,17 +75,16 @@ void XT_DetectAvalanche::detect_avalanche(string logPath, bool isWriteFile)
         xtFile.write_continue_buffer(XT_RESULT_PATH + logPath + CONT_BUF + XT_FILE_EXT,
                                      vAliveFunction);
 
-    /*
-    functionLiveness.filter_small_continuous_buffer();
-    functionLiveness.filter_kernel_buffer();
-    functionLiveness.propagate_alive_buffer();
-    if(isWriteFile)
-        xtFile.write_continuous_buffer(XT_RESULT_PATH + logPath + CONT_BUF + XT_FILE_EXT, 
-                                       functionLiveness);
+    // functionLiveness.filter_small_continuous_buffer();
+    // functionLiveness.filter_kernel_buffer();
+    // functionLiveness.propagate_alive_buffer();
+    // if(isWriteFile)
+    //     xtFile.write_continuous_buffer(XT_RESULT_PATH + logPath + CONT_BUF + XT_FILE_EXT, 
+    //                                    functionLiveness);
     
     // Merges continuous buffers
-    vector<t_AliveFunctionCall> vAliveFunctionCall;
-    vAliveFunctionCall = functionLiveness.convert_alive_function_call();
+    // vector<t_AliveFunctionCall> vAliveFunctionCall;
+    // vAliveFunctionCall = functionLiveness.convert_alive_function_call();
 
     // vAliveFunctionCall = XT_Liveness::merge_continue_buffer(aliveBuf);
     // vAliveFunctionCall = XT_Liveness::filter_continue_buffer(vAliveFunctionCall);
@@ -104,11 +103,11 @@ void XT_DetectAvalanche::detect_avalanche(string logPath, bool isWriteFile)
 
     // Searches avalanche effect
     vector<AvalResBetweenInOut> vAvalResult;
-    vector<XT_FunctionCall> v_xtFunctionCall = functionLiveness.getAliveFunctionCall();
-    SearchAvalanche sa(v_xtFunctionCall, vAliveFunctionCall, xtLogRec, o_xtLog);
-    vAvalResult = sa.detect_avalanche();
-    if(isWriteFile){
-        xtFile.writeAvalResult(XT_RESULT_PATH + logPath + AVAL_RES + XT_FILE_EXT, vAvalResult);
-    }
-    */
+    // vector<XT_FunctionCall> v_xtFunctionCall = functionLiveness.getAliveFunctionCall();
+    // SearchAvalanche sa(v_xtFunctionCall, vAliveFunctionCall, xtLogRec, o_xtLog);
+    SearchAvalanche sa(vAliveFunction, xtLogRec, o_xtLog);
+    // vAvalResult = sa.detect_avalanche();
+    // if(isWriteFile){
+    //     xtFile.writeAvalResult(XT_RESULT_PATH + logPath + AVAL_RES + XT_FILE_EXT, vAvalResult);
+    // }
 }	

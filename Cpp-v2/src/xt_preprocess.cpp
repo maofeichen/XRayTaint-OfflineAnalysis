@@ -206,6 +206,10 @@ vector<string> XT_PreProcess::clean_nonempty_function_mark(vector<string> &v)
             num_item = 1;
             ret = v_new.back();
 
+            // !!!it assums the call must before ret, but this does NOT hold
+            if(v_new.size() < 3)
+                continue;
+
             // scan reverse to find most recent CALL mark
             // ??? why begins from rbegin() ???
             vector<string>::reverse_iterator rit = v_new.rbegin();
@@ -248,13 +252,17 @@ vector<string> XT_PreProcess::clean_nonempty_function_mark(vector<string> &v)
 // instruction makr, then it can be removed
 vector<string> XT_PreProcess::clean_empty_instruction_mark(vector<string> &s_vXTLog)
 {
+    cout << "Cleanning empty instruction mark..." << endl;
+
     vector<string> s_vXTLogNew;
 
     vector<string>::iterator it = s_vXTLog.begin(); 
-    for(; it != s_vXTLog.end(); ++it){
+    for(; it != s_vXTLog.end() - 1; ++it){
         if(XT_Util::equal_mark(*it, flag::XT_INSN_ADDR) ){
-            if(XT_Util::equal_mark(*(it + 1), flag::XT_INSN_ADDR) )
+            vector<string>::iterator itNext = it+1;
+            if(XT_Util::equal_mark(*itNext, flag::XT_INSN_ADDR) ){
                 continue;
+            }
         }
         s_vXTLogNew.push_back(*it);
     }

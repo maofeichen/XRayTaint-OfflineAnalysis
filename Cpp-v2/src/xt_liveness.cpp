@@ -39,6 +39,8 @@ vector<string> XT_Liveness::analyze_alive_buffer(vector<string> &xtLog)
 
     std::cout << "Analyzing alive buffers..." << endl;
 
+    unsigned long numFunction = 1;
+
     for(vector<string>::iterator it = xtLog.begin(); it != xtLog.end(); ++it){
         // If a function call END mark hit
         if(XT_Util::equal_mark(*it, flag::XT_RET_INSN_SEC) ){
@@ -55,6 +57,10 @@ vector<string> XT_Liveness::analyze_alive_buffer(vector<string> &xtLog)
                     call = *rit;
                     // if a matched CALL & RET marks
                     if(XT_Util::is_pair_function_mark(call, ret) ){
+
+                        cout << "Analyzing " << numFunction << " function call..." << endl;
+                        numFunction++;
+
                         indexCall = xtLog.rend() - rit;
                         indexRet = it - xtLog.begin();
 

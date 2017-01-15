@@ -15,7 +15,8 @@ struct Buffer
 	unsigned long beginAddr;
 	unsigned int size;
 
-	std::vector<XTNode> vNode;
+	// std::vector<XTNode> vNode;
+	std::vector<unsigned long> vNodeIndex;
 };
 
 struct BufferInOut
@@ -135,6 +136,8 @@ private:
 
 	Buffer getAvalancheInRestByteOneBuffer(std::unordered_set<Node, NodeHash> &propagateRes, Buffer &avalOut);
 	std::vector<FunctionCallBuffer> getFunctionCallBuffer(std::vector<t_AliveFunctionCall> &v);
+
+	XTNode getMemoryNode(unsigned long index);
 
 	NodePropagate initialBeginNode(FunctionCallBuffer &buf, unsigned long &addr, std::vector<Record> &logRec);
 	NodePropagate initPropagateSourceNode(XTNode &node, vector<Record> &logRecord);

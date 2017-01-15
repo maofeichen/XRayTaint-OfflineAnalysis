@@ -41,10 +41,12 @@ bool XT_Util::is_pair_function_mark(string &s_call, string &s_ret)
 
 bool XT_Util::equal_mark(string &s1, const string &s2)
 {
+    bool isMatch = false;
+
     if(s1.substr(0,2).compare(s2) == 0)
-        return true;
-    else
-        return false;
+        isMatch = true;
+    
+    return isMatch;
 }
 
 bool XT_Util::isMarkRecord(string &flag)
