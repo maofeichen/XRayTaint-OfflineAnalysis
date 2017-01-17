@@ -165,35 +165,24 @@ vector<string> XT_Liveness::analyze_alive_buffer_per_function(vector<string> &v)
     v_new.push_back(v[1]);
 
     for(vector<string>::iterator it = v.begin() + 2; it != v.end() - 2; ++it){
-    	// Only for debug:
-    	// Because it seems there is bug if <addr, val> are same
-//        if(XT_Util::equal_mark(*it, flag::TCG_QEMU_LD)){
-//        	v_ld = XT_Util::split((*it).c_str(), '\t');
-//            s_mem_addr = v_ld[1];
-//            i_mem_addr = std::stoul(s_mem_addr, nullptr, 16);
-//
-//            if(is_mem_alive(i_func_esp, i_mem_addr))
-//                v_new.push_back(*it);
-//        }
-
-        // else if(XT_Util::equal_mark(*it, flag::TCG_QEMU_ST)){
-        //     v_st = XT_Util::split((*it).c_str(), '\t');
-        //     s_mem_addr = v_st[4];
-        //     i_mem_addr = std::stoul(s_mem_addr, nullptr, 16);
-        //     if(is_mem_alive(i_func_esp, i_mem_addr))
-        //         v_new.push_back(*it);
-        // }
-        
         // Based on the paper, the buffers should: 
         // 1) alive
         // 2) be updated in the function call; that is, is the destination
         //    instead of source
+        // 3) There is a issue for list 2), because the program can load
+        //    input any time, so it also needs to consider load
         if(XT_Util::equal_mark(*it, flag::TCG_QEMU_ST)){
             v_st = XT_Util::split((*it).c_str(), '\t');
             s_mem_addr = v_st[4];
             i_mem_addr = std::stoul(s_mem_addr, nullptr, 16);
-            // !!! Hacking should also consider kernel address
-            if(is_mem_alive(i_func_esp, i_mem_addr) /* && i_mem_addr < KERNEL_ADDRESS*/ )
+            if(is_mem_alive(i_func_esp, i_mem_addr) )
+                v_new.push_back(*it);
+        }
+        else if(XT_Util::equal_mark(*it, flag::TCG_QEMU_LD) ){
+            v_ld = XT_Util::split((*it).c_str(), '\t');
+            s_mem_addr = v_ld[1];
+            i_mem_addr = stoul(s_mem_addr, nullptr, 16);
+            if(is_mem_alive(i_func_esp, i_mem_addr) )
                 v_new.push_back(*it);
         }
     }

@@ -234,8 +234,10 @@ unordered_set<Node, NodeHash> Propagate::bfs_old(NodePropagate &s, vector<Record
 
                 // if it is store to buffer operation, save to propagate buffer result
                 Node node = nextNode.n;
-                if(XT_Util::equal_mark(node.flag, flag::TCG_QEMU_ST) )
+                if(XT_Util::equal_mark(node.flag, flag::TCG_QEMU_ST) ){
                     insert_propagate_result(node, res_buffer);
+                    // cout << "Propagate to buffer: line num: " << i << " addr: " << node.addr << endl; 
+                }
             }
             // if a dst node
             // find valid propagation from dst -> src for afterwards records
@@ -276,6 +278,7 @@ unordered_set<Node, NodeHash> Propagate::bfs_old(NodePropagate &s, vector<Record
 
                                 // also save to propagate result!!!
                                 Node node = nextNode.n;
+                                // cout << "Propagate to buffer: line num: " << i << " addr: " << node.addr << endl;
                                 insert_propagate_result(node, res_buffer);
                             } else{ // if not a buffer node
                             	// No need to use isSameInsn & numHit

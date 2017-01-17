@@ -22,6 +22,8 @@ private:
 
 	bool compareMemoryValue(XTNode &nodeFirst, XTNode &nodeSecond);
 	bool isValueMatch(XTNode &nodeSmallSize, XTNode &nodeLargeSize);
+
+	bool compareMemoryValueSameSize(XTNode &nfirst, XTNode &nSecond);
 };
 
 #endif

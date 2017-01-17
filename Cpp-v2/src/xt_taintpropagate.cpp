@@ -21,8 +21,14 @@ bool TaintPropagate::isValidPropagate(XTNode &prevDestination,
 		if(prevDestinateAddr == nextSource.getAddr() ){
 			// Todo: add error prevent: nextSource bitSize should not be empty
 			if(prevDestination.getBitSize() == nextSource.getBitSize() ){
-				if(prevDestination.getVal() == nextSource.getVal() )
+				if(prevDestination.getVal() == nextSource.getVal() ){
 					isValid = true;
+				}else{
+					// Analyze values even their direct values are different, e.g.
+					// 	pre dst: bffff73c 138 1B; next src: bffff73c 38 1B
+					// There byte values are same, should consider valid
+					isValid = compareMemoryValueSameSize(prevDestination, nextSource);
+				}
 			}else{ // value analysis when sizes are different
 				isValid = compareMemoryValue(prevDestination, nextSource);
 			}
@@ -67,26 +73,6 @@ bool TaintPropagate::compareMemoryValue(XTNode &nodeFirst,
 		isMatch = isValueMatch(nodeFirst, nodeSecond);
 	else
 		isMatch = isValueMatch(nodeSecond, nodeFirst);
-
-	// unsigned int smallSize = ((byteNodeFirst < byteNodeSecond) ? byteNodeFirst : byteNodeSecond);
-	// switch(smallSize){
-	// 	case XT_BYTE:
-	// 	{
-	// 		string byteValNodeFirst = nodeFirst.getVal().substr(valLenNodeFirst - 2, 2);
-	// 		if(nodeFirst.getVal().substr(valLenNodeFirst - 2, 2) == 
-	// 		   nodeSecond.getVal().substr(valLenNodeSecond - 2, 2) )
-	// 			isMatch = true;
-	// 	}
-	// 		break;
-	// 	case XT_WORD:
-	// 		if(nodeFirst.getVal().substr(valLenNodeFirst - 4, 4) == 
-	// 		   nodeSecond.getVal().substr(valLenNodeSecond - 4, 4) )
-	// 			isMatch = true;
-	// 		break;
-	// 	default:
-	// 		// other cases should not be possible
-	// 		break;
-	// }
 
 	return isMatch;
 }
@@ -136,4 +122,62 @@ bool TaintPropagate::isValueMatch(XTNode &nodeSmallSize, XTNode &nodeLargeSize)
 		isMatch = true;
 
 	return isMatch;
+}
+
+bool TaintPropagate::compareMemoryValueSameSize(XTNode &nFirst, XTNode &nSecond)
+{
+	unsigned int byteSize = nFirst.getByteSize();
+
+	unsigned int valLenFirst = nFirst.getVal().length();
+	unsigned int valLenSecond = nSecond.getVal().length();
+
+	string valFirst = "";
+	string valSecond = "";
+
+	unsigned int iValFirst = 0;
+	unsigned int iValSecond = 0;
+
+	switch(byteSize){
+		case XT_BYTE:
+		{
+			if(valLenFirst > 1)
+				valFirst = nFirst.getVal().substr(valLenFirst - 2, 2);
+			else
+				valFirst = nFirst.getVal();
+
+			if(valLenSecond > 1)
+				valSecond = nSecond.getVal().substr(valLenSecond - 2, 2);
+			else
+				valSecond = nSecond.getVal();
+		}
+			break;
+		case XT_WORD:
+		{
+			if(valLenFirst > 3)
+				valFirst = nFirst.getVal().substr(valLenFirst - 4, 4);
+			else
+				valFirst = nFirst.getVal();
+
+			if(valLenSecond > 3)
+				valSecond = nSecond.getVal().substr(valLenSecond - 4, 4);
+			else
+				valSecond = nSecond.getVal();
+		}
+			break;
+		case XT_DWORD:
+			valFirst = nFirst.getVal();
+			valSecond = nSecond.getVal();
+			break;
+		default:
+			break;
+	}
+
+	iValFirst = stoul(valFirst, nullptr, 16);
+	iValSecond = stoul(valSecond, nullptr, 16);
+
+	if(iValFirst == iValSecond)
+		return true;
+	else
+		return false;
+
 }
