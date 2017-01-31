@@ -1,7 +1,8 @@
 OBJS = xt_main.o xt_data.o xt_file.o xt_liveness.o \
 		xt_preprocess.o xt_propagate.o xt_searchavalanche.o \
 		xt_util.o xt_detectAvalanche.o xt_log.o xt_taintpropagate.o \
-		xt_node.o xt_record.o xt_alivebuffer.o xt_functioncall.o
+		xt_node.o xt_record.o xt_alivebuffer.o xt_functioncall.o \
+		TaintBitMap.o
 
 CC = g++-4.9
 INC = -Iinclude
@@ -54,6 +55,9 @@ xt_alivebuffer.o : src/xt_alivebuffer.cpp
 
 xt_functioncall.o : src/xt_functioncall.cpp
 	$(CC) $(INC) -c src/xt_functioncall.cpp $(CFLAG)
+
+TaintBitMap.o : src/TaintBitMap.cpp
+	$(CC) $(INC) -c src/TaintBitMap.cpp $(CFLAG)
 
 .PHONY : clean
 clean :

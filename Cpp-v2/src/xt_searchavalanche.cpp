@@ -130,10 +130,10 @@ SearchAvalanche::detect_avalanche()
 
 	unsigned int numSearch = 1;
 
-	// size_t numFunction = m_vFuncCallContBuf.size();
-	// vector<t_AliveFunctionCall>::iterator itInFunction = m_vFuncCallContBuf.end() - 2;
+	size_t numFunction = m_vFuncCallContBuf.size();
+	vector<t_AliveFunctionCall>::iterator itInFunction = m_vFuncCallContBuf.end() - 2;
 
-	vector<t_AliveFunctionCall>::iterator itInFunction = m_vFuncCallContBuf.begin();
+	// vector<t_AliveFunctionCall>::iterator itInFunction = m_vFuncCallContBuf.begin();
 	for(; itInFunction != m_vFuncCallContBuf.end() - 1; ++itInFunction){
 
 		vector<t_AliveFunctionCall>::iterator itOutFunction = itInFunction + 1;
@@ -191,14 +191,14 @@ SearchAvalanche::detect_avalanche()
 
 							vBufferInOut.push_back(bufInOut);
 
-							// avalResInOut = searchAvalancheBetweenInAndOut(in, out, pg);
-							// vAvalRes.push_back(avalResInOut);
+							avalResInOut = searchAvalancheBetweenInAndOut(in, out, pg);
+							vAvalRes.push_back(avalResInOut);
 
-							if(in.buffer.beginAddr == 0xbffff72c && 
-								out.buffer.beginAddr == 0xbffff6fc ){
-								avalResInOut = searchAvalancheBetweenInAndOut(in, out, pg);
-								vAvalRes.push_back(avalResInOut);
-							}
+							// if(in.buffer.beginAddr == 0xbffff72c && 
+							// 	out.buffer.beginAddr == 0xbffff6fc ){
+							// 	avalResInOut = searchAvalancheBetweenInAndOut(in, out, pg);
+							// 	vAvalRes.push_back(avalResInOut);
+							// }
 
 							numSearch++;
 						}
@@ -1152,6 +1152,9 @@ void SearchAvalanche::printFuncCallContBuf(std::vector<t_AliveFunctionCall> &vFu
 
 void SearchAvalanche::printBuffer(Buffer &a)
 {
-	cout << "Buffer Begin Addr: " << hex << a.beginAddr << endl;
-	cout << "Buffer Size: " << dec << a.size / BIT_TO_BYTE << endl; 
+	if(!a.vNodeIndex.empty() )
+		cout << "Buffer Begin Address: " << hex << a.beginAddr << " index: " << a.vNodeIndex.front() << endl;
+	else
+		cout << "Buffer Begin Addr: " << hex << a.beginAddr << endl;
+	cout << "Buffer Size: " << dec << a.size / BIT_TO_BYTE << endl;
 }

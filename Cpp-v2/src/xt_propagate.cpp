@@ -229,6 +229,9 @@ unordered_set<Node, NodeHash> Propagate::bfs_old(NodePropagate &s, vector<Record
                 // can't be a mark
                 assert( v_rec[i].isMark == false);
                 nextNode = propagate_dst(currNode, v_rec);
+                cout << "next dst: lineNO: " << nextNode.pos << \
+                                " addr: " << nextNode.n.addr << \
+                                " val: " << nextNode.n.val << endl;
                 q_propagate.push(nextNode);
                 numHit++;
 
@@ -272,6 +275,9 @@ unordered_set<Node, NodeHash> Propagate::bfs_old(NodePropagate &s, vector<Record
 
                         if(isValidPropagate){
                             nextNode = propagte_src(currNode, v_rec, i);
+                            cout << "next src: lineNO: " << nextNode.pos << \
+                                " addr: " << nextNode.n.addr << \
+                                " val: " << nextNode.n.val << endl;
                             // is it a load opreration? If so, then it is a memory buffer
                             if(XT_Util::equal_mark(nextNode.n.flag, flag::TCG_QEMU_LD) ){
                                 insert_buffer_node(nextNode, v_propagate_buffer, numHit);
@@ -302,6 +308,7 @@ unordered_set<Node, NodeHash> Propagate::bfs_old(NodePropagate &s, vector<Record
                     // No need to use!!!
                     if(!isSameInsn && 
                         numHit >= 1 && 
+                        !is_global_temp(currNode.n.addr) && 
                         !XT_Util::equal_mark(currNode.n.flag, flag::TCG_QEMU_ST) )
                             break;
                 } // end of for loop
@@ -612,6 +619,49 @@ inline bool Propagate::is_save_to_q_propagate(bool isSameInsn, int &numHit)
             isSave = true;
     }
     return isSave;
+}
+
+const int G_TEMP_UNKNOWN        = 0xfff0;
+    const int G_TEMP_ENV            = 0xfff1;
+    const int G_TEMP_CC_OP          = 0xfff2;
+    const int G_TEMP_CC_SRC         = 0xfff3;
+    const int G_TEMP_CC_DST         = 0xfff4;
+    const int G_TEMP_CC_TMP         = 0xfff5;
+    const int G_TEMP_EAX            = 0xfff6;
+    const int G_TEMP_ECX            = 0xfff7;
+    const int G_TEMP_EDX            = 0xfff8;
+    const int G_TEMP_EBX            = 0xfff9;
+    const int G_TEMP_ESP            = 0xfffa;
+    const int G_TEMP_EBP            = 0xfffb;
+    const int G_TEMP_ESI            = 0xfffc;
+    const int G_TEMP_EDI            = 0xfffd;
+
+// Determine if a given addr is global temporary
+// return
+//      true if yes
+//      flase otherwise
+inline bool Propagate::is_global_temp(string &addr)
+{
+    unsigned int i_addr = stoul(addr, nullptr, 16);
+    switch(i_addr){
+        case flag::G_TEMP_UNKNOWN:
+        case flag::G_TEMP_ENV:
+        case flag::G_TEMP_CC_OP:
+        case flag::G_TEMP_CC_SRC:
+        case flag::G_TEMP_CC_DST:
+        case flag::G_TEMP_CC_TMP:
+        case flag::G_TEMP_EAX:
+        case flag::G_TEMP_ECX:
+        case flag::G_TEMP_EDX:
+        case flag::G_TEMP_EBX:
+        case flag::G_TEMP_ESP:
+        case flag::G_TEMP_EBP:
+        case flag::G_TEMP_ESI:
+        case flag::G_TEMP_EDI:
+            return true;
+    }
+
+    return false;
 }
 
 inline RegularRecord Propagate::initMarkRecord(vector<string> &singleRec)
