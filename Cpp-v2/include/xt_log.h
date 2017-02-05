@@ -14,6 +14,7 @@ public:
 
 	XTRecord getRecord(std::size_t index);
 	unsigned int findRecord(std::string &s_record);	
+	unsigned int getRecordSize();
 
 private:
 	// std::vector<std::string> m_vXTLog;

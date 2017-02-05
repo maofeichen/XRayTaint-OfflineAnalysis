@@ -50,4 +50,9 @@ unsigned int XTLog::findRecord(std::string &s_record)
 	}
 
 	return recordIndex;
-}	
+}
+
+unsigned int XTLog::getRecordSize()
+{
+	return m_vXTRecord.size();
+}

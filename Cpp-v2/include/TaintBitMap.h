@@ -31,6 +31,8 @@
 // Consider a 32 bit address, we divide it to:
 //  | 20 bit | 9 bit | 3 bit|
 
+#include <list>
+
 class TaintBitMap {
     static const int size = 0x100000; // 2^32 / 4096
     static const int nslots = 8;

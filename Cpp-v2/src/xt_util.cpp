@@ -2,6 +2,8 @@
 #include "xt_flag.h"
 #include "xt_util.h"
 
+using namespace std;
+
 vector<string> XT_Util::split(const char *s, char c)
 {
     vector<string> v;
