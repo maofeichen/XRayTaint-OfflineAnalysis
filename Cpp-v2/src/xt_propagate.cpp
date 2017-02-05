@@ -350,10 +350,12 @@ unordered_set<Node, NodeHash> Propagate::search_propagate(NodePropagate &taint_s
     XTRecord record = m_xtLog.getRecord(record_idx);
 
     if(taint_src.isSrc){
-        XTNode dst = record.getDestinationNode();
-        handle_destinate_node(dst, propagate_res);
-    }else{
         XTNode src = record.getSourceNode();
+        // ToDo: need to handle the source as handle destination node
+        // because it's the initial node: need to store in the *hashmap
+    }else{
+        XTNode dst = record.getDestinationNode();
+        // handle_destinate_node(dst, propagate_res);
     }
 
     for(; record_idx < record_size; record_idx++){
@@ -416,21 +418,91 @@ bool Propagate::handle_source_node(XTNode &node)
     return is_valid_propagate;
 }
 
-void Propagate::handle_destinate_node(XTNode &xtNode, 
+void Propagate::handle_destinate_node_mem(XTNode &xt_node,
+                                          char &taint, 
+                                          bool is_taint_source,
+                                          unordered_set<Node,NodeHash> &propagate_res)
+{
+    string nodeAddr = xt_node.getAddr();
+    string nodeVal  = xt_node.getVal();
+    unsigned int intNodeAddr = xt_node.getIntAddr();
+    unsigned int memByteSz   = xt_node.getByteSize();
+
+    if(is_taint_source){
+        memTaintMap_.mark(intNodeAddr, xt_node.getByteSize() );
+        memValMap_[intNodeAddr] = nodeVal;
+    }else{
+        // Reference CipherXray's code ByteTaintAnalysis.cpp:342
+        // add taint memory bitmap
+        unsigned int len = 0;
+        unsigned int byteAddr = intNodeAddr;
+        for(unsigned int byteIdx = 0; byteIdx < memByteSz; byteIdx++){
+            if( (taint >> byteIdx) & 0x1){
+                len++;
+            }else{
+                if(len != 0){
+                    memTaintMap_.mark(byteAddr, len);
+                }
+
+                // correct?
+                byteAddr += len + 1;
+                len = 0;
+            }
+        }
+
+        // handle last one?
+        if(len != 0){
+            memTaintMap_.mark(byteAddr, len);
+        }
+
+        // add(update) memory value map
+        if(memValMap_.find(intNodeAddr) != memValMap_.end() ){
+            memValMap_.erase(intNodeAddr);
+            memValMap_[intNodeAddr] = nodeVal;
+        }else
+            memValMap_[intNodeAddr] = nodeVal;
+
+        // insert to propagate result
+        // should insert based on the taint info, but now insert all
+        Node node;
+        convert_mem_xtnode(xt_node, node);
+        insert_propagate_result(node, propagate_res);
+    }
+}
+
+void Propagate::handle_destinate_node(XTNode &xtNode,
+                                      char &taint,
+                                      bool is_taint_source, 
                                       unordered_set<Node, NodeHash> &propagate_res)
 {
     string nodeAddr = xtNode.getAddr();
+    string nodeVal  = xtNode.getVal();
+    unsigned intNodeAddr;
 
-    if(is_mem_stroe(nodeAddr) ){
-        memTaintMap_.mark(xtNode.getIntAddr(), xtNode.getByteSize() );
+    if(is_mem_stroe(nodeAddr) || 
+       (is_mem_load(nodeAddr) && is_taint_source) ){
 
-        Node node;
-        convert_mem_xtnode(xtNode, node);
-        insert_propagate_result(node, propagate_res);
+        handle_destinate_node_mem(xtNode, taint, is_taint_source, propagate_res);
+    
     }else if(is_global_temp(nodeAddr) ){
+        intNodeAddr = stoul(nodeAddr, nullptr, 16);
+        tempDataType_ temp_data = {taint, nodeVal};
 
+        if(globalTempMap_.find(intNodeAddr) != globalTempMap_.end() ){
+            // If already exist
+            globalTempMap_.erase(intNodeAddr);
+            globalTempMap_[intNodeAddr] = temp_data;
+        }else
+            globalTempMap_[intNodeAddr] = temp_data;
     }else{
+        intNodeAddr = stoul(nodeAddr, nullptr, 10);
+        tempDataType_ temp_data = {taint, nodeVal};
 
+        if(localTempMap_.find(intNodeAddr) != localTempMap_.end() ){
+            localTempMap_.erase(intNodeAddr);
+            localTempMap_[intNodeAddr] = temp_data;
+        }else
+            localTempMap_[intNodeAddr] = temp_data; 
     }
 } 
 

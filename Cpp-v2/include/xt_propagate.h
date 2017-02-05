@@ -79,9 +79,9 @@ private:
        string val; 
     };
     // hashmap for local temps of Qemu, e.g. index as 0, 1, 2...
-    google::dense_hash_map<int, tempDataType_> localTempMap_;
+    google::dense_hash_map<unsigned int, tempDataType_> localTempMap_;
     // hashmap for global temps of Qemu, encodes as 0xfff0, 0xfff1...
-    google::dense_hash_map<int, tempDataType_> globalTempMap_;
+    google::dense_hash_map<unsigned int, tempDataType_> globalTempMap_;
 
     // Memory taint bitmap to store <memory, taint> info as it is 
     // propagated by the taint source
@@ -146,18 +146,32 @@ private:
     //  2) value is matched
     bool handle_source_node(XTNode &node);
 
+    // Handles the destination memory node
+    void handle_destinate_node_mem(XTNode &xt_node,
+                                   char &taint, 
+                                   bool is_taint_source,
+                                   std::unordered_set<Node,NodeHash> &propagate_res);
+
     // Handles the destinatin node during the search of propagation.
     // Specifically, analyzes if the node address is:
     //  1. memory address
     //  2. local temporary index
     //  3. global temporary indxe
-    // and its size.
+    // and its taint size.
     //
-    // Then assigns it if:
-    //  1) -> memory taint bitmap and propagate result
-    //  2) -> local temp map
-    //  3) -> global temp map  
-    void handle_destinate_node(XTNode &xtNode, 
+    // Memory:
+    //  based on the taint info (indicating which byte is tainted), 
+    //      1) mark the coressponding byte tainted in the taint bit map and
+    //      2) add (update) the corresponding byte in the memory val hash map
+    //      3) If the memory is NOT taint source, also add it to the propagate result
+    // 
+    //  local temp: 
+    //      add (update) the local temp in local temp hashamp 
+    //  global temp: 
+    //      add (update) the global temp in global temp hashamp 
+    void handle_destinate_node(XTNode &xtNode,
+                               char &taint,
+                               bool is_taint_source, 
                                std::unordered_set<Node, NodeHash> &propagate_res); 
 
     // IGNORE!!! 
