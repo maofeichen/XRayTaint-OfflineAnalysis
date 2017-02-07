@@ -91,6 +91,15 @@ private:
     // Thus use another hashmap to store <mem, val> infomation, in byte level
     google::dense_hash_map<unsigned int, string> memValMap_;
 
+    // IR bitwise operation filter
+    std::vector<std::string> bitwise_ir_filter = {
+        "52", // TCG_QEMU_LOAD
+        "5a", // TCG_QEMU_STORE
+        "51", // TCG_QEMU_MOV
+        "46", // TCG_QEMU_OR
+        "47", // TCG_QEMU_XOR
+    };
+
     inline std::string getInsnAddr(unsigned int &idx, std::vector<Record> &v_rec);
     inline NodePropagate propagate_dst(NodePropagate &s, std::vector<Record> &r);
     inline NodePropagate propagte_src(NodePropagate &d, std::vector<Record> &v_rec, int i);
@@ -100,6 +109,19 @@ private:
 
     static bool compare_buffer_node(const NodePropagate &a, const NodePropagate &b);
     void insert_buffer_node(NodePropagate &node, std::vector<NodePropagate> &v_propagate_buf, int &numHit);
+
+    // Returns true if the given flag is a bitwise ir
+    inline bool is_bitwise_ir(std::string flag);
+
+    // Returns a string last 2 bytes' value
+    // Semantically the string stores a 4 bytes value, it returns the last byte val
+    inline std::string get_string_last_byte(std::string val);
+
+    // Compares the temp's stored value (hashval) and current value (nodeVale)
+    // given a taint bitmap indicating the corresponding position of each
+    // byte that need to compare
+    // Returns true if all positions are same value
+    bool compare_temp(char &taint, std::string hash_val, std::string node_val);
 
     // Splits a multiple byte memory into byte level,
     // Returns a vector of <mem, val>
@@ -126,6 +148,20 @@ private:
     // The complexity is O(n), n is the size of xray taint log.
     std::unordered_set<Node, NodeHash> search_propagate(NodePropagate &taint_src);
 
+    // Handles source node if it's a local temp
+    // Returns true and the taint info, if:
+    //  1) it is tainted
+    //  2) any value of tainted byte is same in the hashmap 
+    //      is same as the current value
+    bool handle_source_node_local(XTNode &node, char &taint);
+
+    // Handles source node if it's a global temp
+    // Returns true and the taint info, if:
+    //  1) it is tainted
+    //  2) any value of tainted byte is same in the hashmap 
+    //      is same as the current value
+    bool handle_source_node_global(XTNode &node, char &taint);
+
     // Handles source node if its addr is a memory
     // Returns true if any byte of the memory:
     //  1) is tainted, and
@@ -144,7 +180,7 @@ private:
     // Generally, a valid propagation:
     //  1) is tainted (stored in temp map or bitmap), and
     //  2) value is matched
-    bool handle_source_node(XTNode &node);
+    bool handle_source_node(XTNode &node, char &taint);
 
     // Handles the destination memory node
     void handle_destinate_node_mem(XTNode &xt_node,

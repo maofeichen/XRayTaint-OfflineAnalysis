@@ -348,21 +348,76 @@ unordered_set<Node, NodeHash> Propagate::search_propagate(NodePropagate &taint_s
     unsigned int record_idx = taint_src.pos;
     unsigned int record_size = m_xtLog.getRecordSize();
     XTRecord record = m_xtLog.getRecord(record_idx);
+    XTNode src, dst;
 
+    // Processes taint source
     if(taint_src.isSrc){
-        XTNode src = record.getSourceNode();
-        // ToDo: need to handle the source as handle destination node
-        // because it's the initial node: need to store in the *hashmap
+        src = record.getSourceNode();
+        // handle the source as handle destination node
+        // it's the initial node: need to store in the *hashmap
+        char taint = 0;
+        for(unsigned int byteIdx = 0; byteIdx < src.getByteSize(); byteIdx++)
+            taint |= (1 << byteIdx);
+        handle_destinate_node(src, taint, true, propagate_res);
+
+        // handles its destination 
+        dst = record.getDestinationNode();
+        handle_destinate_node(dst, taint, false, propagate_res);
     }else{
-        XTNode dst = record.getDestinationNode();
-        // handle_destinate_node(dst, propagate_res);
+        dst = record.getDestinationNode();
+        // handle later
+        cout << "Taint source is in destination instead of source..." << endl;
     }
 
-    for(; record_idx < record_size; record_idx++){
+    // Search taint propagation
+    for(record_idx++; record_idx < record_size; record_idx++){
+        record = m_xtLog.getRecord(record_idx);
+        src = record.getSourceNode();
+        dst = record.getDestinationNode();
 
+        char taint = 0;
+        if(handle_source_node(src, taint) ){
+            string flag = src.getFlag();
+            // if not bitwise ir, assume all 4 bytes of temp are tainted,
+            // results in a overtained to 4 bytes
+            if(!is_bitwise_ir(flag) )
+                taint = 15;
+
+            handle_destinate_node(dst, taint, false, propagate_res);
+        } 
     }
 
     return propagate_res; 
+}
+
+bool Propagate::handle_source_node_local(XTNode &node, char &taint)
+{
+    bool is_match = false;
+    unsigned int intAddr = stoul(node.getAddr(), nullptr, 16);
+
+    if(localTempMap_.find(intAddr) != localTempMap_.end() ){
+        taint = localTempMap_[intAddr].taint;
+        string hash_val = localTempMap_[intAddr].val; 
+        string node_val = node.getVal();
+        is_match = compare_temp(taint, hash_val, node_val);
+    }
+    return is_match;
+}
+
+bool Propagate::handle_source_node_global(XTNode &node, char &taint)
+{
+    bool is_match = false;
+
+    unsigned int intAddr = stoul(node.getAddr(), nullptr, 16);
+
+    if(globalTempMap_.find(intAddr) != globalTempMap_.end() ){
+        taint          = globalTempMap_[intAddr].taint;
+        string hashVal = globalTempMap_[intAddr].val;
+        string nodeVal = node.getVal();
+        is_match = compare_temp(taint, hashVal, nodeVal); 
+    }
+    
+    return is_match; 
 }
 
 bool Propagate::handle_source_node_mem(XTNode &node, char &taint)
@@ -400,19 +455,18 @@ bool Propagate::handle_source_node_mem(XTNode &node, char &taint)
         return false;
 }
 
-bool Propagate::handle_source_node(XTNode &node)
+bool Propagate::handle_source_node(XTNode &node, char &taint)
 {
     bool is_valid_propagate = false;
+    string nodeFlag = node.getFlag();
     string nodeAddr = node.getAddr();
 
-    char taint = 0;
-
-    if(is_mem_load(nodeAddr) ){
+    if(is_mem_load(nodeFlag) ){
         is_valid_propagate = handle_source_node_mem(node, taint);
     }else if(is_global_temp(nodeAddr) ){
-
+        is_valid_propagate = handle_source_node_global(node, taint);
     }else{
-
+        is_valid_propagate = handle_source_node_local(node, taint);
     }
 
     return is_valid_propagate;
@@ -475,15 +529,16 @@ void Propagate::handle_destinate_node(XTNode &xtNode,
                                       bool is_taint_source, 
                                       unordered_set<Node, NodeHash> &propagate_res)
 {
+    string nodeFlag = xtNode.getFlag();
     string nodeAddr = xtNode.getAddr();
     string nodeVal  = xtNode.getVal();
     unsigned intNodeAddr;
 
-    if(is_mem_stroe(nodeAddr) || 
-       (is_mem_load(nodeAddr) && is_taint_source) ){
+    if(is_mem_stroe(nodeFlag) || 
+       (is_mem_load(nodeFlag) && is_taint_source) ){
 
         handle_destinate_node_mem(xtNode, taint, is_taint_source, propagate_res);
-    
+
     }else if(is_global_temp(nodeAddr) ){
         intNodeAddr = stoul(nodeAddr, nullptr, 16);
         tempDataType_ temp_data = {taint, nodeVal};
@@ -790,6 +845,63 @@ inline bool Propagate::is_save_to_q_propagate(bool isSameInsn, int &numHit)
             isSave = true;
     }
     return isSave;
+}
+
+inline bool Propagate::is_bitwise_ir(string flag)
+{
+    vector<string>::const_iterator it = bitwise_ir_filter.begin();
+    for(; it != bitwise_ir_filter.end(); ++it){
+        if(flag == *(it) )
+            return true;
+    }
+    return false;
+}
+
+inline string Propagate::get_string_last_byte(string val)
+{
+    unsigned int val_len = val.length();
+    if(val_len == 0)
+        return "0";
+    else if(val_len > 0 && val_len <= 2)
+        return val;
+    else if(val_len > 2)
+        return val.substr(val_len-2, 2);
+}
+
+bool Propagate::compare_temp(char &taint, string hash_val, string node_val)
+{
+    bool is_match = false;
+
+    // max is 4 bytes
+    for(unsigned int byteIdx = 0; byteIdx < 4; byteIdx++){
+        // checks last bit (little end) is 1
+        if( (taint >> byteIdx) & 0x1){
+            string hash_byte_val = get_string_last_byte(hash_val);
+            string node_byte_val = get_string_last_byte(node_val);
+
+            unsigned int i_hash_byte = stoul(hash_byte_val, nullptr, 16);
+            unsigned int i_node_byte = stoul(node_byte_val, nullptr, 16);
+
+            if(i_hash_byte == i_node_byte)
+                is_match = true;
+            else
+                is_match = false;
+        }
+        // remove the last two bytes' val
+        unsigned int hash_val_len = hash_val.length();
+        if(hash_val_len > 2)
+            hash_val = hash_val.substr(0, hash_val_len - 2);
+        else
+            hash_val = "0";
+
+        unsigned int node_val_len = node_val.length();
+        if(node_val_len > 2)
+            node_val = node_val.substr(0, node_val_len - 2);
+        else
+            node_val = "0";
+    }
+
+    return is_match;
 }
 
 vector<MemVal_> Propagate::split_mem(string addr,

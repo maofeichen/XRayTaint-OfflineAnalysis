@@ -7,19 +7,19 @@ using namespace std;
 
 namespace flag
 {
-    const string XT_SIZE_BEGIN      = "20";
-    const string XT_SIZE_END        = "24";
+    const string XT_SIZE_BEGIN          = "20";
+    const string XT_SIZE_END            = "24";
 
-    const string XT_INSN_ADDR       = "32";
-    const string XT_TCG_DEPOSIT     = "4a";
+    const string XT_INSN_ADDR           = "32";
+    const string XT_TCG_DEPOSIT         = "4a";
 
     const string XT_CALL_INSN           = "14";
     const string XT_CALL_INSN_SEC       = "15";
     const string XT_CALL_INSN_FF2       = "1a";
     const string XT_CALL_INSN_FF2_SEC   = "1b";
 
-    const string XT_RET_INSN        = "18";
-    const string XT_RET_INSN_SEC    = "19";
+    const string XT_RET_INSN            = "18";
+    const string XT_RET_INSN_SEC        = "19";
 
     const string TCG_QEMU_LD            = "52";
     const string TCG_QEMU_LD_POINTER	= "56";
