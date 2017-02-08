@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <ctime>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -31,6 +32,9 @@ void XT_DetectAvalanche::detect_avalanche(string logPath, bool isWriteFile)
 {
 	vector<string> xtLog;
 
+    string c_time = get_time();
+    c_time = '-'+c_time;
+
     // Read file
     XT_File xtFile =(XT_FILE_PATH + logPath + XT_FILE_EXT);
     xtLog = xtFile.read();
@@ -41,17 +45,17 @@ void XT_DetectAvalanche::detect_avalanche(string logPath, bool isWriteFile)
     xtLog = xtPreProc.clean_nonempty_function_mark(xtLog);
     xtLog = xtPreProc.clean_empty_instruction_mark(xtLog);
     if(isWriteFile)
-        xtFile.write(XT_RESULT_PATH + logPath + XT_PREPROCESS + XT_FILE_EXT, xtLog);
+        xtFile.write(XT_RESULT_PATH + logPath + XT_PREPROCESS + c_time + XT_FILE_EXT, xtLog);
 
     // Add memory size infomation
     xtLog = xtPreProc.parseMemSizeInfo(xtLog);
     if(isWriteFile)
-        xtFile.write(XT_RESULT_PATH + logPath + XT_ADD_SIZE_INFO + XT_FILE_EXT, xtLog);
+        xtFile.write(XT_RESULT_PATH + logPath + XT_ADD_SIZE_INFO + c_time + XT_FILE_EXT, xtLog);
 
     // Add index for each record
     xtLog = xtPreProc.addRecordIndex(xtLog);
     if(isWriteFile)
-        xtFile.write(XT_RESULT_PATH + logPath + XT_ADD_INDEX + XT_FILE_EXT, xtLog);
+        xtFile.write(XT_RESULT_PATH + logPath + XT_ADD_INDEX + c_time + XT_FILE_EXT, xtLog);
 
     
     // Initialize XTLog object after adding memory size
@@ -63,7 +67,7 @@ void XT_DetectAvalanche::detect_avalanche(string logPath, bool isWriteFile)
     aliveBuf = XT_Liveness::analyze_alive_buffer(xtLog);
     // aliveBuf =  xtLiveness.insert_load_buffer(aliveBuf, xtLog);
     if(isWriteFile)
-        xtFile.write(XT_RESULT_PATH + logPath + XT_ALIVE_BUF + XT_FILE_EXT, aliveBuf);
+        xtFile.write(XT_RESULT_PATH + logPath + XT_ALIVE_BUF + c_time + XT_FILE_EXT, aliveBuf);
 
     // Create continuous buffers in each function call
     vector<t_AliveFunctionCall> vAliveFunction;
@@ -72,7 +76,7 @@ void XT_DetectAvalanche::detect_avalanche(string logPath, bool isWriteFile)
     functionLiveness.propagate_alive_buffer(vAliveFunction);
     vAliveFunction = functionLiveness.filter_kernel_buffer(vAliveFunction);
     if(isWriteFile)
-        xtFile.write_continue_buffer(XT_RESULT_PATH + logPath + CONT_BUF + XT_FILE_EXT,
+        xtFile.write_continue_buffer(XT_RESULT_PATH + logPath + CONT_BUF + c_time + XT_FILE_EXT,
                                      vAliveFunction);
 
     // functionLiveness.filter_small_continuous_buffer();
@@ -109,6 +113,19 @@ void XT_DetectAvalanche::detect_avalanche(string logPath, bool isWriteFile)
     SearchAvalanche sa(vAliveFunction, xtLogRec, o_xtLog);
     vAvalResult = sa.detect_avalanche();
     if(isWriteFile){
-        xtFile.writeAvalResult(XT_RESULT_PATH + logPath + AVAL_RES + XT_FILE_EXT, vAvalResult);
+        xtFile.writeAvalResult(XT_RESULT_PATH + logPath + AVAL_RES + c_time + XT_FILE_EXT, vAvalResult);
     }
 }	
+
+string XT_DetectAvalanche::get_time()
+{
+    time_t t = time(0);   // get time now
+    struct tm * now = localtime( & t );
+
+    string c_time = to_string( (now->tm_year + 1900) ) + '-' +
+                    to_string( (now->tm_mon + 1) ) + '-' +
+                    to_string(  now->tm_mday) + '-' +
+                    to_string(  now->tm_hour) + '-' +
+                    to_string(  now->tm_min);
+    return c_time;
+}

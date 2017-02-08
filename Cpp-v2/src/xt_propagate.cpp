@@ -87,8 +87,8 @@ Propagate::getPropagateResult(NodePropagate &s,
     unordered_set<PropagateRes, PropagateResHash>::const_iterator got = setOfPropagateRes.find(p);
     if( got == setOfPropagateRes.end() ){
         // aPropagateRes = bfs_old(s, vRec);
-        aPropagateRes = search_propagate(s);
 
+        aPropagateRes = search_propagate(s);
         // clean bitmap and hashmap after search
         memTaintMap_.reset();
         localTempMap_.clear();
@@ -245,9 +245,9 @@ unordered_set<Node, NodeHash> Propagate::bfs_old(NodePropagate &s, vector<Record
                 // can't be a mark
                 assert( v_rec[i].isMark == false);
                 nextNode = propagate_dst(currNode, v_rec);
-                cout << "next dst: lineNO: " << nextNode.pos << \
-                                " addr: " << nextNode.n.addr << \
-                                " val: " << nextNode.n.val << endl;
+                // cout << "next dst: lineNO: " << nextNode.pos << \
+                //                 " addr: " << nextNode.n.addr << \
+                //                 " val: " << nextNode.n.val << endl;
                 q_propagate.push(nextNode);
                 numHit++;
 
@@ -255,7 +255,8 @@ unordered_set<Node, NodeHash> Propagate::bfs_old(NodePropagate &s, vector<Record
                 Node node = nextNode.n;
                 if(XT_Util::equal_mark(node.flag, flag::TCG_QEMU_ST) ){
                     insert_propagate_result(node, res_buffer);
-                    // cout << "Propagate to buffer: line num: " << i << " addr: " << node.addr << endl; 
+                    cout << "Propagate to: line num: " << i;
+                    cout << " addr: " << hex << node.addr << " " << node.sz / 8 << "bytes" << endl; 
                 }
             }
             // if a dst node
@@ -291,16 +292,17 @@ unordered_set<Node, NodeHash> Propagate::bfs_old(NodePropagate &s, vector<Record
 
                         if(isValidPropagate){
                             nextNode = propagte_src(currNode, v_rec, i);
-                            cout << "next src: lineNO: " << nextNode.pos << \
-                                " addr: " << nextNode.n.addr << \
-                                " val: " << nextNode.n.val << endl;
+                            // cout << "next src: lineNO: " << nextNode.pos << \
+                            //     " addr: " << nextNode.n.addr << \
+                            //     " val: " << nextNode.n.val << endl;
                             // is it a load opreration? If so, then it is a memory buffer
                             if(XT_Util::equal_mark(nextNode.n.flag, flag::TCG_QEMU_LD) ){
                                 insert_buffer_node(nextNode, v_propagate_buffer, numHit);
 
                                 // also save to propagate result!!!
                                 Node node = nextNode.n;
-                                // cout << "Propagate to buffer: line num: " << i << " addr: " << node.addr << endl;
+                                cout << "Propagate to: line num: " << i;
+                                cout << " addr: " << hex << node.addr << " " << node.sz / 8 << "bytes" << endl; 
                                 insert_propagate_result(node, res_buffer);
                             } else{ // if not a buffer node
                             	// No need to use isSameInsn & numHit
@@ -324,7 +326,7 @@ unordered_set<Node, NodeHash> Propagate::bfs_old(NodePropagate &s, vector<Record
                     // No need to use!!!
                     if(!isSameInsn && 
                         numHit >= 1 && 
-                        !is_global_temp(currNode.n.addr) && 
+                        // !is_global_temp(currNode.n.addr) && // Not use this for previous test
                         !XT_Util::equal_mark(currNode.n.flag, flag::TCG_QEMU_ST) )
                             break;
                 } // end of for loop
@@ -361,12 +363,13 @@ unordered_set<Node, NodeHash> Propagate::search_propagate(NodePropagate &taint_s
     XTRecord record = m_xtLog.getRecord(record_idx);
     XTNode src, dst;
 
+    char taint;
     // Processes taint source
     if(taint_src.isSrc){
         src = record.getSourceNode();
         // handle the source as handle destination node
         // it's the initial node: need to store in the *hashmap
-        char taint = 0;
+        taint = 0;
         for(unsigned int byteIdx = 0; byteIdx < src.getByteSize(); byteIdx++)
             taint |= (1 << byteIdx);
         handle_destinate_node(src, taint, true, propagate_res);
@@ -376,8 +379,15 @@ unordered_set<Node, NodeHash> Propagate::search_propagate(NodePropagate &taint_s
         handle_destinate_node(dst, taint, false, propagate_res);
     }else{
         dst = record.getDestinationNode();
-        // handle later
-        cout << "Taint source is in destination instead of source..." << endl;
+        string flag = dst.getFlag();
+        if(is_mem_stroe(flag) ){
+            taint = 0;
+            for(unsigned int byteIdx = 0; byteIdx < dst.getByteSize(); byteIdx++){
+                taint |= (1 << byteIdx);
+            }
+            handle_destinate_node(dst, taint, true, propagate_res);
+        }else
+            cout << "Taint source is not a memory..." << endl;
     }
 
     // Search taint propagation

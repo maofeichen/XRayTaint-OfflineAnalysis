@@ -130,10 +130,10 @@ SearchAvalanche::detect_avalanche()
 
 	unsigned int numSearch = 1;
 
-	size_t numFunction = m_vFuncCallContBuf.size();
-	vector<t_AliveFunctionCall>::iterator itInFunction = m_vFuncCallContBuf.end() - 2;
+	// size_t numFunction = m_vFuncCallContBuf.size();
+	// vector<t_AliveFunctionCall>::iterator itInFunction = m_vFuncCallContBuf.end() - 2;
 
-	// vector<t_AliveFunctionCall>::iterator itInFunction = m_vFuncCallContBuf.begin();
+	vector<t_AliveFunctionCall>::iterator itInFunction = m_vFuncCallContBuf.begin();
 	for(; itInFunction != m_vFuncCallContBuf.end() - 1; ++itInFunction){
 
 		vector<t_AliveFunctionCall>::iterator itOutFunction = itInFunction + 1;

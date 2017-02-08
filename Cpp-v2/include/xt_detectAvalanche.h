@@ -9,6 +9,8 @@ private:
 	std::string m_funcCallMark;
 	unsigned int m_beginAddress;
 	unsigned int m_size;
+
+	std::string get_time();
 public:
 	XT_DetectAvalanche(bool isAddInputBuffer,
 					   std::string funcCallMark,
