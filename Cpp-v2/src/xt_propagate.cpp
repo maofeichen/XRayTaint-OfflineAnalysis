@@ -24,8 +24,13 @@ Propagate::Propagate(XTLog &xtLog)
 {
     m_xtLog = xtLog;
     localTempMap_.set_empty_key((unsigned int) - 1);
+    localTempMap_.set_deleted_key(0xfffffffe);
+
     globalTempMap_.set_empty_key((unsigned int) - 1);
+    globalTempMap_.set_deleted_key(0xfffffffe);
+
     memValMap_.set_empty_key((unsigned int) - 1);
+    memValMap_.set_deleted_key(0xfffffffe);
 }
 
 // unordered_set<Node, NodeHash> Propagate::searchAvalanche(vector<string> &log,
@@ -82,7 +87,13 @@ Propagate::getPropagateResult(NodePropagate &s,
     unordered_set<PropagateRes, PropagateResHash>::const_iterator got = setOfPropagateRes.find(p);
     if( got == setOfPropagateRes.end() ){
         // aPropagateRes = bfs_old(s, vRec);
-        aPropagateRes = search_propagate(s); 
+        aPropagateRes = search_propagate(s);
+
+        // clean bitmap and hashmap after search
+        memTaintMap_.reset();
+        localTempMap_.clear();
+        globalTempMap_.clear();
+        memValMap_.clear(); 
 
         p.propagateRes = aPropagateRes;
         setOfPropagateRes.insert(p);
@@ -375,16 +386,18 @@ unordered_set<Node, NodeHash> Propagate::search_propagate(NodePropagate &taint_s
         src = record.getSourceNode();
         dst = record.getDestinationNode();
 
-        char taint = 0;
-        if(handle_source_node(src, taint) ){
-            string flag = src.getFlag();
-            // if not bitwise ir, assume all 4 bytes of temp are tainted,
-            // results in a overtained to 4 bytes
-            if(!is_bitwise_ir(flag) )
-                taint = 15;
+        if(!src.isMark() ){
+            char taint = 0;
+            if(handle_source_node(src, taint) ){
+                string flag = src.getFlag();
+                // if not bitwise ir, assume all 4 bytes of temp are tainted,
+                // results in a overtained to 4 bytes
+                if(!is_bitwise_ir(flag) )
+                    taint = 15;
 
-            handle_destinate_node(dst, taint, false, propagate_res);
-        } 
+                handle_destinate_node(dst, taint, false, propagate_res);
+            } 
+        }
     }
 
     return propagate_res; 
@@ -432,7 +445,8 @@ bool Propagate::handle_source_node_mem(XTNode &node, char &taint)
     vector<MemVal_>::const_iterator itByte = v_memVal.begin();
     for(; itByte != v_memVal.end(); ++itByte){
         string byteAddr = (*itByte).addr;
-        unsigned int intAddr = stoul(byteAddr, nullptr, 16);
+        // should use 10 instead of 16
+        unsigned int intAddr = stoul(byteAddr, nullptr, 10);
 
         // If the byte is tainted
         if(memTaintMap_.isTainted(intAddr) && 
@@ -441,10 +455,12 @@ bool Propagate::handle_source_node_mem(XTNode &node, char &taint)
             string hashVal = memValMap_[intAddr];
             string byteVal = (*itByte).val;
 
-            unsigned int intHashVal = stoul(hashVal, nullptr, 10);
-            unsigned int intByteVal = stoul(byteVal, nullptr, 10);
+            // should be 16 instead of 10 here
+            unsigned int iHashVal = stoul(hashVal, nullptr, 16);
+            unsigned int iByteVal = stoul(byteVal, nullptr, 16);
 
-            taint |= (1 << byteIdx);
+            if(iHashVal == iByteVal)
+                taint |= (1 << byteIdx);
         }
         byteIdx++;
     }
@@ -484,7 +500,16 @@ void Propagate::handle_destinate_node_mem(XTNode &xt_node,
 
     if(is_taint_source){
         memTaintMap_.mark(intNodeAddr, xt_node.getByteSize() );
-        memValMap_[intNodeAddr] = nodeVal;
+        // Need to split into <byte, val>, then store to memory value hashmap
+        // memValMap_[intNodeAddr] = nodeVal;
+        vector<MemVal_> v_mem_val = split_mem(nodeAddr, memByteSz, nodeVal);
+
+        vector<MemVal_>::const_iterator it = v_mem_val.begin();
+        for(; it != v_mem_val.end(); ++it){
+            unsigned int int_byte_addr = stoul(it->addr, nullptr, 10);
+            string byte_val = it->val;
+            memValMap_[int_byte_addr] = byte_val;
+        }
     }else{
         // Reference CipherXray's code ByteTaintAnalysis.cpp:342
         // add taint memory bitmap
@@ -504,23 +529,33 @@ void Propagate::handle_destinate_node_mem(XTNode &xt_node,
             }
         }
 
-        // handle last one?
+        // handle last
         if(len != 0){
             memTaintMap_.mark(byteAddr, len);
         }
 
         // add(update) memory value map
-        if(memValMap_.find(intNodeAddr) != memValMap_.end() ){
-            memValMap_.erase(intNodeAddr);
-            memValMap_[intNodeAddr] = nodeVal;
-        }else
-            memValMap_[intNodeAddr] = nodeVal;
+        vector<MemVal_> v_mem_val = split_mem(nodeAddr, memByteSz, nodeVal);
+
+        for(unsigned int byteIdx = 0; byteIdx < memByteSz; byteIdx++){
+            if((taint >> byteIdx) & 0x1){
+                unsigned int i_byte_addr = stoul(v_mem_val[byteIdx].addr, nullptr, 10);
+                string byte_val = v_mem_val[byteIdx].val;
+
+                if(memValMap_.find(i_byte_addr) != memValMap_.end() ){
+                    memValMap_.erase(i_byte_addr);
+                    memValMap_[i_byte_addr] = byte_val;
+                }else
+                    memValMap_[i_byte_addr] = byte_val;
+            }
+        }
 
         // insert to propagate result
         // should insert based on the taint info, but now insert all
         Node node;
         convert_mem_xtnode(xt_node, node);
         insert_propagate_result(node, propagate_res);
+        cout << "propagate to: " << hex << node.i_addr << " " << node.sz / 8 << " bytes"<< endl;
     }
 }
 
@@ -904,6 +939,41 @@ bool Propagate::compare_temp(char &taint, string hash_val, string node_val)
     return is_match;
 }
 
+// bool Propagate::compare_mem_val(unsigned int byteSz, 
+//                                 string hash_val, 
+//                                 string mem_val)
+// {
+//     bool is_match = false;
+
+//     for(unsigned int byteIdx = 0; byteIdx < byteSz; byteIdx++){
+//         string hash_byte_val = get_string_last_byte(hash_val);
+//         string node_byte_val = get_string_last_byte(mem_val);
+
+//         unsigned int i_hash_byte = stoul(hash_byte_val, nullptr, 16);
+//         unsigned int i_node_byte = stoul(node_byte_val, nullptr, 16);
+
+//         if(i_hash_byte == i_node_byte)
+//             is_match = true;
+//         else
+//             is_match = false;
+
+//         // remove the last two bytes' val
+//         unsigned int hash_val_len = hash_val.length();
+//         if(hash_val_len > 2)
+//             hash_val = hash_val.substr(0, hash_val_len - 2);
+//         else
+//             hash_val = "0";
+
+//         unsigned int node_val_len = mem_val.length();
+//         if(node_val_len > 2)
+//             mem_val = mem_val.substr(0, node_val_len - 2);
+//         else
+//             mem_val = "0";
+//     }
+
+//     return is_match;
+// }
+
 vector<MemVal_> Propagate::split_mem(string addr,
                                      unsigned int byteSz,
                                      string val)
@@ -936,7 +1006,8 @@ vector<MemVal_> Propagate::split_mem(string addr,
             byteVal = byteVal.substr(0, byteValLen - BYTE_VAL_STR_LEN);
             byteValLen = byteVal.length();
         }else{
-            byteVal.clear();
+            byteVal = "0";
+            // byteVal.clear();
         }
     }
 

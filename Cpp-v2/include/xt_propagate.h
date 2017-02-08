@@ -123,6 +123,11 @@ private:
     // Returns true if all positions are same value
     bool compare_temp(char &taint, std::string hash_val, std::string node_val);
 
+    // Not used!!!
+    // Compare a memory value to its hash value, given its size
+    // Returns true if all size bytes: values are same
+    // bool compare_mem_val(unsigned int byteSz, std::string hash_val, std::string mem_val);
+
     // Splits a multiple byte memory into byte level,
     // Returns a vector of <mem, val>
     // Assumes the byte, val is in Little_endian
