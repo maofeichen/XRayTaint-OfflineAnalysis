@@ -1012,9 +1012,10 @@ LABEL_S_TWO:
 			// byteIndex++;
 			// inBeginAddr++;
 
-			numInByteAccumulate += node.getByteSize();
-			inBeginAddr += node.getByteSize();
-			++itNodeIndex;
+			// Should not incremental the byte
+			// numInByteAccumulate += node.getByteSize();
+			// inBeginAddr += node.getByteSize();
+			// ++itNodeIndex;
 			goto LABEL_S_ONE;
 		}
 	}
