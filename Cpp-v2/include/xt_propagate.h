@@ -142,6 +142,8 @@ private:
     inline bool is_mem_load(std::string &addr);
     // Returns ture if the record is a memory store operation
     inline bool is_mem_stroe(std::string &addr);
+    // Returns true if the record is a instruction mark
+    inline bool is_insn_mark(std::string addr);
 
     // Returns the taint source propagation search results.
     // Uses breath first search (bfs), slow in performance.

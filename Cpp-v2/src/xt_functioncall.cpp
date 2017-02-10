@@ -181,10 +181,13 @@ void XT_FunctionCall::create_continuous_buffer(
 			accumulateBitSize = (*it).getBitSize();
 		}
 	}
-	if(accumulateBitSize / BIT_TO_BYTE > VALID_BYTE_SIZE){
-		// m_vAliveBuffer.push_back(aAliveBuffer);
-		aliveFunction.vAliveContinueBuffer.push_back(aliveBuffer);
-	}
+	// Modify here to test byte taint propagate!!! 
+	aliveFunction.vAliveContinueBuffer.push_back(aliveBuffer);
+	// if(accumulateBitSize / BIT_TO_BYTE > VALID_BYTE_SIZE){
+	// 	// Only >= 8 bytes consider a valid buffer
+	// 	// m_vAliveBuffer.push_back(aAliveBuffer);
+	// 	aliveFunction.vAliveContinueBuffer.push_back(aliveBuffer);
+	// }
 }
 
 bool XT_FunctionCall::compare_node(XTNode &firstNode, XTNode &secondNode)

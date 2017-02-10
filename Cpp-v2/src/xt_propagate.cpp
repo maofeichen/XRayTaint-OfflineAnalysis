@@ -396,6 +396,11 @@ unordered_set<Node, NodeHash> Propagate::search_propagate(NodePropagate &taint_s
         src = record.getSourceNode();
         dst = record.getDestinationNode();
 
+        // cout << "record: " << record_idx << " src " << src.getAddr() << " val: " << src.getVal() << " dst: " << dst.getAddr() << " val: " << dst.getVal() << endl;
+
+        // if(record_idx == 338990)
+        //     cout << "record_idx: 338990" << endl;
+
         if(!src.isMark() ){
             char taint = 0;
             if(handle_source_node(src, taint) ){
@@ -407,6 +412,10 @@ unordered_set<Node, NodeHash> Propagate::search_propagate(NodePropagate &taint_s
 
                 handle_destinate_node(dst, taint, false, propagate_res);
             } 
+        }else if(is_insn_mark(src.getFlag() ) ){
+            // cross insn bounary, clear locam temp
+            // local temp can only be used within same instruction (Qemu)
+            localTempMap_.clear();
         }
     }
 
@@ -1068,7 +1077,16 @@ inline bool Propagate::is_mem_load(std::string &addr)
 
 inline bool Propagate::is_mem_stroe(std::string &addr)
 {
-    if(XT_Util::equal_mark(addr, flag::TCG_QEMU_ST) )
+    if(XT_Util::equal_mark(addr, flag::TCG_QEMU_ST) || 
+       XT_Util::equal_mark(addr, flag::TCG_QEMU_ST_POINTER) )
+        return true;
+    else
+        return false;
+}
+
+inline bool Propagate::is_insn_mark(std::string addr)
+{
+    if(XT_Util::equal_mark(addr, flag::XT_INSN_ADDR) )
         return true;
     else
         return false;

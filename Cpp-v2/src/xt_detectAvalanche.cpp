@@ -112,9 +112,9 @@ void XT_DetectAvalanche::detect_avalanche(string logPath, bool isWriteFile)
     
     SearchAvalanche sa(vAliveFunction, xtLogRec, o_xtLog);
     vAvalResult = sa.detect_avalanche();
-    if(isWriteFile){
-        xtFile.writeAvalResult(XT_RESULT_PATH + logPath + AVAL_RES + c_time + XT_FILE_EXT, vAvalResult);
-    }
+    // if(isWriteFile){
+    //     xtFile.writeAvalResult(XT_RESULT_PATH + logPath + AVAL_RES + c_time + XT_FILE_EXT, vAvalResult);
+    // }
 }	
 
 string XT_DetectAvalanche::get_time()
