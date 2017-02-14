@@ -159,10 +159,12 @@ void XT_FunctionCall::create_continuous_buffer(
 		}
 		// If discontinue
 		else if(current_addr < (*it).getIntAddr() ){
-			if(accumulateBitSize / BIT_TO_BYTE > VALID_BYTE_SIZE){
-				// m_vAliveBuffer.push_back(aAliveBuffer);
-				aliveFunction.vAliveContinueBuffer.push_back(aliveBuffer);
-			}
+			// Need to modify here also
+			aliveFunction.vAliveContinueBuffer.push_back(aliveBuffer);
+			// if(accumulateBitSize / BIT_TO_BYTE > VALID_BYTE_SIZE){
+			// 	// m_vAliveBuffer.push_back(aAliveBuffer);
+			// 	aliveFunction.vAliveContinueBuffer.push_back(aliveBuffer);
+			// }
 
 			// aAliveBuffer.clearAliveBuffer();
 			// aAliveBuffer.setBeginAddr((*it).getIntAddr() );

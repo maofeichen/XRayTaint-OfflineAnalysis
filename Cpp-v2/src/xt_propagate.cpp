@@ -77,7 +77,8 @@ Propagate::Propagate(XTLog &xtLog)
 
 unordered_set<Node, NodeHash> 
 Propagate::getPropagateResult(NodePropagate &s, 
-                              std::vector<Record> &vRec)
+                              std::vector<Record> &vRec,
+                              unsigned int byte_pos)
 {
     unordered_set<Node, NodeHash> aPropagateRes;
 
@@ -88,15 +89,16 @@ Propagate::getPropagateResult(NodePropagate &s,
     if( got == setOfPropagateRes.end() ){
         // aPropagateRes = bfs_old(s, vRec);
 
-        aPropagateRes = search_propagate(s);
+        aPropagateRes = search_propagate(s, byte_pos);
         // clean bitmap and hashmap after search
         memTaintMap_.reset();
         localTempMap_.clear();
         globalTempMap_.clear();
         memValMap_.clear(); 
 
-        p.propagateRes = aPropagateRes;
-        setOfPropagateRes.insert(p);
+        // temporay disable the hash
+        // p.propagateRes = aPropagateRes;
+        // setOfPropagateRes.insert(p);
         
         return aPropagateRes;
     } else
@@ -354,7 +356,8 @@ unordered_set<Node, NodeHash> Propagate::bfs_old(NodePropagate &s, vector<Record
 } 
 
 
-unordered_set<Node, NodeHash> Propagate::search_propagate(NodePropagate &taint_src)
+unordered_set<Node, NodeHash> Propagate::search_propagate(NodePropagate &taint_src, 
+                                                          unsigned int byte_pos)
 {
     unordered_set<Node, NodeHash> propagate_res;
 
@@ -370,8 +373,11 @@ unordered_set<Node, NodeHash> Propagate::search_propagate(NodePropagate &taint_s
         // handle the source as handle destination node
         // it's the initial node: need to store in the *hashmap
         taint = 0;
-        for(unsigned int byteIdx = 0; byteIdx < src.getByteSize(); byteIdx++)
-            taint |= (1 << byteIdx);
+        // for(unsigned int byteIdx = 0; byteIdx < src.getByteSize(); byteIdx++)
+        //     taint |= (1 << byteIdx);
+
+        // use byte_pos to calcuate the taint
+        taint = (1 << byte_pos);
         handle_destinate_node(src, taint, true, propagate_res);
 
         // handles its destination 
@@ -382,9 +388,12 @@ unordered_set<Node, NodeHash> Propagate::search_propagate(NodePropagate &taint_s
         string flag = dst.getFlag();
         if(is_mem_stroe(flag) ){
             taint = 0;
-            for(unsigned int byteIdx = 0; byteIdx < dst.getByteSize(); byteIdx++){
-                taint |= (1 << byteIdx);
-            }
+
+            // for(unsigned int byteIdx = 0; byteIdx < dst.getByteSize(); byteIdx++){
+            //     taint |= (1 << byteIdx);
+            // }
+
+            taint = (1 << byte_pos);
             handle_destinate_node(dst, taint, true, propagate_res);
         }else
             cout << "Taint source is not a memory..." << endl;
@@ -402,7 +411,7 @@ unordered_set<Node, NodeHash> Propagate::search_propagate(NodePropagate &taint_s
         //     cout << "record_idx: 338990" << endl;
 
         if(!src.isMark() ){
-            char taint = 0;
+            taint = 0;
             if(handle_source_node(src, taint) ){
                 string flag = src.getFlag();
                 // if not bitwise ir, assume all 4 bytes of temp are tainted,
@@ -518,16 +527,27 @@ void Propagate::handle_destinate_node_mem(XTNode &xt_node,
     unsigned int memByteSz   = xt_node.getByteSize();
 
     if(is_taint_source){
-        memTaintMap_.mark(intNodeAddr, xt_node.getByteSize() );
+        // memTaintMap_.mark(intNodeAddr, xt_node.getByteSize() );
+
         // Need to split into <byte, val>, then store to memory value hashmap
         // memValMap_[intNodeAddr] = nodeVal;
         vector<MemVal_> v_mem_val = split_mem(nodeAddr, memByteSz, nodeVal);
 
-        vector<MemVal_>::const_iterator it = v_mem_val.begin();
-        for(; it != v_mem_val.end(); ++it){
-            unsigned int int_byte_addr = stoul(it->addr, nullptr, 10);
-            string byte_val = it->val;
-            memValMap_[int_byte_addr] = byte_val;
+        // vector<MemVal_>::const_iterator it = v_mem_val.begin();
+        // for(; it != v_mem_val.end(); ++it){
+        //     unsigned int int_byte_addr = stoul(it->addr, nullptr, 10);
+        //     string byte_val = it->val;
+        //     memValMap_[int_byte_addr] = byte_val;
+        // }
+
+        // Only need to store the byte that specify by the taint
+        for(unsigned int byteIdx = 0; byteIdx < memByteSz; byteIdx++){
+            if((taint >> byteIdx) & 0x1){
+                unsigned int i_byte_addr = intNodeAddr+byteIdx;
+                memTaintMap_.mark(i_byte_addr, 1);
+                string byte_val = v_mem_val[byteIdx].val;
+                memValMap_[i_byte_addr] = byte_val;
+            }
         }
     }else{
         // Reference CipherXray's code ByteTaintAnalysis.cpp:342
@@ -561,6 +581,8 @@ void Propagate::handle_destinate_node_mem(XTNode &xt_node,
                 unsigned int i_byte_addr = stoul(v_mem_val[byteIdx].addr, nullptr, 10);
                 string byte_val = v_mem_val[byteIdx].val;
 
+                cout << "propagate to: " << hex << i_byte_addr << " val: " << byte_val << endl;
+
                 if(memValMap_.find(i_byte_addr) != memValMap_.end() ){
                     memValMap_.erase(i_byte_addr);
                     memValMap_[i_byte_addr] = byte_val;
@@ -574,7 +596,7 @@ void Propagate::handle_destinate_node_mem(XTNode &xt_node,
         Node node;
         convert_mem_xtnode(xt_node, node);
         insert_propagate_result(node, propagate_res);
-        cout << "propagate to: " << hex << node.i_addr << " " << node.sz / 8 << " bytes"<< endl;
+        // cout << "propagate to: " << hex << node.i_addr << " " << node.sz / 8 << " bytes"<< endl;
     }
 }
 

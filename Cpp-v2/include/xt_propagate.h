@@ -60,7 +60,8 @@ public:
     //      If yes, returns results from hashset; 
     //      else search propagation.
     std::unordered_set<Node, NodeHash> getPropagateResult(NodePropagate &s, 
-                                                          std::vector<Record> &vRec);
+                                                          std::vector<Record> &vRec, 
+                                                          unsigned int byte_pos);
 
     // INGORE!!!
     // std::unordered_set<Node, NodeHash> searchAvalanche(std::vector<std::string> &log, 
@@ -153,7 +154,12 @@ private:
     // Returns the taint srouce propagate search results.
     // References CipherXray's Code and uses a new search algorithm.
     // The complexity is O(n), n is the size of xray taint log.
-    std::unordered_set<Node, NodeHash> search_propagate(NodePropagate &taint_src);
+    // 
+    // Param:
+    //  byte_pos: indicates which byte it is if the taint source node is a multiple
+    //  bytes
+    std::unordered_set<Node, NodeHash> search_propagate(NodePropagate &taint_src,
+                                                        unsigned int byte_pos);
 
     // Handles source node if it's a local temp
     // Returns true and the taint info, if:
