@@ -407,8 +407,8 @@ unordered_set<Node, NodeHash> Propagate::search_propagate(NodePropagate &taint_s
 
         // cout << "record: " << record_idx << " src " << src.getAddr() << " val: " << src.getVal() << " dst: " << dst.getAddr() << " val: " << dst.getVal() << endl;
 
-        // if(record_idx == 338990)
-        //     cout << "record_idx: 338990" << endl;
+        if(record_idx == 31915)
+            cout << "record_idx: 31915" << endl;
 
         if(!src.isMark() ){
             taint = 0;
@@ -942,6 +942,7 @@ inline string Propagate::get_string_last_byte(string val)
         return val.substr(val_len-2, 2);
 }
 
+// Bug: af5ab301 and af5ab302 return true (fixed)
 bool Propagate::compare_temp(char &taint, string hash_val, string node_val)
 {
     bool is_match = false;
@@ -958,8 +959,10 @@ bool Propagate::compare_temp(char &taint, string hash_val, string node_val)
 
             if(i_hash_byte == i_node_byte)
                 is_match = true;
-            else
-                is_match = false;
+            else{
+            	return false;
+                // is_match = false;
+            }
         }
         // remove the last two bytes' val
         unsigned int hash_val_len = hash_val.length();
