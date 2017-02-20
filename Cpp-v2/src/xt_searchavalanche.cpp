@@ -131,9 +131,9 @@ SearchAvalanche::detect_avalanche()
 	unsigned int numSearch = 1;
 
 	// size_t numFunction = m_vFuncCallContBuf.size();
-	// vector<t_AliveFunctionCall>::iterator itInFunction = m_vFuncCallContBuf.end() - 2;
+	vector<t_AliveFunctionCall>::iterator itInFunction = m_vFuncCallContBuf.end() - 2;
 
-	vector<t_AliveFunctionCall>::iterator itInFunction = m_vFuncCallContBuf.begin();
+	// vector<t_AliveFunctionCall>::iterator itInFunction = m_vFuncCallContBuf.begin();
 	for(; itInFunction != m_vFuncCallContBuf.end() - 1; ++itInFunction){
 
 		vector<t_AliveFunctionCall>::iterator itOutFunction = itInFunction + 1;
@@ -148,115 +148,115 @@ SearchAvalanche::detect_avalanche()
 				vector<t_AliveContinueBuffer> v_current_out_buf = (*itOutFunction).vAliveContinueBuffer;
 				vector<t_AliveContinueBuffer>::iterator itOutBuf = v_current_out_buf.begin();
 				for(; itOutBuf != v_current_out_buf.end(); ++itOutBuf){
+					
 					// Modify here to test byte taint propagate!!!
+					// FunctionCallBuffer in;
+					// FunctionCallBuffer out;
 
-					FunctionCallBuffer in;
-					FunctionCallBuffer out;
+					// in.callMark 	= (*itInFunction).call_mark;
+					// in.callSecMark 	= (*itInFunction).sec_call_mark;
+					// in.retMark 		= (*itInFunction).ret_mark;
+					// in.retSecMark 	= (*itInFunction).sec_ret_mark;
+					// in.buffer.beginAddr 	= (*itInBuf).beginAddress ;
+					// in.buffer.size 			= (*itInBuf).size;
+					// in.buffer.vNodeIndex 	= (*itInBuf).vNodeIndex;
 
-					in.callMark 	= (*itInFunction).call_mark;
-					in.callSecMark 	= (*itInFunction).sec_call_mark;
-					in.retMark 		= (*itInFunction).ret_mark;
-					in.retSecMark 	= (*itInFunction).sec_ret_mark;
-					in.buffer.beginAddr 	= (*itInBuf).beginAddress ;
-					in.buffer.size 			= (*itInBuf).size;
-					in.buffer.vNodeIndex 	= (*itInBuf).vNodeIndex;
+					// out.callMark 	= (*itOutFunction).call_mark;
+					// out.callSecMark = (*itOutFunction).sec_call_mark;
+					// out.retMark 	= (*itOutFunction).ret_mark;
+					// out.retSecMark 	= (*itOutFunction).sec_ret_mark;
+					// out.buffer.beginAddr 	= (*itOutBuf).beginAddress ;
+					// out.buffer.size 	 	= (*itOutBuf).size;
+					// out.buffer.vNodeIndex 	= (*itOutBuf).vNodeIndex;
 
-					out.callMark 	= (*itOutFunction).call_mark;
-					out.callSecMark = (*itOutFunction).sec_call_mark;
-					out.retMark 	= (*itOutFunction).ret_mark;
-					out.retSecMark 	= (*itOutFunction).sec_ret_mark;
-					out.buffer.beginAddr 	= (*itOutBuf).beginAddress ;
-					out.buffer.size 	 	= (*itOutBuf).size;
-					out.buffer.vNodeIndex 	= (*itOutBuf).vNodeIndex;
-
-					BufferInOut bufInOut;
-					bufInOut.in.beginAddr 	= in.buffer.beginAddr;
-					bufInOut.in.size 		= in.buffer.size;
-					bufInOut.out.beginAddr 	= out.buffer.beginAddr;
-					bufInOut.out.size 		= out.buffer.size;
-
-
-					if(isDuplBufInOut(bufInOut, vBufferInOut) ){
-						cout << "In and Out buffers had been searched, skip..." << endl;
-					}else{
-						cout << "IN buffer: " << endl;
-						printFunctionCallBuffer(in);
-					   	cout << "----------" << endl;
-					   	cout << "Output buffer: " << endl;
-					   	printFunctionCallBuffer(out);
+					// BufferInOut bufInOut;
+					// bufInOut.in.beginAddr 	= in.buffer.beginAddr;
+					// bufInOut.in.size 		= in.buffer.size;
+					// bufInOut.out.beginAddr 	= out.buffer.beginAddr;
+					// bufInOut.out.size 		= out.buffer.size;
 
 
-						cout << "----------------------------------------" << endl;
-						cout << "Searching IN and Out: " << numSearch << endl;
-
-						vBufferInOut.push_back(bufInOut);
-
-						// avalResInOut = searchAvalancheBetweenInAndOut(in, out, pg);
-						// vAvalRes.push_back(avalResInOut);
-
-						if(in.buffer.beginAddr == 0xbffff70c /* && 
-							out.buffer.beginAddr == 0xbffff6dc */ ){
-							avalResInOut = searchAvalancheBetweenInAndOut(in, out, pg);
-							vAvalRes.push_back(avalResInOut);
-						}
-
-						numSearch++;
-					}
-
-					// if(	(*itInBuf).beginAddress  != (*itOutBuf).beginAddress  ){
-					// 	FunctionCallBuffer in;
-					// 	FunctionCallBuffer out;
-
-					// 	in.callMark 	= (*itInFunction).call_mark;
-					// 	in.callSecMark 	= (*itInFunction).sec_call_mark;
-					// 	in.retMark 		= (*itInFunction).ret_mark;
-					// 	in.retSecMark 	= (*itInFunction).sec_ret_mark;
-					// 	in.buffer.beginAddr 	= (*itInBuf).beginAddress ;
-					// 	in.buffer.size 			= (*itInBuf).size;
-					// 	in.buffer.vNodeIndex 	= (*itInBuf).vNodeIndex;
-
-					// 	out.callMark 	= (*itOutFunction).call_mark;
-					// 	out.callSecMark = (*itOutFunction).sec_call_mark;
-					// 	out.retMark 	= (*itOutFunction).ret_mark;
-					// 	out.retSecMark 	= (*itOutFunction).sec_ret_mark;
-					// 	out.buffer.beginAddr 	= (*itOutBuf).beginAddress ;
-					// 	out.buffer.size 	 	= (*itOutBuf).size;
-					// 	out.buffer.vNodeIndex 	= (*itOutBuf).vNodeIndex;
-
-					// 	BufferInOut bufInOut;
-					// 	bufInOut.in.beginAddr 	= in.buffer.beginAddr;
-					// 	bufInOut.in.size 		= in.buffer.size;
-					// 	bufInOut.out.beginAddr 	= out.buffer.beginAddr;
-					// 	bufInOut.out.size 		= out.buffer.size;
+					// if(isDuplBufInOut(bufInOut, vBufferInOut) ){
+					// 	cout << "In and Out buffers had been searched, skip..." << endl;
+					// }else{
+					// 	cout << "IN buffer: " << endl;
+					// 	printFunctionCallBuffer(in);
+					//    	cout << "----------" << endl;
+					//    	cout << "Output buffer: " << endl;
+					//    	printFunctionCallBuffer(out);
 
 
-					// 	if(isDuplBufInOut(bufInOut, vBufferInOut) ){
-					// 		cout << "In and Out buffers had been searched, skip..." << endl;
-					// 	}else{
-					// 		cout << "IN buffer: " << endl;
-					// 		printFunctionCallBuffer(in);
-					// 	   	cout << "----------" << endl;
-					// 	   	cout << "Output buffer: " << endl;
-					// 	   	printFunctionCallBuffer(out);
+					// 	cout << "----------------------------------------" << endl;
+					// 	cout << "Searching IN and Out: " << numSearch << endl;
 
+					// 	vBufferInOut.push_back(bufInOut);
 
-					// 		cout << "----------------------------------------" << endl;
-					// 		cout << "Searching IN and Out: " << numSearch << endl;
+					// 	// avalResInOut = searchAvalancheBetweenInAndOut(in, out, pg);
+					// 	// vAvalRes.push_back(avalResInOut);
 
-					// 		vBufferInOut.push_back(bufInOut);
-
+					// 	if(in.buffer.beginAddr == 0xbffff70c /* && 
+					// 		out.buffer.beginAddr == 0xbffff6dc */ ){
 					// 		avalResInOut = searchAvalancheBetweenInAndOut(in, out, pg);
 					// 		vAvalRes.push_back(avalResInOut);
-
-					// 		// if(in.buffer.beginAddr == 0xbffff72c && 
-					// 		// 	out.buffer.beginAddr == 0xbffff6fc ){
-					// 		// 	avalResInOut = searchAvalancheBetweenInAndOut(in, out, pg);
-					// 		// 	vAvalRes.push_back(avalResInOut);
-					// 		// }
-
-					// 		numSearch++;
 					// 	}
+
+					// 	numSearch++;
 					// }
+
+					if(	(*itInBuf).beginAddress  != (*itOutBuf).beginAddress  ){
+						FunctionCallBuffer in;
+						FunctionCallBuffer out;
+
+						in.callMark 	= (*itInFunction).call_mark;
+						in.callSecMark 	= (*itInFunction).sec_call_mark;
+						in.retMark 		= (*itInFunction).ret_mark;
+						in.retSecMark 	= (*itInFunction).sec_ret_mark;
+						in.buffer.beginAddr 	= (*itInBuf).beginAddress ;
+						in.buffer.size 			= (*itInBuf).size;
+						in.buffer.vNodeIndex 	= (*itInBuf).vNodeIndex;
+
+						out.callMark 	= (*itOutFunction).call_mark;
+						out.callSecMark = (*itOutFunction).sec_call_mark;
+						out.retMark 	= (*itOutFunction).ret_mark;
+						out.retSecMark 	= (*itOutFunction).sec_ret_mark;
+						out.buffer.beginAddr 	= (*itOutBuf).beginAddress ;
+						out.buffer.size 	 	= (*itOutBuf).size;
+						out.buffer.vNodeIndex 	= (*itOutBuf).vNodeIndex;
+
+						BufferInOut bufInOut;
+						bufInOut.in.beginAddr 	= in.buffer.beginAddr;
+						bufInOut.in.size 		= in.buffer.size;
+						bufInOut.out.beginAddr 	= out.buffer.beginAddr;
+						bufInOut.out.size 		= out.buffer.size;
+
+
+						if(isDuplBufInOut(bufInOut, vBufferInOut) ){
+							cout << "In and Out buffers had been searched, skip..." << endl;
+						}else{
+							cout << "IN buffer: " << endl;
+							printFunctionCallBuffer(in);
+						   	cout << "----------" << endl;
+						   	cout << "Output buffer: " << endl;
+						   	printFunctionCallBuffer(out);
+
+
+							cout << "----------------------------------------" << endl;
+							cout << "Searching IN and Out: " << numSearch << endl;
+
+							vBufferInOut.push_back(bufInOut);
+
+							// avalResInOut = searchAvalancheBetweenInAndOut(in, out, pg);
+							// vAvalRes.push_back(avalResInOut);
+
+							if(in.buffer.beginAddr == 0xbffff70c /* && 
+								out.buffer.beginAddr == 0xbffff6fc */ ){
+								avalResInOut = searchAvalancheBetweenInAndOut(in, out, pg);
+								vAvalRes.push_back(avalResInOut);
+							}
+
+							numSearch++;
+						}
+					}
 				}	
 			}
 		}
@@ -728,7 +728,7 @@ XTNode SearchAvalanche::getMemoryNode(unsigned long index)
 	else if(XT_Util::equal_mark(srcFlag, flag::TCG_QEMU_ST) )
 		node = record.getDestinationNode();
 	else
-		cout << "Neither load or store node, error..." << endl;
+		cout << "Record index: " << index << " neither load or store node, error..." << endl;
 
 	return node;
 }
@@ -1048,11 +1048,7 @@ LABEL_S_TWO:
 		prev_s = curr_s;
 		// curr_s = initialBeginNode(in, inBeginAddr, m_logAesRec);
 
-		if(byte_pos > 3){
-			byte_pos = 0;
-			++itNodeIndex;
-		}
-
+		
 		XTNode node = getMemoryNode(*itNodeIndex);
 		curr_s = initPropagateSourceNode(node, m_logAesRec);
 
@@ -1102,6 +1098,11 @@ LABEL_S_TWO:
 			// inBeginAddr += node.getByteSize();
 			// ++itNodeIndex;
 			goto LABEL_S_ONE;
+		}
+
+		if(byte_pos > 3){
+			byte_pos = 0;
+			++itNodeIndex;
 		}
 	}
 

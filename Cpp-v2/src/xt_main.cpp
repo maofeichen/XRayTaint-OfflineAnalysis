@@ -23,7 +23,7 @@ int main(int argc, char const *argv[])
 {
     string fn;
 
-    po::options_description desc("Allowed options");
+	po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "produce help message")
         ("input-file,i", po::value< string >(), "input file");
@@ -48,7 +48,7 @@ int main(int argc, char const *argv[])
                               TAINT_FUNC_CALL_MARK, 
                               TAINT_BUF_BEGIN_ADDR, 
                               TAINT_BUF_SIZE);
-        da.detect_avalanche(fn, false);
+        da.detect_avalanche(fn, true);
     } 
     
     return 0;

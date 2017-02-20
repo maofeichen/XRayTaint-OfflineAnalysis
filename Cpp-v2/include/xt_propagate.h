@@ -136,7 +136,8 @@ private:
                                    unsigned int byteSz,
                                    std::string val);
     // Converts a memory XTNode to a Node
-    inline void convert_mem_xtnode(XTNode &xtNode, Node &node);
+    inline void convert_mem_xtnode(XTNode &xtNode, Node &node, 
+                                   unsigned int i_byte_addr);
     // Returns true if a given addr is global temporary
     inline bool is_global_temp(std::string &addr);
     // Returns ture if the record is a memory load operation

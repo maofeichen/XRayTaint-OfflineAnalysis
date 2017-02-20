@@ -4,9 +4,22 @@ OBJS = xt_main.o xt_data.o xt_file.o xt_liveness.o \
 		xt_node.o xt_record.o xt_alivebuffer.o xt_functioncall.o \
 		TaintBitMap.o
 
+OBJS_SRCH_PROPAGATE = xt_search_propagate.o xt_util.o xt_file.o xt_liveness.o \
+					  xt_searchavalanche.o xt_node.o xt_functioncall.o xt_log.o \
+					  xt_propagate.o xt_alivebuffer.o TaintBitMap.o xt_record.o \
+					  xt_taintpropagate.o xt_preprocess.o
+
 CC = g++-4.9
 INC = -Iinclude
 CFLAG = -g -std=c++11
+
+all : xt_main xt_search_propagate
+
+xt_search_propagate : $(OBJS_SRCH_PROPAGATE) 
+	$(CC) $(INC) -o ./bin/xt_search_propagate $(OBJS_SRCH_PROPAGATE) $(CFLAG) -lboost_program_options
+	
+xt_search_propagate.o : src/xt_search_propagate.cpp
+	$(CC) $(INC) -c src/xt_search_propagate.cpp $(CFLAG)
 
 xt_main : $(OBJS)
 	$(CC) $(INC) -o ./bin/xt_main $(OBJS) $(CFLAG) -lboost_program_options 

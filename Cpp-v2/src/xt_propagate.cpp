@@ -378,7 +378,7 @@ unordered_set<Node, NodeHash> Propagate::search_propagate(NodePropagate &taint_s
 
         // use byte_pos to calcuate the taint
         taint = (1 << byte_pos);
-        handle_destinate_node(src, taint, true, propagate_res);
+        // handle_destinate_node(src, taint, true, propagate_res);
 
         // handles its destination 
         dst = record.getDestinationNode();
@@ -581,22 +581,20 @@ void Propagate::handle_destinate_node_mem(XTNode &xt_node,
                 unsigned int i_byte_addr = stoul(v_mem_val[byteIdx].addr, nullptr, 10);
                 string byte_val = v_mem_val[byteIdx].val;
 
-                cout << "propagate to: " << hex << i_byte_addr << " val: " << byte_val << endl;
-
                 if(memValMap_.find(i_byte_addr) != memValMap_.end() ){
                     memValMap_.erase(i_byte_addr);
                     memValMap_[i_byte_addr] = byte_val;
                 }else
                     memValMap_[i_byte_addr] = byte_val;
+
+                // inserts to propagate result
+                // inserts based on the taint info, but now insert all
+                cout << "propagate to: " << hex << i_byte_addr << " val: " << byte_val << endl;
+                Node node;
+                convert_mem_xtnode(xt_node, node, i_byte_addr);
+                insert_propagate_result(node, propagate_res);
             }
         }
-
-        // insert to propagate result
-        // should insert based on the taint info, but now insert all
-        Node node;
-        convert_mem_xtnode(xt_node, node);
-        insert_propagate_result(node, propagate_res);
-        // cout << "propagate to: " << hex << node.i_addr << " " << node.sz / 8 << " bytes"<< endl;
     }
 }
 
@@ -1055,14 +1053,17 @@ vector<MemVal_> Propagate::split_mem(string addr,
     return v_memVal;
 }
 
-inline void Propagate::convert_mem_xtnode(XTNode &xtNode, Node &node)
+inline void Propagate::convert_mem_xtnode(XTNode &xtNode, Node &node, 
+                                          unsigned int i_byte_addr)
 {
     node.flag = xtNode.getFlag();
     node.addr = xtNode.getAddr();
     node.val  = xtNode.getVal();
-    node.i_addr = xtNode.getIntAddr();
-    // bit size?
-    node.sz     = xtNode.getBitSize();
+    // node.i_addr = xtNode.getIntAddr();
+    node.i_addr = i_byte_addr;
+    // bit size? 1 byte
+    node.sz     = 8;
+    // node.sz     = xtNode.getBitSize();
 }
 
 inline bool Propagate::is_global_temp(string &addr)
