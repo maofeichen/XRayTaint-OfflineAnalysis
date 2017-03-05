@@ -119,6 +119,20 @@ private:
 	inline void saveAvalancheResult(AvalancheRes &avalRes, Buffer &avalIn, std::vector<Buffer> &vAvalOut);
 	inline void saveAvalResult(AvalResBetweenInOut &avalResInOut, Buffer &avalIn, std::vector<Buffer> &vAvalOut);
 
+	// Computes the inteval to next different taint source
+	inline unsigned long compu_multi_source_interval(std::vector<unsigned long> &v_node_idx, 
+													 std::vector<unsigned long>::iterator it_node_idx);
+
+	// Merge propagate result for multiple identical taint source
+	inline void merge_propagate_res(std::unordered_set<Node, NodeHash> &propagateRes,
+									std::unordered_set<Node, NodeHash> &propagate_res_merge);
+
+	std::unordered_set<Node, NodeHash> compu_multi_propagate_res(unsigned int src_interval,
+																 std::vector<unsigned long>::iterator it_idx_interval,
+																 unsigned int byte_pos,
+																 XTNode &node,
+																 Propagate &propagate);
+
 
 	void assignFunctionCallBuffer(FunctionCallBuffer &a, FunctionCallBuffer &b);
 	std::vector<FunctionCallBuffer> getAvalancheInNewSearch(std::unordered_set<Node, NodeHash> &propagateResult, 

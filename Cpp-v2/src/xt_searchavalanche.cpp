@@ -245,14 +245,14 @@ SearchAvalanche::detect_avalanche()
 
 							vBufferInOut.push_back(bufInOut);
 
-							// avalResInOut = searchAvalancheBetweenInAndOut(in, out, pg);
-							// vAvalRes.push_back(avalResInOut);
+							avalResInOut = searchAvalancheBetweenInAndOut(in, out, pg);
+							vAvalRes.push_back(avalResInOut);
 
-							if(in.buffer.beginAddr == 0xbffff70c /* && 
-								out.buffer.beginAddr == 0xbffff6fc */ ){
-								avalResInOut = searchAvalancheBetweenInAndOut(in, out, pg);
-								vAvalRes.push_back(avalResInOut);
-							}
+							// if(in.buffer.beginAddr == 0xbffff70c /* && 
+							// 	out.buffer.beginAddr == 0xbffff6fc */ ){
+							// 	avalResInOut = searchAvalancheBetweenInAndOut(in, out, pg);
+							// 	vAvalRes.push_back(avalResInOut);
+							// }
 
 							numSearch++;
 						}
@@ -427,6 +427,59 @@ inline void SearchAvalanche::saveAvalResult(AvalResBetweenInOut &avalResInOut, B
 		avalRes.avalOut.size = s.size;
 		avalResInOut.vAvalRes.push_back(avalRes);
 	}
+}
+
+inline unsigned long SearchAvalanche::compu_multi_source_interval(vector<unsigned long> &v_node_idx, 
+													 			  vector<unsigned long>::iterator it_node_idx)
+{
+	unsigned long count = 0;
+
+	XTNode node = getMemoryNode(*it_node_idx);
+	unsigned long begin_addr = node.getIntAddr();
+
+	for(; it_node_idx != v_node_idx.end(); ++it_node_idx){
+		node = getMemoryNode(*it_node_idx);
+		count++;
+
+		if(begin_addr != node.getIntAddr() )
+			break;
+	}	
+
+	return count;
+}
+
+inline void SearchAvalanche::merge_propagate_res(unordered_set<Node, NodeHash> &propagateRes,
+												 unordered_set<Node, NodeHash> &propagate_res_merge) 
+{
+	unordered_set<Node,NodeHash>::iterator it = propagateRes.begin();
+	for(; it != propagateRes.end(); ++it){
+		propagate_res_merge.insert(*it);
+	}	
+}
+
+unordered_set<Node, NodeHash> 
+SearchAvalanche::compu_multi_propagate_res(unsigned int src_interval,
+										   vector<unsigned long>::iterator it_idx_interval,
+										   unsigned int byte_pos,
+										   XTNode &node,
+										   Propagate &propagate)
+{
+	unordered_set<Node, NodeHash> propagateRes;
+	unordered_set<Node, NodeHash> propagate_res_merge;
+
+	NodePropagate s;
+
+	for(int idx = 0; idx < src_interval - 1; idx++){
+		node = getMemoryNode(*it_idx_interval);
+		s = initPropagateSourceNode(node, m_logAesRec);
+
+		propagateRes = propagate.getPropagateResult(s, m_logAesRec, byte_pos);
+		merge_propagate_res(propagateRes, propagate_res_merge);
+
+		it_idx_interval++;
+	}
+
+	return propagate_res_merge;
 }
 
 void SearchAvalanche::assignFunctionCallBuffer(FunctionCallBuffer &a, FunctionCallBuffer &b)
@@ -941,11 +994,13 @@ SearchAvalanche::searchAvalancheBetweenInAndOut(
 	NodePropagate curr_s;
 	NodePropagate prev_s;
 	unordered_set<Node, NodeHash> propagateRes;
+	unordered_set<Node, NodeHash> propagate_res_merge;
 
 	unsigned long inBeginAddr;
 	unsigned int numInByteAccumulate; 
 	unsigned int byteIndex;
 	unsigned int byte_pos;
+	unsigned int src_interval = 0;
 
 	Buffer avalIn;
 	vector<Buffer> vAvalOut;
@@ -986,13 +1041,31 @@ LABEL_S_ONE:
 	// while(byteIndex < in.buffer.size / BIT_TO_BYTE){
 	while(itNodeIndex != in.buffer.vNodeIndex.end() ){
 		// s = initialBeginNode(in, inBeginAddr, m_logAesRec);
-		XTNode node = getMemoryNode(*itNodeIndex);
-		s = initPropagateSourceNode(node, m_logAesRec);
+		XTNode node;
+		src_interval = compu_multi_source_interval(in.buffer.vNodeIndex, itNodeIndex);
+		vector<unsigned long>::iterator it_idx_interval = itNodeIndex;
+		// for(int idx = 0; idx < src_interval - 1; idx++){
+		// 	node = getMemoryNode(*it_idx_interval);
+		// 	s = initPropagateSourceNode(node, m_logAesRec);
+		// 	cout << "search propagation, taint source: " << hex << inBeginAddr << endl; 
+
+		// 	propagateRes = propagate.getPropagateResult(s, m_logAesRec, byte_pos);
+		// 	merge_propagate_res(propagateRes, propagate_res_merge);
+
+		// 	it_idx_interval++;
+		// }
+		propagate_res_merge = compu_multi_propagate_res(src_interval, it_idx_interval, byte_pos,
+														node, propagate);
+
+		// XTNode node = getMemoryNode(*itNodeIndex);
+		// s = initPropagateSourceNode(node, m_logAesRec);
 
 		cout << "search propagation, taint source: " << hex << inBeginAddr << endl; 
 
-		propagateRes = propagate.getPropagateResult(s, m_logAesRec, byte_pos);
-		vFuncAvalOut = getAvalancheInNewSearch(propagateRes, out);
+		// propagateRes = propagate.getPropagateResult(s, m_logAesRec, byte_pos);
+		// vFuncAvalOut = getAvalancheInNewSearch(propagateRes, out);
+
+		vFuncAvalOut = getAvalancheInNewSearch(propagate_res_merge, out);
 
 		// if 1st byte can propagate to any valid subset of out?
 		if(!vFuncAvalOut.empty() ){
@@ -1033,7 +1106,9 @@ LABEL_S_ONE:
 			// if cross 4 bytes, reset and goto next node
 			if(byte_pos > 3){
 				byte_pos = 0;
-				++itNodeIndex;
+				// ++itNodeIndex;
+				// instead of plus 1, plus the interval
+				itNodeIndex += src_interval;
 			}
 
 			// byteIndex += node.getByteSize();
@@ -1048,14 +1123,20 @@ LABEL_S_TWO:
 		prev_s = curr_s;
 		// curr_s = initialBeginNode(in, inBeginAddr, m_logAesRec);
 
-		
-		XTNode node = getMemoryNode(*itNodeIndex);
-		curr_s = initPropagateSourceNode(node, m_logAesRec);
-
 		cout << "search propagation, taint source: " << hex << inBeginAddr << endl; 
-
-		propagateRes = propagate.getPropagateResult(curr_s, m_logAesRec, byte_pos);
-		vAvalOut = getAvalInRestByte(avalResInOut_new, avalIn, propagateRes, vAvalOut);
+	
+		XTNode node;
+		src_interval = compu_multi_source_interval(in.buffer.vNodeIndex, itNodeIndex);
+		vector<unsigned long>::iterator it_idx_interval = itNodeIndex;
+		propagate_res_merge = compu_multi_propagate_res(src_interval, it_idx_interval, byte_pos,
+														node, propagate);
+		
+		// XTNode node = getMemoryNode(*itNodeIndex);
+		// curr_s = initPropagateSourceNode(node, m_logAesRec);
+		// cout << "search propagation, taint source: " << hex << inBeginAddr << endl; 
+		// propagateRes = propagate.getPropagateResult(curr_s, m_logAesRec, byte_pos);
+		// vAvalOut = getAvalInRestByte(avalResInOut_new, avalIn, propagateRes, vAvalOut);
+		vAvalOut = getAvalInRestByte(avalResInOut_new, avalIn, propagate_res_merge, vAvalOut);
 
 		// No need this optimize now, because we use byte to byte search
 		// if(!isSameNode(prev_s, curr_s)){
@@ -1102,7 +1183,9 @@ LABEL_S_TWO:
 
 		if(byte_pos > 3){
 			byte_pos = 0;
-			++itNodeIndex;
+			// ++itNodeIndex;
+			// instead of plus 1, plus the interval
+			itNodeIndex += src_interval;
 		}
 	}
 

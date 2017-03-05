@@ -139,13 +139,16 @@ void XT_FunctionCall::create_continuous_buffer(
 
 	accumulateBitSize += (*it).getBitSize();
 
-	for(; it != vNode.end(); ++it){
+	for(++it; it != vNode.end(); ++it){
 		// unsigned int current_addr = aAliveBuffer.getBeginAddr() + aAliveBuffer.getBufferByteSize();
 		unsigned int current_addr = aliveBuffer.beginAddress + (aliveBuffer.size / BIT_TO_BYTE);
 
 		// If contains
-		if( current_addr > (*it).getIntAddr() )
-			continue;
+		if( current_addr > (*it).getIntAddr() ){
+			// continue;
+			nodeIndex = (*it).getIndex();
+			aliveBuffer.vNodeIndex.push_back(nodeIndex);
+		}
 		// If continue
 		else if( current_addr == (*it).getIntAddr() ){
 			accumulateBitSize += (*it).getBitSize();
