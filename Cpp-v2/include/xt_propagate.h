@@ -63,12 +63,9 @@ public:
                                                           std::vector<Record> &vRec, 
                                                           unsigned int byte_pos);
 
-    // INGORE!!!
-    // std::unordered_set<Node, NodeHash> searchAvalanche(std::vector<std::string> &log, 
-    //                                                    std::vector<NodePropagate> &allPropgateRes);
 private:
     // a maximum byte value in string, its max len 
-    const unsigned int BYTE_VAL_STR_LEN = 2;
+    unsigned int BYTE_VAL_STR_LEN = 2;
 
     // new class to store xray taint log 
     XTLog m_xtLog;
@@ -77,7 +74,7 @@ private:
     struct tempDataType_
     {
        char taint;
-       string val; 
+       std::string val;
     };
     // hashmap for local temps of Qemu, e.g. index as 0, 1, 2...
     google::dense_hash_map<unsigned int, tempDataType_> localTempMap_;
@@ -90,7 +87,7 @@ private:
     // Since XinLi's TaintBitMap doesn't store the value of a memory,
     // but we need it during the propagate search .
     // Thus use another hashmap to store <mem, val> infomation, in byte level
-    google::dense_hash_map<unsigned int, string> memValMap_;
+    google::dense_hash_map<unsigned int, std::string> memValMap_;
 
     // IR bitwise operation filter
     std::vector<std::string> bitwise_ir_filter = {
@@ -123,11 +120,6 @@ private:
     // byte that need to compare
     // Returns true if all positions are same value
     bool compare_temp(char &taint, std::string hash_val, std::string node_val);
-
-    // Not used!!!
-    // Compare a memory value to its hash value, given its size
-    // Returns true if all size bytes: values are same
-    // bool compare_mem_val(unsigned int byteSz, std::string hash_val, std::string mem_val);
 
     // Splits a multiple byte memory into byte level,
     // Returns a vector of <mem, val>
@@ -223,18 +215,6 @@ private:
                                char &taint,
                                bool is_taint_source, 
                                std::unordered_set<Node, NodeHash> &propagate_res); 
-
-    // IGNORE!!! 
-    // std::vector<Record> initRec(std::vector<std::string> &log); 
-
-    // Move to preprocess
-    // inline RegularRecord initMarkRecord(std::vector<std::string> &singleRec);      
-    // inline RegularRecord initRegularRecord(std::vector<std::string> &singleRec);   
-
-    // std::unordered_set<Node, NodeHash> bfs(NodePropagate &s, std::vector<Record> &r);
-    // std::unordered_set<Node, NodeHash> bfs_old_debug(NodePropagate &s, 
-    //                                                  std::vector<Record> &v_rec, 
-    //                                                  std::vector<NodePropagate> &allPropgateRes);
 
 };
 #endif

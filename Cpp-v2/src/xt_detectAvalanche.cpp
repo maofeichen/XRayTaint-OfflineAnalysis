@@ -118,7 +118,7 @@ void XT_DetectAvalanche::detect_avalanche(string logPath, bool isWriteFile)
     // }
 
     // Detects after liveness analysis
-    Detect det(vAliveFunction, o_xtLog);
+    Detect det(vAliveFunction, o_xtLog, xtLogRec);
     det.detect_cipher();
 }	
 
