@@ -84,7 +84,6 @@ public:
 	std::vector<AvalResBetweenInOut> searchAvalanche();
 	std::vector<AvalResBetweenInOut> detect_avalanche();
 
-	// void searchAvalancheDebug();
 	void printAvalResBetweenInAndOut(AvalancheResBetweenInAndOut &avalResInOut);
 	void printAvalResBetweenInAndOutNew(AvalResBetweenInOut &avalResInOut);
 	void printAvalancheRes(AvalancheRes &avalRes);
@@ -156,13 +155,8 @@ private:
 	NodePropagate initialBeginNode(FunctionCallBuffer &buf, unsigned long &addr, std::vector<Record> &logRec);
 	NodePropagate initPropagateSourceNode(XTNode &node, vector<Record> &logRecord);
 
-	// AvalancheResBetweenInAndOut old_searchAvalancheBetweenInAndOut(FunctionCallBuffer &in, 
-	// 														   	   FunctionCallBuffer &out,
-	// 														       Propagate &propagate);
 	AvalResBetweenInOut searchAvalancheBetweenInAndOut(FunctionCallBuffer &in, 
 													   FunctionCallBuffer &out,
 													   Propagate &propagate);
-	// void searchAvalancheBetweenInAndOut_IGNORE(FunctionCallBuffer &in, FunctionCallBuffer &out);
-	// void searchAvalancheBetweenInAndOutDebug(FunctionCallBuffer &in, FunctionCallBuffer &out);
 };
 #endif
