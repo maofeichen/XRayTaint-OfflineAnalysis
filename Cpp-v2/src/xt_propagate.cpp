@@ -263,9 +263,6 @@ unordered_set<Node, NodeHash> Propagate::search_propagate(NodePropagate &taint_s
 
         // cout << "record: " << record_idx << " src " << src.getAddr() << " val: " << src.getVal() << " dst: " << dst.getAddr() << " val: " << dst.getVal() << endl;
 
-        if(record_idx == 31915)
-            cout << "record_idx: 31915" << endl;
-
         if(!src.isMark() ){
             taint = 0;
             if(handle_source_node(src, taint) ){
@@ -447,7 +444,8 @@ void Propagate::handle_destinate_node_mem(XTNode &xt_node,
                 // inserts based on the taint info, but now insert all
                 cout << "propagate to: " << hex << i_byte_addr << " val: " << byte_val << endl;
                 Node node;
-                convert_mem_xtnode(xt_node, node, i_byte_addr);
+                // convert_mem_xtnode(xt_node, node, i_byte_addr);
+                convert_to_byte_node(xt_node, node, i_byte_addr, byte_val);
                 insert_propagate_result(node, propagate_res);
             }
         }
@@ -769,6 +767,17 @@ inline void Propagate::convert_mem_xtnode(XTNode &xtNode, Node &node,
     // bit size? 1 byte
     node.sz     = 8;
     // node.sz     = xtNode.getBitSize();
+}
+
+inline void Propagate::convert_to_byte_node(XTNode &xt_node, Node &node,
+                                            unsigned int i_byte_addr,
+                                            string byte_val)
+{
+    node.flag = xt_node.getFlag();
+    node.addr = to_string(i_byte_addr);
+    node.val  = byte_val;
+    node.i_addr = i_byte_addr;
+    node.sz     = 8; // 1 byte
 }
 
 inline bool Propagate::is_global_temp(string &addr)

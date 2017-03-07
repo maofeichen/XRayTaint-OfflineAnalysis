@@ -14,12 +14,13 @@ Detect::Detect(vector<t_AliveFunctionCall> v_func_cont_buf,
     v_func_cont_buf_ = v_func_cont_buf;
     xt_log_ = xt_log;
     log_rec_ = log_rec;
-    propagate_ = Propagate(xt_log_);
 }
 
 void Detect::detect_cipher()
 {
     cout << "Detecting cipher after liveness analysis..." << endl;
+
+    Propagate propagate(xt_log_);
 
     vector<t_AliveFunctionCall>::iterator it_in_func = v_func_cont_buf_.end() - 2;
     // vector<t_AliveFunctionCall>::iterator itInFunction = v_func_cont_buf_.begin();
@@ -41,7 +42,13 @@ void Detect::detect_cipher()
                     if( (*it_in_buf).beginAddress != (*it_out_buf).beginAddress){
                         t_AliveContinueBuffer in_buf = *it_in_buf;
                         t_AliveContinueBuffer out_buf = *it_out_buf;
-                        detect_cipher_in_out(in_buf, out_buf);
+
+                        // detect_cipher_in_out(in_buf, out_buf, propagate);
+
+                        // Debug
+                        if(in_buf.beginAddress == 0xbffff70c){
+                            detect_cipher_in_out(in_buf, out_buf, propagate);
+                        }
                     }
                 }
             }
@@ -86,12 +93,14 @@ inline void
 Detect::merge_propagate_res(unordered_set<Node, NodeHash> &propagate_res,
 	                        unordered_set<Node, NodeHash> &multi_propagate_res)
 {
-    unordered_set<Node, NodeHash>::const_iterator it_propagate_res =
-            propagate_res.begin();
+    unordered_set<Node, NodeHash>::const_iterator it_propagate_res;
+    unordered_set<Node, NodeHash>::const_iterator got_multi;
+
+    it_propagate_res = propagate_res.begin();
     for(; it_propagate_res != propagate_res.end(); ++it_propagate_res){
-        unordered_set<Node, NodeHash>::const_iterator got_multi =
-                multi_propagate_res.find(*it_propagate_res);
-        if( got_multi != multi_propagate_res.end() ){
+        got_multi = multi_propagate_res.find(*it_propagate_res);
+
+        if( got_multi == multi_propagate_res.end() ){
             multi_propagate_res.insert(*it_propagate_res);
         }
     }
@@ -100,7 +109,8 @@ Detect::merge_propagate_res(unordered_set<Node, NodeHash> &propagate_res,
 unordered_set<Node, NodeHash>
 Detect::comp_multi_src_propagate_res(unsigned int multi_src_interval,
                                      vector<unsigned long>::const_iterator it_multi_src_idx,
-                                     unsigned int byte_pos)
+                                     unsigned int byte_pos,
+                                     Propagate &propagate)
 {
 
     unordered_set<Node, NodeHash> propagate_res;
@@ -110,7 +120,7 @@ Detect::comp_multi_src_propagate_res(unsigned int multi_src_interval,
     for(; i < multi_src_interval - 1; i++){
         XTNode node = get_mem_node(*it_multi_src_idx);
         NodePropagate taint_src = init_taint_source(node, log_rec_);
-        propagate_res = propagate_.getPropagateResult(taint_src, log_rec_, byte_pos);
+        propagate_res = propagate.getPropagateResult(taint_src, log_rec_, byte_pos);
         merge_propagate_res(propagate_res, multi_propagate_res);
 
         it_multi_src_idx++;
@@ -172,18 +182,32 @@ Detect::init_taint_source(XTNode &node, std::vector<Record> &log_rec)
 }
 
 void Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
-	                              t_AliveContinueBuffer &out)
+	                              t_AliveContinueBuffer &out,
+	                              Propagate &propagate)
 {
-    unsigned int byte_pos = 0;
+    unsigned int byte_pos    = 0;
+    unsigned long begin_addr = in.beginAddress;
+    vector<unsigned long>::const_iterator it_node_idx;
 
-    vector<unsigned long>::const_iterator it_node_idx = in.vNodeIndex.begin();
-
+    it_node_idx = in.vNodeIndex.begin();
     while(it_node_idx != in.vNodeIndex.end() ){
-        unsigned int multi_src_interval =
-                comp_multi_src_interval(in.vNodeIndex, it_node_idx);
-        vector<unsigned long>::const_iterator it_multi_srcidx = it_node_idx;
+        unsigned int multi_src_interval;
+        vector<unsigned long>::const_iterator it_multi_src_idx;
+        unordered_set<Node, NodeHash> multi_propagate_res;
 
-        unordered_set<Node, NodeHash> multi_propagate_res =
-                comp_multi_src_propagate_res(multi_src_interval, it_multi_srcidx, byte_pos);
+        cout << "Search taint propagation: taint source: " << hex << begin_addr << endl;
+        multi_src_interval = comp_multi_src_interval(in.vNodeIndex, it_node_idx);
+        it_multi_src_idx = it_node_idx;
+        multi_propagate_res = comp_multi_src_propagate_res(multi_src_interval,
+                                                           it_multi_src_idx,
+                                                           byte_pos, propagate);
+
+        byte_pos++;
+        begin_addr++;
+        // if crosses 4 bytes, reset and goes to next multi sources
+        if(byte_pos > 3){
+            byte_pos = 0;
+            it_node_idx += multi_src_interval;
+        }
     }
 }

@@ -21,7 +21,6 @@ private:
     XTLog xt_log_;
 	std::vector<t_AliveFunctionCall> v_func_cont_buf_;
 	std::vector<Record> log_rec_;
-	Propagate propagate_;
 
 	// Due to there might be multiple same taint sources (same addr, different val),
 	// computes the interval to next different taint source
@@ -34,9 +33,10 @@ private:
 
 	// Computes propagate results for multiple sources
 	std::unordered_set<Node, NodeHash> comp_multi_src_propagate_res(
-	        unsigned int multi_src_interval,
-	        std::vector<unsigned long>::const_iterator it_multi_src_idx,
-	        unsigned int byte_pos);
+	                                            unsigned int multi_src_interval,
+	                                            std::vector<unsigned long>::const_iterator it_multi_src_idx,
+	                                            unsigned int byte_pos,
+	                                            Propagate &propagate);
 
 	// get the memory node (load or store) given the index in the log
 	XTNode get_mem_node(unsigned long index);
@@ -46,8 +46,8 @@ private:
 	NodePropagate init_taint_source(XTNode &node, std::vector<Record> &log_rec);
 
 	// Detects cipher between a potential input and output buffers
-	void detect_cipher_in_out(t_AliveContinueBuffer &in,
-	                          t_AliveContinueBuffer &out);
+	void detect_cipher_in_out(t_AliveContinueBuffer &in, t_AliveContinueBuffer &out,
+	                          Propagate &propagate);
 };
 
 #endif /* XT_DETECT_H_ */
