@@ -2,6 +2,7 @@
 #include "xt_flag.h"
 #include "xt_util.h"
 
+#include <algorithm>
 #include <string>
 #include <iostream>
 
@@ -129,6 +130,116 @@ Detect::comp_multi_src_propagate_res(unsigned int multi_src_interval,
     return multi_propagate_res;
 }
 
+vector<Detect::propagate_byte_>
+Detect::convert_propagate_byte(unordered_set<Node, NodeHash> &multi_propagate_res)
+{
+    vector<propagate_byte_> v_propagate_byte;
+    propagate_byte_ propagate_byte;
+
+    unordered_set<Node,NodeHash>::const_iterator it_multi;
+
+    it_multi = multi_propagate_res.begin();
+    // Only needs addr and val, size is 1 byte by default
+    for(; it_multi != multi_propagate_res.end(); ++it_multi){
+        propagate_byte.addr = (*it_multi).i_addr;
+        propagate_byte.val  = (*it_multi).val;
+        v_propagate_byte.push_back(propagate_byte);
+    }
+
+    return v_propagate_byte;
+}
+
+vector< vector<Detect::propagate_byte_> >
+Detect::gen_in_propagate_byte(t_AliveContinueBuffer &in, Propagate &propagate)
+{
+    vector< vector<propagate_byte_> > in_vec_propagate_byte;
+
+    unsigned int byte_pos    = 0;
+    unsigned long begin_addr = in.beginAddress;
+    vector<unsigned long>::const_iterator it_node_idx;
+
+    it_node_idx = in.vNodeIndex.begin();
+    while(it_node_idx != in.vNodeIndex.end() ){
+        unsigned int multi_src_interval;
+        vector<unsigned long>::const_iterator it_multi_src_idx;
+        unordered_set<Node, NodeHash> multi_propagate_res;
+
+        // cout << "Search taint propagation: taint source: " << hex << begin_addr << endl;
+        multi_src_interval = comp_multi_src_interval(in.vNodeIndex, it_node_idx);
+        it_multi_src_idx = it_node_idx;
+        multi_propagate_res = comp_multi_src_propagate_res(multi_src_interval,
+                                                           it_multi_src_idx,
+                                                           byte_pos, propagate);
+
+        vector<propagate_byte_> v_propagate_byte;
+        v_propagate_byte = convert_propagate_byte(multi_propagate_res);
+        in_vec_propagate_byte.push_back(v_propagate_byte);
+
+        byte_pos++;
+        begin_addr++;
+        // if crosses 4 bytes, reset and goes to next multi sources
+        if(byte_pos > 3){
+            byte_pos = 0;
+            it_node_idx += multi_src_interval;
+        }
+    }
+
+    return in_vec_propagate_byte;
+}
+
+void Detect::gen_byte_range_array(vector<Detect::propagate_byte_> v_propagate_byte)
+{
+    RangeArray range_array;
+
+    sort(v_propagate_byte.begin(), v_propagate_byte.end() );
+
+    vector<propagate_byte_>::const_iterator it_propagate_byte;
+    it_propagate_byte = v_propagate_byte.begin();
+
+    unsigned long range_begin_addr = (*it_propagate_byte).addr;
+    unsigned int range_len = 1;
+
+    for(; it_propagate_byte != v_propagate_byte.end(); ++it_propagate_byte){
+        unsigned long curr_begin_addr = (*it_propagate_byte).addr;
+
+        if(range_begin_addr + range_len == curr_begin_addr){
+            range_len++;
+        }
+        else if(range_begin_addr + range_len < curr_begin_addr){
+            // cout << "a new range, previous range: " <<
+            //         "addr: " << hex << range_begin_addr <<
+            //         " len: " << dec << range_len << " bytes" << endl;
+
+            range_array.add_range(range_begin_addr, range_len);
+
+            // Init for next range
+            range_begin_addr = curr_begin_addr;
+            range_len = 1;
+        }
+    }
+
+    // range_array.disp_range_array();
+}
+
+void Detect::gen_in_range_array(t_AliveContinueBuffer &in,
+	                            vector< vector<Detect::propagate_byte_> > &in_vec_propagate_byte)
+{
+    vector<RangeArray> v_range_array;
+    RangeArray range_array;
+    RangeArray *ptr_range_array;
+
+    unsigned long begin_addr = in.beginAddress;
+    vector< vector<propagate_byte_> >::const_iterator it_in_byte;
+
+    it_in_byte = in_vec_propagate_byte.begin();
+    for(; it_in_byte != in_vec_propagate_byte.end(); ++it_in_byte){
+        gen_byte_range_array(*it_in_byte);
+
+        begin_addr++;
+    }
+}
+
+
 XTNode Detect::get_mem_node(unsigned long index)
 {
     XTNode node, src_node;
@@ -148,7 +259,6 @@ XTNode Detect::get_mem_node(unsigned long index)
 
     return node;
 }
-
 
 NodePropagate
 Detect::init_taint_source(XTNode &node, std::vector<Record> &log_rec)
@@ -185,29 +295,10 @@ void Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
 	                              t_AliveContinueBuffer &out,
 	                              Propagate &propagate)
 {
-    unsigned int byte_pos    = 0;
-    unsigned long begin_addr = in.beginAddress;
-    vector<unsigned long>::const_iterator it_node_idx;
+    vector< vector<propagate_byte_> > in_vec_propagate_byte;
+    in_vec_propagate_byte = gen_in_propagate_byte(in, propagate);
+    cout << "numbef of bytes in in buffer: " << dec << in.size / 8 << endl;
+    cout << "number of vector of propagte bytes: " << dec << in_vec_propagate_byte.size() << endl;
 
-    it_node_idx = in.vNodeIndex.begin();
-    while(it_node_idx != in.vNodeIndex.end() ){
-        unsigned int multi_src_interval;
-        vector<unsigned long>::const_iterator it_multi_src_idx;
-        unordered_set<Node, NodeHash> multi_propagate_res;
-
-        cout << "Search taint propagation: taint source: " << hex << begin_addr << endl;
-        multi_src_interval = comp_multi_src_interval(in.vNodeIndex, it_node_idx);
-        it_multi_src_idx = it_node_idx;
-        multi_propagate_res = comp_multi_src_propagate_res(multi_src_interval,
-                                                           it_multi_src_idx,
-                                                           byte_pos, propagate);
-
-        byte_pos++;
-        begin_addr++;
-        // if crosses 4 bytes, reset and goes to next multi sources
-        if(byte_pos > 3){
-            byte_pos = 0;
-            it_node_idx += multi_src_interval;
-        }
-    }
+    gen_in_range_array(in, in_vec_propagate_byte);
 }

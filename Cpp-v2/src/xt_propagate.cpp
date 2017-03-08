@@ -440,9 +440,9 @@ void Propagate::handle_destinate_node_mem(XTNode &xt_node,
                 }else
                     memValMap_[i_byte_addr] = byte_val;
 
-                // inserts to propagate result
-                // inserts based on the taint info, but now insert all
-                cout << "propagate to: " << hex << i_byte_addr << " val: " << byte_val << endl;
+                // Inserts to propagate result
+                // Inserts based on the taint info, but now insert all
+                // cout << "propagate to: " << hex << i_byte_addr << " val: " << byte_val << endl;
                 Node node;
                 // convert_mem_xtnode(xt_node, node, i_byte_addr);
                 convert_to_byte_node(xt_node, node, i_byte_addr, byte_val);

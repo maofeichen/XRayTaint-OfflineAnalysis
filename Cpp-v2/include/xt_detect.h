@@ -6,6 +6,7 @@
 
 #include "xt_propagate.h"
 #include "xt_log.h"
+#include "RangeArray.h"
 
 #include <unordered_set>
 #include <vector>
@@ -21,6 +22,15 @@ private:
     XTLog xt_log_;
 	std::vector<t_AliveFunctionCall> v_func_cont_buf_;
 	std::vector<Record> log_rec_;
+
+	struct propagate_byte_{
+	    unsigned long addr;
+	    std::string val;
+
+	    bool operator < (const propagate_byte_ &propagate_byte) const{
+	        return (addr < propagate_byte.addr);
+	    }
+	};
 
 	// Due to there might be multiple same taint sources (same addr, different val),
 	// computes the interval to next different taint source
@@ -38,8 +48,23 @@ private:
 	                                            unsigned int byte_pos,
 	                                            Propagate &propagate);
 
+	// Converts multiple source result set to vector of propagate_byte_
+	// for further analysis
+	std::vector<Detect::propagate_byte_>
+	        convert_propagate_byte(std::unordered_set<Node, NodeHash> &multi_propagate_res);
+
 	// get the memory node (load or store) given the index in the log
 	XTNode get_mem_node(unsigned long index);
+
+	// Generates propagate bytes for all bytes of in buffer
+	std::vector< std::vector<Detect::propagate_byte_> >
+	        gen_in_propagate_byte(t_AliveContinueBuffer &in, Propagate &propagate);
+
+	// Generates range array for 1 byte taint source
+	void gen_byte_range_array(std::vector<Detect::propagate_byte_> v_propagate_byte);
+	// Generate range array for all bytes of in buffer as taint sources
+	void gen_in_range_array(t_AliveContinueBuffer &in,
+	        std::vector< std::vector<Detect::propagate_byte_> > &in_vec_propagate_byte);
 
 	// Given a node in log, convert it to NodePropagate format as taint source
 	// for taint propagation search
