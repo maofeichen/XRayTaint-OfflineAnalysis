@@ -4,6 +4,7 @@
 #ifndef XT_DETECT_H_
 #define XT_DETECT_H_
 
+#include "xt_ByteTaintPropagate.h"
 #include "xt_propagate.h"
 #include "xt_log.h"
 #include "RangeArray.h"
@@ -61,10 +62,12 @@ private:
 	        gen_in_propagate_byte(t_AliveContinueBuffer &in, Propagate &propagate);
 
 	// Generates range array for 1 byte taint source
-	void gen_byte_range_array(std::vector<Detect::propagate_byte_> v_propagate_byte);
+	void gen_byte_range_array(std::vector<Detect::propagate_byte_> v_propagate_byte,
+	                          RangeArray *range_array);
 	// Generate range array for all bytes of in buffer as taint sources
 	void gen_in_range_array(t_AliveContinueBuffer &in,
-	        std::vector< std::vector<Detect::propagate_byte_> > &in_vec_propagate_byte);
+	        std::vector< std::vector<Detect::propagate_byte_> > &in_vec_propagate_byte,
+	        std::vector<ByteTaintPropagate *> &in_taint_propagate);
 
 	// Given a node in log, convert it to NodePropagate format as taint source
 	// for taint propagation search

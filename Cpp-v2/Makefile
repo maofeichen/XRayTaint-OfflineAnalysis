@@ -2,7 +2,8 @@ OBJS = xt_main.o xt_data.o xt_file.o xt_liveness.o \
 		xt_preprocess.o xt_propagate.o xt_searchavalanche.o \
 		xt_util.o xt_detectAvalanche.o xt_log.o xt_taintpropagate.o \
 		xt_node.o xt_record.o xt_alivebuffer.o xt_functioncall.o \
-		TaintBitMap.o xt_detect.o RangeArray.o
+		TaintBitMap.o xt_detect.o RangeArray.o xt_ByteTaintPropagate.o \
+		xt_modedetect.o xt_blockdetect.o
 
 OBJS_SRCH_PROPAGATE = xt_search_propagate.o xt_util.o xt_file.o xt_liveness.o \
 					  xt_searchavalanche.o xt_node.o xt_functioncall.o xt_log.o \
@@ -77,6 +78,15 @@ xt_detect.o : src/xt_detect.cpp
 	
 RangeArray.o : src/RangeArray.cpp
 	$(CC) $(INC) -c src/RangeArray.cpp $(CFLAG)
+
+xt_ByteTaintPropagate.o : src/xt_ByteTaintPropagate.cpp
+	$(CC) $(INC) -c src/xt_ByteTaintPropagate.cpp $(CFLAG)
+
+xt_modedetect.o : src/xt_modedetect.cpp
+	$(CC) $(INC) -c src/xt_modedetect.cpp $(CFLAG)
+
+xt_blockdetect.o : src/xt_blockdetect.cpp
+	$(CC) $(INC) -c src/xt_blockdetect.cpp $(CFLAG)
 
 .PHONY : clean
 clean :

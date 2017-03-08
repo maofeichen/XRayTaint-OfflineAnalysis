@@ -1,3 +1,5 @@
+#include "xt_blockdetect.h"
+#include "xt_ByteTaintPropagate.h"
 #include "xt_detect.h"
 #include "xt_flag.h"
 #include "xt_util.h"
@@ -187,10 +189,9 @@ Detect::gen_in_propagate_byte(t_AliveContinueBuffer &in, Propagate &propagate)
     return in_vec_propagate_byte;
 }
 
-void Detect::gen_byte_range_array(vector<Detect::propagate_byte_> v_propagate_byte)
+void Detect::gen_byte_range_array(vector<Detect::propagate_byte_> v_propagate_byte,
+                                  RangeArray *range_array)
 {
-    RangeArray range_array;
-
     sort(v_propagate_byte.begin(), v_propagate_byte.end() );
 
     vector<propagate_byte_>::const_iterator it_propagate_byte;
@@ -210,7 +211,8 @@ void Detect::gen_byte_range_array(vector<Detect::propagate_byte_> v_propagate_by
             //         "addr: " << hex << range_begin_addr <<
             //         " len: " << dec << range_len << " bytes" << endl;
 
-            range_array.add_range(range_begin_addr, range_len);
+            range_array->add_range(range_begin_addr, range_len);
+            // range_array.add_range(range_begin_addr, range_len);
 
             // Init for next range
             range_begin_addr = curr_begin_addr;
@@ -222,21 +224,35 @@ void Detect::gen_byte_range_array(vector<Detect::propagate_byte_> v_propagate_by
 }
 
 void Detect::gen_in_range_array(t_AliveContinueBuffer &in,
-	                            vector< vector<Detect::propagate_byte_> > &in_vec_propagate_byte)
+	                            vector< vector<Detect::propagate_byte_> > &in_vec_propagate_byte,
+	                            vector<ByteTaintPropagate *> &in_taint_propagate)
 {
-    vector<RangeArray> v_range_array;
-    RangeArray range_array;
-    RangeArray *ptr_range_array;
+    // vector<RangeArray *> v_range_array;
 
     unsigned long begin_addr = in.beginAddress;
     vector< vector<propagate_byte_> >::const_iterator it_in_byte;
 
     it_in_byte = in_vec_propagate_byte.begin();
     for(; it_in_byte != in_vec_propagate_byte.end(); ++it_in_byte){
-        gen_byte_range_array(*it_in_byte);
+        // RangeArray *range_array = new RangeArray();
+        // gen_byte_range_array(*it_in_byte, range_array);
+        // range_array->disp_range_array();
+
+        // v_range_array.push_back(range_array);
+
+        ByteTaintPropagate *byte_taint_propagate =
+                new ByteTaintPropagate(begin_addr);
+        gen_byte_range_array(*it_in_byte, byte_taint_propagate->get_taint_propagate() );
+        // byte_taint_propagate->get_taint_propagate()->disp_range_array();
+
+        in_taint_propagate.push_back(byte_taint_propagate);
 
         begin_addr++;
     }
+
+    // for(int i = 0; i < in_taint_propagate.size(); i++){
+    //     in_taint_propagate[i]->get_taint_propagate()->disp_range_array();
+    // }
 }
 
 
@@ -300,5 +316,16 @@ void Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
     cout << "numbef of bytes in in buffer: " << dec << in.size / 8 << endl;
     cout << "number of vector of propagte bytes: " << dec << in_vec_propagate_byte.size() << endl;
 
-    gen_in_range_array(in, in_vec_propagate_byte);
+    vector<ByteTaintPropagate *> in_taint_propagate;
+    gen_in_range_array(in, in_vec_propagate_byte, in_taint_propagate);
+
+    for(int i = 0; i < in_taint_propagate.size(); i++){
+        cout << "taint src: " << hex << in_taint_propagate[i]->get_taint_src() << endl;
+        in_taint_propagate[i]->get_taint_propagate()->disp_range_array();
+    }
+
+
+    Blocks blocks;
+    BlockDetect block_detect;
+    block_detect.detect_block_size(blocks, in_taint_propagate, in.size / 8);
 }

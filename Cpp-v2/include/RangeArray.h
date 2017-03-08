@@ -29,6 +29,7 @@ private:
 class RangeArray{
 public:
     RangeArray();
+    RangeArray(unsigned int begin_addr, unsigned int len);
     ~RangeArray();
 
     Range *operator[] (int i) const;
@@ -37,8 +38,15 @@ public:
     RangeArray &operator=(const RangeArray &r);
 
     void add_range(unsigned int begin_addr, unsigned int len);
-    unsigned int get_size() const;
     void disp_range_array();
+
+    // Result common ranges stores in common
+    void get_common_range(RangeArray &ra_right, RangeArray &common);
+    RangeArray &get_common_range(RangeArray &r);
+    unsigned int get_size() const;
+    // Removes ranges given their positions in the range array
+    void remove_ranges(int first, int last);
+    void remove_range(int pos);
     void reset();
 
 private:

@@ -1,10 +1,17 @@
 #include "RangeArray.h"
 
+#include <cassert>
 #include <iostream>
 
 using namespace std;
 
 RangeArray::RangeArray() {init(); }
+
+RangeArray::RangeArray(unsigned int begin_addr, unsigned int len)
+{
+    init();
+    add_range(begin_addr, len);
+}
 
 RangeArray::~RangeArray() {
     reset();
@@ -50,8 +57,6 @@ void RangeArray::add_range(unsigned int begin_addr, unsigned int len)
     insert_range(low, begin_addr, len);
 }
 
-unsigned int RangeArray::get_size() const{ return array_used_; }
-
 // Displays all current ranges in the range array
 void RangeArray::disp_range_array()
 {
@@ -62,6 +67,62 @@ void RangeArray::disp_range_array()
                 << " len: " << dec << (*range).get_len() << " bytes" << endl;
     }
 }
+
+void RangeArray::get_common_range(RangeArray &ra_right, RangeArray &common)
+{
+    int idx_left = 0;
+    int idx_right = 0;
+
+    Range *range_left;
+    Range *range_right;
+    RangeArray &ra_left = *this;
+
+    common.reset();
+
+    // find the common ranges of left range and right range
+    while(true){
+        range_left = ra_left[idx_left];
+        range_right = ra_right[idx_right];
+
+        if(range_left == NULL || range_right == NULL){
+            break;
+        }
+
+        // chooses the larger begin addr
+        // chooses the smaller end addr
+        // which make it common range between left and right
+        unsigned int common_begin = max(range_left->get_begin(), range_right->get_begin() );
+        unsigned int common_end   = min(range_left->get_end(), range_right->get_end() );
+
+        if(common_begin < common_end){
+            // This is the common range
+            common.add_range(common_begin, common_end - common_begin);
+        }
+
+        // if left range is smaller than right range, increases it
+        // notices that all ranges in range array are in increasing order
+        if(range_left->get_end() < range_right->get_end() ){
+            idx_left++;
+        }else if(range_right->get_end() < range_left->get_end() ){
+            idx_right++;
+        }else {
+            idx_left++;
+            idx_right++;
+        }
+    }
+}
+
+RangeArray &RangeArray::get_common_range(RangeArray &r)
+{
+    RangeArray common;
+    get_common_range(r, common);
+
+    // Important
+    *this = common;
+    return *this;
+}
+
+unsigned int RangeArray::get_size() const{ return array_used_; }
 
 void RangeArray::copy(const RangeArray &src)
 {
@@ -86,6 +147,35 @@ void RangeArray::init() {
     array_size_ = 8;
     array_used_ = 0;
     ref_rray_ = new Range *[array_size_];
+}
+
+void RangeArray::remove_ranges(int first, int last)
+{
+    if(first > array_used_ - 1 || last > array_used_ - 1){
+        return;
+    }
+    assert(last >= first);
+
+    int i;
+    int gap;
+    Range *r;
+
+    for(i = first; i <= last; i++){
+        r = ref_rray_[i];
+        delete r;
+    }
+
+    gap = last - first + 1;
+    for(i = first; i < array_used_ - gap; i++){
+        ref_rray_[i] = ref_rray_[i + gap];
+    }
+
+    array_used_ -= gap;
+}
+
+void RangeArray::remove_range(int pos)
+{
+    remove_ranges(pos, pos);
 }
 
 void RangeArray::reset() {
