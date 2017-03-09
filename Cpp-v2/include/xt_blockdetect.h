@@ -22,9 +22,15 @@ public:
                            unsigned int in_byte_sz,
                            unsigned int out_addr,
                            unsigned int out_byte_sz);
+    void detect_block_size_alter(Blocks &blocks,
+                                 std::vector<ByteTaintPropagate *> &buf_taint_propagate,
+                                 unsigned int in_byte_sz,
+                                 unsigned int out_addr,
+                                 unsigned int out_byte_sz);
 private:
+    // Removes ranges smaller than minimum range in the given range array
+    void rm_minimum_range(RangeArray &ra, unsigned int minimum_range);
 };
-
 
 
 #endif /* XT_BLOCKDETECT_H_ */

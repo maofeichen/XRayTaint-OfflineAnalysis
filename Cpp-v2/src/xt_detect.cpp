@@ -330,7 +330,15 @@ void Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
 
 
     Blocks blocks;
+
     BlockDetect block_detect;
-    block_detect.detect_block_size(blocks, in_taint_propagate, in.size / 8,
-                                   out.beginAddress, out.size / 8);
+    // block_detect.detect_block_size(blocks, in_taint_propagate, in.size / 8,
+    //                                out.beginAddress, out.size / 8);
+    block_detect.detect_block_size_alter(blocks, in_taint_propagate, in.size / 8,
+                                         out.beginAddress, out.size / 8);
+
+    if(blocks.size() == 0){
+        cout << "No block identified" << endl;
+        return;
+    }
 }
