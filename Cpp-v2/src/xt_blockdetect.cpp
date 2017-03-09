@@ -91,7 +91,10 @@ void BlockDetect::detect_block_size_alter(Blocks &blocks,
            old_common.disp_range_array();
 
            ByteTaintPropagate *byte_taint_propagate = buf_taint_propagate[idx_byte];
+           unsigned int byte_addr = byte_taint_propagate->get_taint_src();
+           cout << "current byte addr: " << hex << byte_addr << endl;
            byte_taint_propagate->get_taint_propagate()->disp_range_array();
+
 
            common.get_common_range(*byte_taint_propagate->get_taint_propagate() );
            common.disp_range_array();
@@ -111,7 +114,8 @@ void BlockDetect::detect_block_size_alter(Blocks &blocks,
                    blocks.push_back(RangeSPtr(new Range(block_begin, accumu_block_win) ) );
 
                    // advances to next taint source byte
-                   block_begin = idx_byte + 1;
+                   // no need to plus extra 1
+                   block_begin = idx_byte;
                }
                buf_win = buf_win - accumu_block_win;
                accumu_block_win = 0;

@@ -25,8 +25,8 @@ void Detect::detect_cipher()
 
     Propagate propagate(xt_log_);
 
-    vector<t_AliveFunctionCall>::iterator it_in_func = v_func_cont_buf_.end() - 2;
-    // vector<t_AliveFunctionCall>::iterator itInFunction = v_func_cont_buf_.begin();
+    // vector<t_AliveFunctionCall>::iterator it_in_func = v_func_cont_buf_.end() - 2;
+     vector<t_AliveFunctionCall>::iterator it_in_func = v_func_cont_buf_.begin() + 3;
 
     // Iterates each function call
     for(; it_in_func != v_func_cont_buf_.end() - 1; ++it_in_func){
@@ -50,6 +50,17 @@ void Detect::detect_cipher()
 
                         // Debug
                         if(in_buf.beginAddress == 0xbffff70c){
+                            cout << "function call mark:" << it_in_func->call_mark << endl;
+                            vector<unsigned long>::const_iterator it_n_idx = it_in_buf->vNodeIndex.begin();
+                            for(; it_n_idx != it_in_buf->vNodeIndex.end(); ++it_n_idx){
+                                cout << "src index: " << *it_n_idx << endl;
+                            }
+                            if(it_in_func->call_mark == "14 bffff48c    8048a04 107662"){
+                                vector<unsigned long>::const_iterator it_n_idx = it_in_buf->vNodeIndex.begin();
+                                for(; it_n_idx != it_in_buf->vNodeIndex.end(); ++it_n_idx){
+                                    cout << "src index: " << *it_n_idx << endl;
+                                }
+                            }
                             detect_cipher_in_out(in_buf, out_buf, propagate);
                         }
                     }
