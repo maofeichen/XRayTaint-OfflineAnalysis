@@ -5,7 +5,9 @@ using namespace std;
 
 void BlockDetect::detect_block_size(Blocks &blocks,
                                     vector<ByteTaintPropagate *> &buf_taint_propagate,
-                                    unsigned int in_byte_sz)
+                                    unsigned int in_byte_sz,
+                                    unsigned int out_addr,
+                                    unsigned int out_byte_sz)
 {
     int begin_byte = 0;
     int end_byte   = in_byte_sz;
@@ -13,7 +15,12 @@ void BlockDetect::detect_block_size(Blocks &blocks,
     while(end_byte - begin_byte > 0){
         // Initially common range cover full user address space
         // Need to change to kernel address later
-        RangeArray common(MIN_ADDRESS, MAX_ADDRESS - MIN_ADDRESS + 1);
+        //
+        // Instead of covering full address space, we use the target (out)
+        // buffer addr and len.
+        // Cipher Xray seems not using the out buffer info, interesting
+        RangeArray common(out_addr, out_byte_sz);
+        // RangeArray common(MIN_ADDRESS, MAX_ADDRESS - MIN_ADDRESS + 1);
         RangeArray old_common;
 
         int idx_outter;

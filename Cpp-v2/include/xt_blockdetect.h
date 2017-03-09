@@ -19,7 +19,9 @@ public:
 
     void detect_block_size(Blocks &blocks,
                            std::vector<ByteTaintPropagate *> &buf_taint_propagate,
-                           unsigned int in_byte_sz);
+                           unsigned int in_byte_sz,
+                           unsigned int out_addr,
+                           unsigned int out_byte_sz);
 private:
 };
 

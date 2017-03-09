@@ -64,17 +64,22 @@ inline unsigned long
 Detect::comp_multi_src_interval(vector<unsigned long> &v_node_idx,
 								vector<unsigned long>::const_iterator it_node_idx)
 {
-    unsigned long count = 0;
+    unsigned long count = 1;
 
     XTNode node = get_mem_node(*it_node_idx);
     unsigned long begin_addr = node.getIntAddr();
 
-    for(;
-        it_node_idx != v_node_idx.end() && begin_addr == node.getIntAddr();
-        ++it_node_idx){
+    for(it_node_idx++; it_node_idx != v_node_idx.end(); ++it_node_idx){
+        node = get_mem_node(*it_node_idx);
+
+        cout << "node index: " << dec << *it_node_idx << endl;
+        cout << "node addr: " << hex << node.getIntAddr() << endl;
+
+        if(begin_addr != node.getIntAddr() ){
+           break;
+        }
 
         count++;
-        node = get_mem_node(*it_node_idx);
     }
 
     return count;
@@ -119,8 +124,7 @@ Detect::comp_multi_src_propagate_res(unsigned int multi_src_interval,
     unordered_set<Node, NodeHash> propagate_res;
     unordered_set<Node, NodeHash> multi_propagate_res;
 
-    int i = 0;
-    for(; i < multi_src_interval - 1; i++){
+    for(int i = 0; i < multi_src_interval; i++){
         XTNode node = get_mem_node(*it_multi_src_idx);
         NodePropagate taint_src = init_taint_source(node, log_rec_);
         propagate_res = propagate.getPropagateResult(taint_src, log_rec_, byte_pos);
@@ -166,7 +170,7 @@ Detect::gen_in_propagate_byte(t_AliveContinueBuffer &in, Propagate &propagate)
         vector<unsigned long>::const_iterator it_multi_src_idx;
         unordered_set<Node, NodeHash> multi_propagate_res;
 
-        // cout << "Search taint propagation: taint source: " << hex << begin_addr << endl;
+        cout << "Search taint propagation: taint source: " << hex << begin_addr << endl;
         multi_src_interval = comp_multi_src_interval(in.vNodeIndex, it_node_idx);
         it_multi_src_idx = it_node_idx;
         multi_propagate_res = comp_multi_src_propagate_res(multi_src_interval,
@@ -327,5 +331,6 @@ void Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
 
     Blocks blocks;
     BlockDetect block_detect;
-    block_detect.detect_block_size(blocks, in_taint_propagate, in.size / 8);
+    block_detect.detect_block_size(blocks, in_taint_propagate, in.size / 8,
+                                   out.beginAddress, out.size / 8);
 }

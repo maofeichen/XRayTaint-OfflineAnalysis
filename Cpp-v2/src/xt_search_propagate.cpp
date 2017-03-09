@@ -74,6 +74,25 @@ void search_taint_propagate(string log_path)
     NodePropagate taint_src;
     XTNode node;
 
+    // taint source: index 103422
+    node = xt_log.getRecord(103422).getSourceNode();
+    taint_src = init_taint_source(node);
+    cout << "search propagation, taint source: index: 103422 addr: " << hex << node.getIntAddr() << endl;
+    propagate.getPropagateResult(taint_src, v_record, 1);
+
+    // taint source: index 108001
+    node = xt_log.getRecord(108001).getSourceNode();
+    taint_src = init_taint_source(node);
+    cout << "search propagation, taint source: index: 108001 addr: " << hex << node.getIntAddr() << endl;
+    propagate.getPropagateResult(taint_src, v_record, 1);
+
+    // taint source: index 115491
+    node = xt_log.getRecord(115491).getSourceNode();
+    taint_src = init_taint_source(node);
+    cout << "search propagation, taint source: index: 115491 addr: " << hex << node.getIntAddr() << endl;
+    propagate.getPropagateResult(taint_src, v_record, 1);
+
+    /*
     // taint source: index 107992
     node = xt_log.getRecord(107992).getSourceNode();
     taint_src = init_taint_source(node);
@@ -86,7 +105,6 @@ void search_taint_propagate(string log_path)
     cout << "search propagation, taint source: index: 115470 addr: " << hex << node.getIntAddr() << endl;
     propagate.getPropagateResult(taint_src, v_record, 0);
 
-    /*
     // taint source: index 327121
     node = xt_log.getRecord(327121).getSourceNode();
     taint_src = init_taint_source(node);
