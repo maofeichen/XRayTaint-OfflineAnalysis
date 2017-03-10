@@ -139,6 +139,25 @@ void BlockDetect::detect_block_size_alter(Blocks &blocks,
     } // end while
 }
 
+void BlockDetect::detect_mode_type(vector<ByteTaintPropagate *> &v_in_propagate,
+                                   Blocks &blocks)
+{
+    DetectFactory &det_fac = DetectFactory::get_instance();
+
+    // We don't know which mode, try all
+    det_fac.begin();
+    while(!det_fac.at_end() ){
+        ModeDetect *detector = det_fac.get_detector();
+        cout << detector->get_mode_name() << endl;
+
+        if(detector->analyze_mode(v_in_propagate, blocks) ){
+
+        }
+
+        det_fac.next();
+    }
+}
+
 void BlockDetect::rm_minimum_range(RangeArray &ra, unsigned int minimum_range)
 {
     for(int i = 0; i < ra.get_size(); ) {

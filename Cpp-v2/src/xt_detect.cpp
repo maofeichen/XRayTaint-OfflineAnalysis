@@ -334,15 +334,15 @@ void Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
     vector<ByteTaintPropagate *> in_taint_propagate;
     gen_in_range_array(in, in_vec_propagate_byte, in_taint_propagate);
 
-    for(int i = 0; i < in_taint_propagate.size(); i++){
-        cout << "taint src: " << hex << in_taint_propagate[i]->get_taint_src() << endl;
-        in_taint_propagate[i]->get_taint_propagate()->disp_range_array();
-    }
+    // for(int i = 0; i < in_taint_propagate.size(); i++){
+    //     cout << "taint src: " << hex << in_taint_propagate[i]->get_taint_src() << endl;
+    //     in_taint_propagate[i]->get_taint_propagate()->disp_range_array();
+    // }
 
 
     Blocks blocks;
-
     BlockDetect block_detect;
+
     // block_detect.detect_block_size(blocks, in_taint_propagate, in.size / 8,
     //                                out.beginAddress, out.size / 8);
     block_detect.detect_block_size_alter(blocks, in_taint_propagate, in.size / 8,
@@ -352,4 +352,6 @@ void Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
         cout << "No block identified" << endl;
         return;
     }
+
+    block_detect.detect_mode_type(in_taint_propagate, blocks);
 }
