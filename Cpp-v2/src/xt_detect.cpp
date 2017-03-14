@@ -49,17 +49,13 @@ void Detect::detect_cipher()
                         // detect_cipher_in_out(in_buf, out_buf, propagate);
 
                         // Debug
-                        if(in_buf.beginAddress == 0xbffff70c){
+                        if(in_buf.beginAddress == 0xbffff6bc){
                             cout << "function call mark:" << it_in_func->call_mark << endl;
                             vector<unsigned long>::const_iterator it_n_idx = it_in_buf->vNodeIndex.begin();
                             for(; it_n_idx != it_in_buf->vNodeIndex.end(); ++it_n_idx){
                                 cout << "src index: " << *it_n_idx << endl;
-                            }
-                            if(it_in_func->call_mark == "14 bffff48c    8048a04 107662"){
-                                vector<unsigned long>::const_iterator it_n_idx = it_in_buf->vNodeIndex.begin();
-                                for(; it_n_idx != it_in_buf->vNodeIndex.end(); ++it_n_idx){
-                                    cout << "src index: " << *it_n_idx << endl;
-                                }
+                                XTNode node = get_mem_node(*it_n_idx);
+                                cout << "node addr: " << hex << node.getIntAddr() << endl;
                             }
                             detect_cipher_in_out(in_buf, out_buf, propagate);
                         }
@@ -194,11 +190,35 @@ Detect::gen_in_propagate_byte(t_AliveContinueBuffer &in, Propagate &propagate)
 
         byte_pos++;
         begin_addr++;
+
         // if crosses 4 bytes, reset and goes to next multi sources
-        if(byte_pos > 3){
-            byte_pos = 0;
-            it_node_idx += multi_src_interval;
+        // or
+        XTNode node = get_mem_node(*it_node_idx);
+        switch(node.getByteSize() ){
+            case 4:
+                if(byte_pos > 3){
+                    byte_pos = 0;
+                    it_node_idx += multi_src_interval;
+                }
+                break;
+            case 2:
+                if(byte_pos > 2){
+                    byte_pos = 0;
+                    it_node_idx += multi_src_interval;
+                }
+                break;
+            case 1:
+                byte_pos = 0;
+                it_node_idx += multi_src_interval;
+                break;
+            default:
+                cout << "error: incorrect mem node size" << endl;
         }
+
+        // if(byte_pos > 3 ){
+        //     byte_pos = 0;
+        //     it_node_idx += multi_src_interval;
+        // }
     }
 
     return in_vec_propagate_byte;
