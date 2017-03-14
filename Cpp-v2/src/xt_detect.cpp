@@ -192,7 +192,6 @@ Detect::gen_in_propagate_byte(t_AliveContinueBuffer &in, Propagate &propagate)
         begin_addr++;
 
         // if crosses 4 bytes, reset and goes to next multi sources
-        // or
         XTNode node = get_mem_node(*it_node_idx);
         switch(node.getByteSize() ){
             case 4:

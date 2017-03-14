@@ -108,6 +108,7 @@ void BlockDetect::detect_block_size_alter(Blocks &blocks,
 
            rm_minimum_range(common, min_block_sz);
 
+           // Only for cbc dec mode
            if(common.get_size() == 0){
                if(accumu_block_win < min_block_sz){
                    // The taint source byte propagation result has NO common ranges
@@ -122,6 +123,20 @@ void BlockDetect::detect_block_size_alter(Blocks &blocks,
 
                    // advances to next taint source byte
                    // no need to plus extra 1
+                   block_begin = idx_byte;
+               }
+               buf_win = buf_win - accumu_block_win;
+               accumu_block_win = 0;
+               break;
+           }
+
+           int len_common = common[0]->get_len();
+           int len_old_common = old_common[0]->get_len();
+           if( (len_old_common - len_common) == accumu_block_win ){
+               if(accumu_block_win < min_block_sz){
+                   block_begin++;
+               }else {
+                   blocks.push_back(RangeSPtr(new Range(block_begin, accumu_block_win) ) );
                    block_begin = idx_byte;
                }
                buf_win = buf_win - accumu_block_win;
