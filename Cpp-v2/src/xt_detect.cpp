@@ -341,7 +341,7 @@ void Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
 
 
     Blocks blocks;
-    BlockDetect block_detect;
+    BlockDetect block_detect(out.beginAddress, out.size / 8);
 
     // block_detect.detect_block_size(blocks, in_taint_propagate, in.size / 8,
     //                                out.beginAddress, out.size / 8);

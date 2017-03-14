@@ -36,10 +36,57 @@ class CBCDetect : public ModeDetect{
 public:
     bool analyze_mode(std::vector<ByteTaintPropagate *> &v_in_propagate,
                       Blocks &blocks);
+    bool analyze_mode_alter(std::vector<ByteTaintPropagate *> &v_in_propagate,
+                            Blocks &blocks,
+                            unsigned int out_begin_addr,
+                            unsigned int out_len);
+    static CBCDetect &get_instance() { return cbc_;}
+
 private:
-    static CBCDetect cbc;
+    static CBCDetect cbc_;
     CBCDetect() { mode_name = "cbc"; }
     ~CBCDetect() {}
+
+    // Determines if the impact byte to next block's decrypted text buffer,
+    // is in order to its byte position in the current block
+    inline bool is_in_order_impact(unsigned int addr_to_nex_b_byte,
+                                   unsigned int addr_next_b_r_begin,
+                                   unsigned int idx_byte);
+
+    bool analyze_enc(std::vector<ByteTaintPropagate *> &v_in_propagate,
+                     Blocks &blocks);
+    bool analyze_dec(std::vector<ByteTaintPropagate *> &v_in_propagate,
+                     Blocks &blocks,
+                     unsigned int out_addr_begin,
+                     unsigned int out_len);
+    bool analyze_dec_block(std::vector<ByteTaintPropagate *> &v_in_propagate,
+                           Blocks &blocks,
+                           bool is_last,
+                           unsigned int idx_block,
+                           unsigned int out_addr_begin,
+                           unsigned int out_len);
+    bool analyze_dec_byte(std::vector<ByteTaintPropagate *> &v_in_propagate,
+                          Blocks &blocks,
+                          unsigned int idx_byte,
+                          unsigned int idx_block,
+                          unsigned int out_addr_begin,
+                          unsigned int out_len);
+
+    // determines if the byte of current block has 1:1 pattern to
+    // next block's decrypted text buffer
+    bool has_one_to_one_pattern(std::vector<ByteTaintPropagate *> &v_in_propagate,
+                                Blocks &blocks,
+                                unsigned int idx_byte,
+                                unsigned int idx_block,
+                                unsigned int out_addr_begin,
+                                unsigned int out_len);
+    // if current block's propagate range is successive with the
+    // next block's propagate range
+    bool is_range_successive(std::vector<ByteTaintPropagate *> &v_in_propagate,
+                             Blocks &blocks,
+                             unsigned int idx_block,
+                             unsigned int out_addr_begin,
+                             unsigned int out_len);
 };
 
 class DetectFactory{

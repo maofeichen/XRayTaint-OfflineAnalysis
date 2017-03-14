@@ -3,6 +3,13 @@
 #include <iostream>
 using namespace std;
 
+
+BlockDetect::BlockDetect(unsigned int out_begin_addr, unsigned int out_len)
+{
+    out_begin_addr_ = out_begin_addr;
+    out_len_        = out_len;
+}
+
 void BlockDetect::detect_block_size(Blocks &blocks,
                                     vector<ByteTaintPropagate *> &buf_taint_propagate,
                                     unsigned int in_byte_sz,
@@ -146,6 +153,7 @@ void BlockDetect::detect_mode_type(vector<ByteTaintPropagate *> &v_in_propagate,
 
     // We don't know which mode, try all
     det_fac.begin();
+
     while(!det_fac.at_end() ){
         ModeDetect *detector = det_fac.get_detector();
         cout << detector->get_mode_name() << endl;
@@ -156,6 +164,12 @@ void BlockDetect::detect_mode_type(vector<ByteTaintPropagate *> &v_in_propagate,
 
         det_fac.next();
     }
+
+    // Above code seems not working, debug here
+    CBCDetect &det_cbc = CBCDetect::get_instance();
+    // det_cbc.analyze_mode(v_in_propagate, blocks);
+    det_cbc.analyze_mode_alter(v_in_propagate, blocks, out_begin_addr_, out_len_);
+
 }
 
 void BlockDetect::rm_minimum_range(RangeArray &ra, unsigned int minimum_range)

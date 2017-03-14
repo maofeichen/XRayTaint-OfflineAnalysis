@@ -14,7 +14,7 @@ public:
     unsigned int MAX_ADDRESS = 0xc0000000;
     unsigned int WINDOW_SIZE = 64; // 64 bytes
 
-    BlockDetect() {};
+    BlockDetect(unsigned int out_begin_addr, unsigned int out_len);
     ~BlockDetect() {};
 
     // Not used!
@@ -32,6 +32,8 @@ public:
                           Blocks &blocks);
 
 private:
+    unsigned int out_begin_addr_ = 0;
+    unsigned int out_len_         = 0;
     // Removes ranges smaller than minimum range in the given range array
     void rm_minimum_range(RangeArray &ra, unsigned int minimum_range);
 };
