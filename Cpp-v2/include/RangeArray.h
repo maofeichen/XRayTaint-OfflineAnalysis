@@ -41,13 +41,18 @@ public:
     // Deletes range in the range array, given the range
     bool del_range(unsigned int begin_addr, unsigned int len);
     void disp_range_array();
-    bool has_range(unsigned int begin_addr, unsigned int len);
-    bool has_range(Range &r);
 
     // Result common ranges stores in common
     void get_common_range(RangeArray &ra_right, RangeArray &common);
     RangeArray &get_common_range(RangeArray &r);
     unsigned int get_size() const;
+
+    bool has_range(unsigned int begin_addr, unsigned int len);
+    bool has_range(Range &r);
+
+    // Compars if two rangearrays have same ranges
+    bool is_identical(RangeArray &ra);
+
     // Removes ranges given their positions in the range array
     void remove_ranges(int first, int last);
     void remove_range(int pos);

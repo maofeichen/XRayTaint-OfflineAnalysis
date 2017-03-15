@@ -161,6 +161,23 @@ bool RangeArray::has_range(Range &r)
     return has_range(r.get_begin(), r.get_len() );
 }
 
+bool RangeArray::is_identical(RangeArray &ra)
+{
+    if(array_used_ == ra.get_size() ){
+        for(int i = 0; i < array_used_; i++){
+            if(ref_rray_[i]->get_begin() == ra[i]->get_begin() &&
+               ref_rray_[i]->get_end() == ra[i]->get_end() ){
+                // continue;
+            }else{
+                return false;
+            }
+        }
+        return true;
+    }else {
+        return false;
+    }
+}
+
 void RangeArray::get_common_range(RangeArray &ra_right, RangeArray &common)
 {
     int idx_left = 0;

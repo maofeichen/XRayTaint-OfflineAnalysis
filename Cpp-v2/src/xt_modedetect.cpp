@@ -7,7 +7,7 @@ int ModeDetect::TYPE_UNDEF = 0;
 int ModeDetect::TYPE_ENC   = 1;
 int ModeDetect::TYPE_DEC   = 2;
 
-ModeDetect::ModeDetect()
+ModeDetect::ModeDetect() : input(0,0), output(0,0)
 {
     DetectFactory::get_instance().register_detector(this);
     type_enc_dec = TYPE_UNDEF;
@@ -94,6 +94,37 @@ bool CBCDetect::analyze_mode_alter(vector<ByteTaintPropagate *> &v_in_propagate,
             return analyze_enc(v_in_propagate, blocks, out_begin_addr, out_len);
         }
     }
+}
+
+// If cbc enc, should have pattern:
+//  1 : n, 1 : n,...
+// If cbc dec, should have pattern:
+//  1 : n,
+//  1 : 1
+// By comparing the first two blocks, we can determine if it is either
+// enc or dec, or neither
+bool CBCDetect::analyze_mode_improve(vector<ByteTaintPropagate *> &v_in_propagate,
+                            Blocks &blocks,
+                            unsigned int out_begin_addr,
+                            unsigned int out_len)
+{
+    bool is_enc = false;
+    bool is_dec = false;
+
+    is_enc = analyze_enc_block(v_in_propagate, blocks, false, 0, out_begin_addr, out_len);
+    is_dec = analyze_dec_block(v_in_propagate, blocks, false, 0, out_begin_addr, out_len);
+
+    if(is_enc){
+        type_enc_dec = TYPE_ENC;
+        analyze_enc(v_in_propagate, blocks, out_begin_addr, out_len);
+    }else if(is_dec){
+        type_enc_dec = TYPE_DEC;
+        analyze_dec(v_in_propagate, blocks, out_begin_addr, out_len);
+    }else{
+        return false;
+    }
+
+    return true;
 }
 
 inline bool CBCDetect::is_in_order_impact(unsigned int addr_to_nex_b_byte,
@@ -325,6 +356,7 @@ bool CBCDetect::has_one_to_one_pattern(vector<ByteTaintPropagate *> &v_in_propag
     //  1) decrypted buffer range of current block
     //  2) extra 1 byte of decrypted buffer of next block
     byte_curr_b_r.get_common_range(byte_next_b_r);
+    byte_curr_b_r.disp_range_array();
     if(byte_curr_b_r.get_size() == 1 && byte_curr_b_r[0]->get_len() == 1){
         unsigned int to_next_b_byte_addr = byte_curr_b_r[0]->get_begin();
         unsigned int next_b_r_begin_addr = byte_next_b_r[0]->get_begin();

@@ -50,6 +50,7 @@ void Detect::detect_cipher()
 
                         // Debug
                         if(in_buf.beginAddress == 0xbffff6bc){
+                        // if(in_buf.beginAddress == 0xbffff70c){
                             cout << "function call mark:" << it_in_func->call_mark << endl;
                             vector<unsigned long>::const_iterator it_n_idx = it_in_buf->vNodeIndex.begin();
                             for(; it_n_idx != it_in_buf->vNodeIndex.end(); ++it_n_idx){
@@ -364,8 +365,9 @@ void Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
 
     // block_detect.detect_block_size(blocks, in_taint_propagate, in.size / 8,
     //                                out.beginAddress, out.size / 8);
-    block_detect.detect_block_size_alter(blocks, in_taint_propagate, in.size / 8,
-                                         out.beginAddress, out.size / 8);
+    // block_detect.detect_block_size_alter(blocks, in_taint_propagate, in.size / 8,
+    //                                      out.beginAddress, out.size / 8);
+    block_detect.detect_block_sz_small_win(blocks, in_taint_propagate, in.size / 8);
 
     if(blocks.size() == 0){
         cout << "No block identified" << endl;

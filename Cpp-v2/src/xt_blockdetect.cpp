@@ -130,6 +130,7 @@ void BlockDetect::detect_block_size_alter(Blocks &blocks,
                break;
            }
 
+           // for cbc enc mode
            int len_common = common[0]->get_len();
            int len_old_common = old_common[0]->get_len();
            if( (len_old_common - len_common) == accumu_block_win ){
@@ -161,6 +162,69 @@ void BlockDetect::detect_block_size_alter(Blocks &blocks,
     } // end while
 }
 
+void BlockDetect::detect_block_sz_small_win(Blocks &blocks,
+                                 vector<ByteTaintPropagate *> &buf_taint_propagate,
+                                 unsigned int in_byte_sz)
+{
+    unsigned int b_begin_byte = 0;
+    unsigned int b_end_byte   = in_byte_sz;
+
+    unsigned int buf_sz       = in_byte_sz;
+    unsigned int accumu_b_sz  = 0;
+
+    while(buf_sz - accumu_b_sz > 0){
+        // Initially common range cover full user address space
+        // Need to change to kernel address later
+        //
+        // The reason why not using the output range, is because output range
+        // only works for the last cipher. But consider a mix cipher:
+        // first enc then dec, the output range only for the dec, but not
+        // the enc
+        RangeArray common(MIN_ADDRESS, MAX_ADDRESS - MIN_ADDRESS + 1);
+        RangeArray prev_common;
+
+        int i = b_begin_byte;
+        for(; i < b_end_byte; i++){
+            ByteTaintPropagate *firbyte_taint_propa = buf_taint_propagate[i];
+            common.get_common_range(*firbyte_taint_propa->get_taint_propagate() );
+
+            unsigned int firstbyte_addr = firbyte_taint_propa->get_taint_src();
+            cout << "propcessing byte addr: " << hex << firstbyte_addr << endl;
+
+            if(accumu_b_sz == 0){
+                // For a potential block, uses the first two bytes of the block
+                // to determin the common propagate range
+                ByteTaintPropagate *secbyte_taint_propa = buf_taint_propagate[i+1];
+                common.get_common_range(*secbyte_taint_propa->get_taint_propagate() );
+            }
+
+            common.disp_range_array();
+            prev_common.disp_range_array();
+
+            // If detects the current byte common range is different from previous bytes'
+            // range, then we assume it is a byte in next block.
+            // The assumption is all bytes belongs to the same block should have same
+            // common range.
+            if(accumu_b_sz != 0 &&
+               !common.is_identical(prev_common) ){
+                cout << "detecting block sz: find a block end" << endl;
+                save_block(accumu_b_sz, blocks, b_begin_byte, i);
+
+                buf_sz -= accumu_b_sz;
+                accumu_b_sz = 0;
+                break;
+            }
+
+            prev_common = common;
+            accumu_b_sz++;
+        } // end for
+
+    } // end while
+    if(accumu_b_sz >= MIN_BLOCK_SZ){
+        blocks.push_back(RangeSPtr(new Range(b_begin_byte, b_end_byte) ) );
+    }
+}
+
 void BlockDetect::detect_mode_type(vector<ByteTaintPropagate *> &v_in_propagate,
                                    Blocks &blocks)
 {
@@ -184,6 +248,7 @@ void BlockDetect::detect_mode_type(vector<ByteTaintPropagate *> &v_in_propagate,
     CBCDetect &det_cbc = CBCDetect::get_instance();
     // det_cbc.analyze_mode(v_in_propagate, blocks);
     det_cbc.analyze_mode_alter(v_in_propagate, blocks, out_begin_addr_, out_len_);
+    // det_cbc.analyze_mode_improve(v_in_propagate, blocks, out_begin_addr_, out_len_);
 
 }
 
@@ -195,5 +260,17 @@ void BlockDetect::rm_minimum_range(RangeArray &ra, unsigned int minimum_range)
             continue;
         }
         i++;
+    }
+}
+
+bool BlockDetect::save_block(unsigned accumu_b_sz, Blocks &blocks,
+            unsigned int &b_begin_byte, int i_byte)
+{
+    if(accumu_b_sz < MIN_BLOCK_SZ){
+        b_begin_byte++;
+    }else{
+        blocks.push_back(RangeSPtr(new Range(b_begin_byte, accumu_b_sz) ) );
+        // advances to next taint source byte, no need to plus extra 1
+        b_begin_byte = i_byte;
     }
 }

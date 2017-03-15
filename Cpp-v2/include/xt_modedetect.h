@@ -29,6 +29,9 @@ protected:
     std::string mode_name;
     int type_enc_dec;
 
+    Range input;
+    Range output;
+
 private:
 };
 
@@ -37,6 +40,10 @@ public:
     bool analyze_mode(std::vector<ByteTaintPropagate *> &v_in_propagate,
                       Blocks &blocks);
     bool analyze_mode_alter(std::vector<ByteTaintPropagate *> &v_in_propagate,
+                            Blocks &blocks,
+                            unsigned int out_begin_addr,
+                            unsigned int out_len);
+    bool analyze_mode_improve(std::vector<ByteTaintPropagate *> &v_in_propagate,
                             Blocks &blocks,
                             unsigned int out_begin_addr,
                             unsigned int out_len);
