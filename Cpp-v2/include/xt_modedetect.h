@@ -54,7 +54,22 @@ private:
                                    unsigned int idx_byte);
 
     bool analyze_enc(std::vector<ByteTaintPropagate *> &v_in_propagate,
-                     Blocks &blocks);
+                     Blocks &blocks,
+                     unsigned int out_addr_begin,
+                     unsigned int out_len);
+    bool analyze_enc_block(std::vector<ByteTaintPropagate *> &v_in_propagate,
+                     Blocks &blocks,
+                     bool is_last,
+                     unsigned int idx_block,
+                     unsigned int out_addr_begin,
+                     unsigned int out_len);
+    bool analyze_enc_byte(std::vector<ByteTaintPropagate *> &v_in_propagate,
+                     Blocks &blocks,
+                     unsigned int idx_block,
+                     unsigned int idx_byte,
+                     unsigned int out_addr_begin,
+                     unsigned int out_len);
+
     bool analyze_dec(std::vector<ByteTaintPropagate *> &v_in_propagate,
                      Blocks &blocks,
                      unsigned int out_addr_begin,

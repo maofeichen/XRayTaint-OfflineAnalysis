@@ -91,7 +91,7 @@ bool CBCDetect::analyze_mode_alter(vector<ByteTaintPropagate *> &v_in_propagate,
         if(common_range_first_b[0]->get_len() == 1){
             return analyze_dec(v_in_propagate, blocks, out_begin_addr, out_len);
         }else{
-            return false;
+            return analyze_enc(v_in_propagate, blocks, out_begin_addr, out_len);
         }
     }
 }
@@ -103,6 +103,109 @@ inline bool CBCDetect::is_in_order_impact(unsigned int addr_to_nex_b_byte,
     if( (addr_to_nex_b_byte - addr_next_b_r_begin) == idx_byte ){
         return true;
     }else{
+        return false;
+    }
+}
+
+bool CBCDetect::analyze_enc(std::vector<ByteTaintPropagate *> &v_in_propagate,
+                     Blocks &blocks,
+                     unsigned int out_addr_begin,
+                     unsigned int out_len)
+{
+    cout << "analyzing cbc enc..." << endl;
+
+    bool is_found = false;
+
+    int idx_b = 0;
+    for(; idx_b < blocks.size(); idx_b++){
+        bool is_last_block = (idx_b == blocks.size() - 1) ? true : false;
+        is_found = analyze_enc_block(v_in_propagate, blocks, is_last_block, idx_b,
+                out_addr_begin, out_len);
+
+        if(is_found){
+            cout << "detects block in cbc mode encryption: block id: " << idx_b << endl;
+        }
+    }
+
+    return is_found;
+}
+
+bool CBCDetect::analyze_enc_block(vector<ByteTaintPropagate *> &v_in_propagate,
+                     Blocks &blocks,
+                     bool is_last,
+                     unsigned int idx_block,
+                     unsigned int out_addr_begin,
+                     unsigned int out_len)
+{
+    if(!is_last){
+        bool is_all_bytes_found = false;
+
+        unsigned int block_sz = blocks[idx_block]->get_len();
+        unsigned int idx_byte_begin = idx_block * block_sz;
+        for(; idx_byte_begin < block_sz; idx_byte_begin++){
+            is_all_bytes_found = analyze_enc_byte(v_in_propagate, blocks, idx_block,
+                    idx_byte_begin, out_addr_begin, out_len);
+
+            if(!is_all_bytes_found){
+                return is_all_bytes_found;
+            }
+        }
+
+        return is_all_bytes_found;
+    }else {
+        return true;
+    }
+}
+
+bool CBCDetect::analyze_enc_byte(vector<ByteTaintPropagate *> &v_in_propagate,
+                     Blocks &blocks,
+                     unsigned int idx_block,
+                     unsigned int idx_byte,
+                     unsigned int out_addr_begin,
+                     unsigned int out_len)
+{
+    ByteTaintPropagate *in_byte_propa = v_in_propagate[idx_byte];
+    RangeArray in_byte_r(out_addr_begin, out_len);
+    in_byte_r.get_common_range(*in_byte_propa->get_taint_propagate() );
+    in_byte_r.disp_range_array();
+
+    if(in_byte_r.get_size() != 1){
+        cout << "analyze_enc_byte: in byte range array is not 1" << endl;
+        return false;
+    }
+
+    int block_sz = blocks[idx_block]->get_len();
+    int idx_out_block = idx_block + 1;
+    // goes througth all rest blocks
+    for(; idx_out_block < blocks.size(); idx_out_block++){
+        // If in byte range contains all ranges of next blocks
+        // Pattern: 1:n
+        int idx_out_b_first_byte = idx_out_block * block_sz;
+        ByteTaintPropagate *firstbyte_out_b_propa = v_in_propagate[idx_out_b_first_byte];
+        RangeArray out_block_r(out_addr_begin, out_len);
+        out_block_r.get_common_range(*firstbyte_out_b_propa->get_taint_propagate() );
+        out_block_r.disp_range_array();
+
+        if(out_block_r.get_size() != 1){
+            cout << "analyze_enc_byte: in byte range array is not 1" << endl;
+            return false;
+        }
+
+        // remove the common range with idx_out_block range
+        if(in_byte_r.has_range(*out_block_r[0]) ){
+            in_byte_r.del_range(out_block_r[0]->get_begin(), out_block_r[0]->get_len() );
+            in_byte_r.disp_range_array();
+        }else{
+            return false;
+        }
+    }
+
+    // After removing all common ranges with rest blocks, should only left
+    // with range the current block decrypted text
+    // the decrypted text buffer size should be same with the ciphertext block size
+    if(in_byte_r[0]->get_len() == block_sz){
+        return true;
+    }else {
         return false;
     }
 }
@@ -158,6 +261,10 @@ bool CBCDetect::analyze_dec_block(vector<ByteTaintPropagate *> &v_in_propagate,
         for(; idx_byte < len_next_b_range; idx_byte++){
             is_all_bytes_found = analyze_dec_byte(v_in_propagate, blocks, idx_byte,
                     idx_block, out_addr_begin, out_len);
+
+            if(!is_all_bytes_found){
+                return is_all_bytes_found;
+            }
         }
 
         // It must be all bytes in the block have the 1:1 pattern

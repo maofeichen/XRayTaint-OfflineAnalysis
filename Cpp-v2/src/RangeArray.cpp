@@ -57,6 +57,83 @@ void RangeArray::add_range(unsigned int begin_addr, unsigned int len)
     insert_range(low, begin_addr, len);
 }
 
+bool RangeArray::del_range(unsigned int begin_addr, unsigned int len)
+{
+    // binary search
+    int low = 0;
+    int high = array_used_;
+    int mid = low;
+    int end = begin_addr + len;
+
+    bool is_del = false;
+
+    while(low < high){
+        mid = low + (high - low) / 2;
+        if(ref_rray_[mid]->get_begin() < begin_addr){
+            low = mid + 1;
+        }else {
+            high = mid;
+        }
+    }
+
+    if(low > 0){
+        low--;
+    }
+
+    int to_del = 0;
+    int first = -1;
+
+    for(int i = low; i < array_used_; i++) {
+        unsigned int save_begin;
+        unsigned int save_end;
+
+        if(ref_rray_[i]->get_begin() >= end){
+            break;
+        }
+
+        save_begin = ref_rray_[i]->get_begin();
+        save_end = ref_rray_[i]->get_end();
+
+        if(save_begin >= begin_addr &&
+                save_end <= end){
+            // remove ref_rray_[i]
+            if(first == -1){
+                first = i;
+            }
+            to_del++;
+
+            is_del = true;
+        } else {
+            // save_begin < begin_addr or
+            // save_end > end
+            if(save_begin < begin_addr){
+                if(save_end > end){
+                    // range splits into two
+                    ref_rray_[i]->set_end(begin_addr);
+                    insert_range(i+1, end, save_end - end);
+
+                    is_del = true;
+                    break;
+                }else if(save_end > begin_addr){
+                    // save_end <= end
+                    ref_rray_[i]->set_end(begin_addr);
+                    is_del = true;
+                }
+            } else {
+                // save_begin >= begin && save_end > end
+                ref_rray_[i]->set_begin(end);
+                is_del = true;
+            }
+        }
+    }
+
+    if(first != -1){
+        remove_ranges(first, first + to_del - 1);
+    }
+
+    return is_del;
+}
+
 // Displays all current ranges in the range array
 void RangeArray::disp_range_array()
 {
@@ -66,6 +143,22 @@ void RangeArray::disp_range_array()
         cout << "begin addr: " << hex << (*range).get_begin()
                 << " len: " << dec << (*range).get_len() << " bytes" << endl;
     }
+}
+
+bool RangeArray::has_range(unsigned int begin_addr, unsigned int len)
+{
+    for(int i = 0; i < array_used_; i++){
+        if(ref_rray_[i]->get_begin() <= begin_addr &&
+                ref_rray_[i]->get_end() >= begin_addr + len){
+            return true;
+        }
+    }
+    return false;
+}
+
+bool RangeArray::has_range(Range &r)
+{
+    return has_range(r.get_begin(), r.get_len() );
 }
 
 void RangeArray::get_common_range(RangeArray &ra_right, RangeArray &common)

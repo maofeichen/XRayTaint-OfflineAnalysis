@@ -38,7 +38,11 @@ public:
     RangeArray &operator=(const RangeArray &r);
 
     void add_range(unsigned int begin_addr, unsigned int len);
+    // Deletes range in the range array, given the range
+    bool del_range(unsigned int begin_addr, unsigned int len);
     void disp_range_array();
+    bool has_range(unsigned int begin_addr, unsigned int len);
+    bool has_range(Range &r);
 
     // Result common ranges stores in common
     void get_common_range(RangeArray &ra_right, RangeArray &common);
