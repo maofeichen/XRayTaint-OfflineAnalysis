@@ -21,6 +21,9 @@ public:
     unsigned int get_end() {return end_addr_; }
     unsigned int get_len() {return end_addr_ - begin_addr_; }
 
+    void disp_range();
+    bool has_range(unsigned int begin_addr, unsigned int len);
+
 private:
     unsigned int begin_addr_;
     unsigned int end_addr_; // end addr is 1 byte pass the last byte

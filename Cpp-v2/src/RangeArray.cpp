@@ -5,6 +5,22 @@
 
 using namespace std;
 
+void Range::disp_range()
+{
+    cout << "begin addr: " << hex << begin_addr_
+            << " len: " << dec << end_addr_ - begin_addr_ << endl;
+}
+
+bool Range::has_range(unsigned int begin_addr, unsigned int len)
+{
+    if( (begin_addr_ <= begin_addr) &&
+        (end_addr_ >= begin_addr + len) ) {
+        return true;
+    }else {
+        return false;
+    }
+}
+
 RangeArray::RangeArray() {init(); }
 
 RangeArray::RangeArray(unsigned int begin_addr, unsigned int len)

@@ -30,12 +30,16 @@ protected:
     unsigned int MAX_ADDRESS = 0xc0000000;
     unsigned int WINDOW_SIZE = 64; // 64 bytes
 
+    unsigned int MIN_BUF_SZ = 8;
+
     std::string mode_name;
     int type_enc_dec;
 
     Range input;
     Range output;
 
+    // Removes ranges smaller than minimum range in the given range array
+    void rm_minimum_range(RangeArray &ra, unsigned int minimum_range);
 private:
 };
 
@@ -99,6 +103,13 @@ private:
                           unsigned int out_addr_begin,
                           unsigned int out_len);
 
+    // current block i, next block i + 1. If block i and i+1 are
+    // sucessive blocks in cbc dec, their decrypted buffer range
+    // should be successive.
+    // Get the len of decrypted buffer range in block i+1
+    unsigned int get_next_bk_range_len(std::vector<ByteTaintPropagate *> &v_in_propagate,
+                                       unsigned int i_1stbyte_curr_bk,
+                                       unsigned int i_1stbyte_next_bk);
     // determines if the byte of current block has 1:1 pattern to
     // next block's decrypted text buffer
     bool has_one_to_one_pattern(std::vector<ByteTaintPropagate *> &v_in_propagate,
@@ -111,9 +122,10 @@ private:
     // next block's propagate range
     bool is_range_successive(std::vector<ByteTaintPropagate *> &v_in_propagate,
                              Blocks &blocks,
-                             unsigned int idx_block,
-                             unsigned int out_addr_begin,
-                             unsigned int out_len);
+                             unsigned int idx_block);
+    // If either of range array has range containing a range in other,
+    // remove that range in both arraies
+    void rm_contain_ranges(RangeArray &ra1, RangeArray &ra2);
     void rm_ident_ranges(RangeArray &ra1, RangeArray &ra2);
 };
 

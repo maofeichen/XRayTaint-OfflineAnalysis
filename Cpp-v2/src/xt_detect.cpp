@@ -49,8 +49,8 @@ void Detect::detect_cipher()
                         // detect_cipher_in_out(in_buf, out_buf, propagate);
 
                         // Debug
-                        if(in_buf.beginAddress == 0xbffff6bc){
-                        // if(in_buf.beginAddress == 0xbffff70c){
+                        // if(in_buf.beginAddress == 0xbffff6bc){
+                        if(in_buf.beginAddress == 0xbffff70c){
                             cout << "function call mark:" << it_in_func->call_mark << endl;
                             vector<unsigned long>::const_iterator it_n_idx = it_in_buf->vNodeIndex.begin();
                             for(; it_n_idx != it_in_buf->vNodeIndex.end(); ++it_n_idx){
