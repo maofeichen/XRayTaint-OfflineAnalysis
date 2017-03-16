@@ -47,6 +47,7 @@ public:
     RangeArray &get_common_range(RangeArray &r);
     unsigned int get_size() const;
 
+    bool has_ident_range(unsigned int begin_addr, unsigned int len);
     bool has_range(unsigned int begin_addr, unsigned int len);
     bool has_range(Range &r);
 

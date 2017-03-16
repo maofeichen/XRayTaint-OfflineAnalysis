@@ -145,6 +145,17 @@ void RangeArray::disp_range_array()
     }
 }
 
+bool RangeArray::has_ident_range(unsigned int begin_addr, unsigned int len)
+{
+    for(int i = 0; i < array_used_; i++){
+        if(ref_rray_[i]->get_begin() == begin_addr &&
+           ref_rray_[i]->get_end() == begin_addr + len){
+            return true;
+        }
+    }
+    return false;
+}
+
 bool RangeArray::has_range(unsigned int begin_addr, unsigned int len)
 {
     for(int i = 0; i < array_used_; i++){

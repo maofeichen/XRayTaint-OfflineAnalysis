@@ -26,6 +26,10 @@ public:
     virtual bool analyze_mode(std::vector<ByteTaintPropagate *> &v_in_propagate,
                               Blocks &blocks) = 0;
 protected:
+    unsigned int MIN_ADDRESS = 0x300;
+    unsigned int MAX_ADDRESS = 0xc0000000;
+    unsigned int WINDOW_SIZE = 64; // 64 bytes
+
     std::string mode_name;
     int type_enc_dec;
 
@@ -73,9 +77,10 @@ private:
     bool analyze_enc_byte(std::vector<ByteTaintPropagate *> &v_in_propagate,
                      Blocks &blocks,
                      unsigned int idx_block,
-                     unsigned int idx_byte,
-                     unsigned int out_addr_begin,
-                     unsigned int out_len);
+                     unsigned int idx_byte);
+    // Analyzes if input range array has containing all ranges of
+    // output range arrary. The 1 : n pattern in cbc enc
+    bool analyze_enc_ra(RangeArray &in_ra, RangeArray &out_ra);
 
     bool analyze_dec(std::vector<ByteTaintPropagate *> &v_in_propagate,
                      Blocks &blocks,
@@ -109,6 +114,7 @@ private:
                              unsigned int idx_block,
                              unsigned int out_addr_begin,
                              unsigned int out_len);
+    void rm_ident_ranges(RangeArray &ra1, RangeArray &ra2);
 };
 
 class DetectFactory{

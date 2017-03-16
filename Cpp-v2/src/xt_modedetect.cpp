@@ -174,8 +174,8 @@ bool CBCDetect::analyze_enc_block(vector<ByteTaintPropagate *> &v_in_propagate,
         unsigned int block_sz = blocks[idx_block]->get_len();
         unsigned int idx_byte_begin = idx_block * block_sz;
         for(; idx_byte_begin < block_sz; idx_byte_begin++){
-            is_all_bytes_found = analyze_enc_byte(v_in_propagate, blocks, idx_block,
-                    idx_byte_begin, out_addr_begin, out_len);
+            is_all_bytes_found =
+                    analyze_enc_byte(v_in_propagate, blocks, idx_block, idx_byte_begin);
 
             if(!is_all_bytes_found){
                 return is_all_bytes_found;
@@ -191,42 +191,29 @@ bool CBCDetect::analyze_enc_block(vector<ByteTaintPropagate *> &v_in_propagate,
 bool CBCDetect::analyze_enc_byte(vector<ByteTaintPropagate *> &v_in_propagate,
                      Blocks &blocks,
                      unsigned int idx_block,
-                     unsigned int idx_byte,
-                     unsigned int out_addr_begin,
-                     unsigned int out_len)
+                     unsigned int idx_byte)
 {
     ByteTaintPropagate *in_byte_propa = v_in_propagate[idx_byte];
-    RangeArray in_byte_r(out_addr_begin, out_len);
+    RangeArray in_byte_r(MIN_ADDRESS, MAX_ADDRESS - MIN_ADDRESS + 1);
+
     in_byte_r.get_common_range(*in_byte_propa->get_taint_propagate() );
     in_byte_r.disp_range_array();
 
-    if(in_byte_r.get_size() != 1){
-        cout << "analyze_enc_byte: in byte range array is not 1" << endl;
-        return false;
-    }
-
     int block_sz = blocks[idx_block]->get_len();
-    int idx_out_block = idx_block + 1;
+    int i_rest_bks = idx_block + 1;
+
     // goes througth all rest blocks
-    for(; idx_out_block < blocks.size(); idx_out_block++){
+    for(; i_rest_bks < blocks.size(); i_rest_bks++){
         // If in byte range contains all ranges of next blocks
         // Pattern: 1:n
-        int idx_out_b_first_byte = idx_out_block * block_sz;
-        ByteTaintPropagate *firstbyte_out_b_propa = v_in_propagate[idx_out_b_first_byte];
-        RangeArray out_block_r(out_addr_begin, out_len);
+        int i_rest_b_firstbyte = i_rest_bks * block_sz;
+        ByteTaintPropagate *firstbyte_out_b_propa = v_in_propagate[i_rest_b_firstbyte];
+
+        RangeArray out_block_r(MIN_ADDRESS, MAX_ADDRESS - MIN_ADDRESS + 1);
         out_block_r.get_common_range(*firstbyte_out_b_propa->get_taint_propagate() );
         out_block_r.disp_range_array();
 
-        if(out_block_r.get_size() != 1){
-            cout << "analyze_enc_byte: in byte range array is not 1" << endl;
-            return false;
-        }
-
-        // remove the common range with idx_out_block range
-        if(in_byte_r.has_range(*out_block_r[0]) ){
-            in_byte_r.del_range(out_block_r[0]->get_begin(), out_block_r[0]->get_len() );
-            in_byte_r.disp_range_array();
-        }else{
+        if(!analyze_enc_ra(in_byte_r, out_block_r) ){
             return false;
         }
     }
@@ -239,6 +226,39 @@ bool CBCDetect::analyze_enc_byte(vector<ByteTaintPropagate *> &v_in_propagate,
     }else {
         return false;
     }
+}
+
+bool CBCDetect::analyze_enc_ra(RangeArray &in_ra, RangeArray &out_ra)
+{
+    int i = 0;
+    if(in_ra.get_size() != 1){
+        rm_ident_ranges(in_ra, out_ra);
+    }
+
+    in_ra.disp_range_array();
+    out_ra.disp_range_array();
+
+    // If in range arrays has only one range left (observation)
+    if(in_ra.get_size() == 1) {
+        bool has_common = false;
+        for(i = 0; i < out_ra.get_size(); i++){
+            // if the range of in_ra contains any ranges in
+            // the out_ra
+            if(in_ra.has_range(*out_ra[i] ) ){
+                in_ra.del_range(out_ra[i]->get_begin(),
+                                out_ra[i]->get_len() );
+                has_common = true;
+            }
+        }
+
+        if(has_common){
+            return true;
+        } else{
+            return false;
+        }
+    }
+
+    return false;
 }
 
 bool CBCDetect::analyze_dec(vector<ByteTaintPropagate *> &v_in_propagate,
@@ -399,6 +419,26 @@ bool CBCDetect::is_range_successive(vector<ByteTaintPropagate *> &v_in_propagate
         return false;
     }
 
+}
+
+void CBCDetect::rm_ident_ranges(RangeArray &ra1, RangeArray &ra2)
+{
+    int ra2_sz = ra2.get_size();
+    int i = 0;
+
+    while(i < ra2_sz){
+        unsigned int r2_begin = ra2[i]->get_begin();
+        unsigned int r2_len   = ra2[i]->get_len();
+
+        if(ra1.has_ident_range(r2_begin, r2_len) ){
+            ra1.del_range(r2_begin, r2_len);
+            ra2.del_range(r2_begin, r2_len);
+
+            ra2_sz = ra2.get_size();
+        }else {
+            i++;
+        }
+    }
 }
 
 DetectFactory DetectFactory::detect_factory_;

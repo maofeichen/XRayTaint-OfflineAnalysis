@@ -247,8 +247,8 @@ void BlockDetect::detect_mode_type(vector<ByteTaintPropagate *> &v_in_propagate,
     // Above code seems not working, debug here
     CBCDetect &det_cbc = CBCDetect::get_instance();
     // det_cbc.analyze_mode(v_in_propagate, blocks);
-    det_cbc.analyze_mode_alter(v_in_propagate, blocks, out_begin_addr_, out_len_);
-    // det_cbc.analyze_mode_improve(v_in_propagate, blocks, out_begin_addr_, out_len_);
+    // det_cbc.analyze_mode_alter(v_in_propagate, blocks, out_begin_addr_, out_len_);
+    det_cbc.analyze_mode_improve(v_in_propagate, blocks, out_begin_addr_, out_len_);
 
 }
 
