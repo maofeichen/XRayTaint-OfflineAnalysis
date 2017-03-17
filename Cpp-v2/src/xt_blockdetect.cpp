@@ -186,6 +186,13 @@ void BlockDetect::detect_block_sz_small_win(Blocks &blocks,
         int i = b_begin_byte;
         for(; i < b_end_byte; i++){
             ByteTaintPropagate *firbyte_taint_propa = buf_taint_propagate[i];
+
+            if(firbyte_taint_propa->get_taint_propagate()->get_size() == 0) {
+                b_begin_byte++;
+                buf_sz--;
+                continue;
+            }
+
             common.get_common_range(*firbyte_taint_propa->get_taint_propagate() );
 
             unsigned int firstbyte_addr = firbyte_taint_propa->get_taint_src();

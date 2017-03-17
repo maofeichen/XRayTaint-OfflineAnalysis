@@ -81,7 +81,9 @@ private:
     bool analyze_enc_byte(std::vector<ByteTaintPropagate *> &v_in_propagate,
                      Blocks &blocks,
                      unsigned int idx_block,
-                     unsigned int idx_byte);
+                     unsigned int idx_byte,
+                     unsigned int out_addr_begin,
+                     unsigned int out_len);
     // Analyzes if input range array has containing all ranges of
     // output range arrary. The 1 : n pattern in cbc enc
     bool analyze_enc_ra(RangeArray &in_ra, RangeArray &out_ra);

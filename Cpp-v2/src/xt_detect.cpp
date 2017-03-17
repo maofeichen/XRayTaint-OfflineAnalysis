@@ -25,6 +25,9 @@ void Detect::detect_cipher()
 
     Propagate propagate(xt_log_);
 
+    // Store which IN and OUT buffer had been searched already
+	vector<pair_inout_> v_buf_inout;
+
     // vector<t_AliveFunctionCall>::iterator it_in_func = v_func_cont_buf_.end() - 2;
      vector<t_AliveFunctionCall>::iterator it_in_func = v_func_cont_buf_.begin() + 3;
 
@@ -46,20 +49,43 @@ void Detect::detect_cipher()
                         t_AliveContinueBuffer in_buf = *it_in_buf;
                         t_AliveContinueBuffer out_buf = *it_out_buf;
 
-                        // detect_cipher_in_out(in_buf, out_buf, propagate);
+                        pair_inout_ buf_inout;
+
+                        buf_inout.in_.beginAddress  = in_buf.beginAddress;
+                        buf_inout.in_.size          = in_buf.size;
+                        buf_inout.out_.beginAddress = out_buf.beginAddress;
+                        buf_inout.out_.size         = out_buf.size;
+
+                        if(is_dupl_buf_inout(buf_inout, v_buf_inout) ) {
+                            cout << "In and Out buffers had been searched, skip..." << endl;
+                        }else {
+                            v_buf_inout.push_back(buf_inout);
+
+                            cout << "in: addr: " << hex << in_buf.beginAddress
+                                    << " byte: " << dec << in_buf.size / 8 << endl;
+                            cout << "out: addr: " << hex << out_buf.beginAddress
+                                    << " byte: " << dec << out_buf.size / 8 << endl;
+                            detect_cipher_in_out(in_buf, out_buf, propagate);
+
+                            // if(in_buf.beginAddress == 0xbffff6ac) {
+                            //     detect_cipher_in_out(in_buf, out_buf, propagate);
+                            // }
+                        }
+
+
 
                         // Debug
                         // if(in_buf.beginAddress == 0xbffff6bc){
-                        if(in_buf.beginAddress == 0xbffff70c){
-                            cout << "function call mark:" << it_in_func->call_mark << endl;
-                            vector<unsigned long>::const_iterator it_n_idx = it_in_buf->vNodeIndex.begin();
-                            for(; it_n_idx != it_in_buf->vNodeIndex.end(); ++it_n_idx){
-                                cout << "src index: " << *it_n_idx << endl;
-                                XTNode node = get_mem_node(*it_n_idx);
-                                cout << "node addr: " << hex << node.getIntAddr() << endl;
-                            }
-                            detect_cipher_in_out(in_buf, out_buf, propagate);
-                        }
+                        // if(in_buf.beginAddress == 0xbffff70c){
+                        //     cout << "function call mark:" << it_in_func->call_mark << endl;
+                        //     vector<unsigned long>::const_iterator it_n_idx = it_in_buf->vNodeIndex.begin();
+                        //     for(; it_n_idx != it_in_buf->vNodeIndex.end(); ++it_n_idx){
+                        //         cout << "src index: " << *it_n_idx << endl;
+                        //         XTNode node = get_mem_node(*it_n_idx);
+                        //         cout << "node addr: " << hex << node.getIntAddr() << endl;
+                        //     }
+                        //     detect_cipher_in_out(in_buf, out_buf, propagate);
+                        // }
                     }
                 }
             }
@@ -120,6 +146,24 @@ Detect::merge_propagate_res(unordered_set<Node, NodeHash> &propagate_res,
             multi_propagate_res.insert(*it_propagate_res);
         }
     }
+}
+
+inline bool
+Detect::is_dupl_buf_inout(Detect::pair_inout_ &bufInOut, std::vector<Detect::pair_inout_> &vBufInOut)
+{
+    if(vBufInOut.empty() ){
+		return false;
+    }
+
+	for(vector<Detect::pair_inout_>::iterator it = vBufInOut.begin(); it != vBufInOut.end(); ++it){
+		if(it->in_.beginAddress == bufInOut.in_.beginAddress&&
+		   it->in_.size == bufInOut.in_.size &&
+		   it->out_.beginAddress == bufInOut.out_.beginAddress &&
+		   it->out_.size == bufInOut.out_.size)
+			return true;
+	}
+
+	return false;
 }
 
 unordered_set<Node, NodeHash>
@@ -227,6 +271,10 @@ Detect::gen_in_propagate_byte(t_AliveContinueBuffer &in, Propagate &propagate)
 void Detect::gen_byte_range_array(vector<Detect::propagate_byte_> v_propagate_byte,
                                   RangeArray *range_array)
 {
+    if(v_propagate_byte.empty() ){
+        return;
+    }
+
     sort(v_propagate_byte.begin(), v_propagate_byte.end() );
 
     vector<propagate_byte_>::const_iterator it_propagate_byte;

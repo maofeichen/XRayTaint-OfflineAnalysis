@@ -186,7 +186,8 @@ bool CBCDetect::analyze_enc_block(vector<ByteTaintPropagate *> &v_in_propagate,
         unsigned int idx_byte_begin = idx_block * block_sz;
         for(; idx_byte_begin < block_sz; idx_byte_begin++){
             is_all_bytes_found =
-                    analyze_enc_byte(v_in_propagate, blocks, idx_block, idx_byte_begin);
+                    analyze_enc_byte(v_in_propagate, blocks, idx_block, idx_byte_begin,
+                            out_addr_begin, out_len);
 
             if(!is_all_bytes_found){
                 return is_all_bytes_found;
@@ -202,10 +203,13 @@ bool CBCDetect::analyze_enc_block(vector<ByteTaintPropagate *> &v_in_propagate,
 bool CBCDetect::analyze_enc_byte(vector<ByteTaintPropagate *> &v_in_propagate,
                      Blocks &blocks,
                      unsigned int idx_block,
-                     unsigned int idx_byte)
+                     unsigned int idx_byte,
+                     unsigned int out_addr_begin,
+                     unsigned int out_len)
 {
     ByteTaintPropagate *in_byte_propa = v_in_propagate[idx_byte];
-    RangeArray in_byte_r(MIN_ADDRESS, MAX_ADDRESS - MIN_ADDRESS + 1);
+    RangeArray in_byte_r(out_addr_begin, out_len);
+    // RangeArray in_byte_r(MIN_ADDRESS, MAX_ADDRESS - MIN_ADDRESS + 1);
 
     in_byte_r.get_common_range(*in_byte_propa->get_taint_propagate() );
     in_byte_r.disp_range_array();
@@ -220,7 +224,8 @@ bool CBCDetect::analyze_enc_byte(vector<ByteTaintPropagate *> &v_in_propagate,
         int i_rest_b_firstbyte = i_rest_bks * block_sz;
         ByteTaintPropagate *firstbyte_out_b_propa = v_in_propagate[i_rest_b_firstbyte];
 
-        RangeArray out_block_r(MIN_ADDRESS, MAX_ADDRESS - MIN_ADDRESS + 1);
+        RangeArray out_block_r(out_addr_begin, out_len);
+        // RangeArray out_block_r(MIN_ADDRESS, MAX_ADDRESS - MIN_ADDRESS + 1);
         out_block_r.get_common_range(*firstbyte_out_b_propa->get_taint_propagate() );
         out_block_r.disp_range_array();
 
@@ -248,6 +253,9 @@ bool CBCDetect::analyze_enc_ra(RangeArray &in_ra, RangeArray &out_ra)
 
     in_ra.disp_range_array();
     out_ra.disp_range_array();
+
+    // cbc enc pattern could not be identical
+    rm_ident_ranges(in_ra, out_ra);
 
     // If in range arrays has only one range left (observation)
     if(in_ra.get_size() == 1) {
@@ -363,6 +371,11 @@ unsigned int CBCDetect::get_next_bk_range_len(vector<ByteTaintPropagate *> &v_in
     ByteTaintPropagate *firstbyte_curr_bk_propa = v_in_propagate[i_1stbyte_curr_bk];
     ByteTaintPropagate *firstbyte_next_bk_propa = v_in_propagate[i_1stbyte_next_bk];
 
+    if(firstbyte_curr_bk_propa->get_taint_propagate()->get_size() == 0 ||
+       firstbyte_next_bk_propa->get_taint_propagate()->get_size() == 0) {
+        return 0;
+    }
+
     RangeArray curr_ra(MIN_ADDRESS, MAX_ADDRESS - MIN_ADDRESS + 1);
     RangeArray next_ra(MIN_ADDRESS, MAX_ADDRESS - MIN_ADDRESS + 1);
 
@@ -403,13 +416,18 @@ bool CBCDetect::has_one_to_one_pattern(vector<ByteTaintPropagate *> &v_in_propag
     ByteTaintPropagate *byte_curr_b_propa = v_in_propagate[idx_byte_curr_b];
     ByteTaintPropagate *byte_next_b_propa = v_in_propagate[idx_byte_next_b];
 
-    RangeArray byte_curr_b_ra(MIN_ADDRESS, MAX_ADDRESS - MIN_ADDRESS + 1);
-    RangeArray byte_next_b_ra(MIN_ADDRESS, MAX_ADDRESS - MIN_ADDRESS + 1);
+    RangeArray byte_curr_b_ra(out_addr_begin, out_len);
+    RangeArray byte_next_b_ra(out_addr_begin, out_len);
+    // RangeArray byte_curr_b_ra(MIN_ADDRESS, MAX_ADDRESS - MIN_ADDRESS + 1);
+    // RangeArray byte_next_b_ra(MIN_ADDRESS, MAX_ADDRESS - MIN_ADDRESS + 1);
+
+    byte_curr_b_ra.disp_range_array();
+    byte_next_b_ra.disp_range_array();
 
     byte_curr_b_ra.get_common_range(*byte_curr_b_propa->get_taint_propagate() );
     byte_next_b_ra.get_common_range(*byte_next_b_propa->get_taint_propagate() );
 
-    rm_minimum_range(byte_curr_b_ra, MIN_BUF_SZ);
+    // rm_minimum_range(byte_curr_b_ra, MIN_BUF_SZ);
     rm_minimum_range(byte_next_b_ra, MIN_BUF_SZ);
 
     rm_ident_ranges(byte_curr_b_ra, byte_next_b_ra);
@@ -418,6 +436,9 @@ bool CBCDetect::has_one_to_one_pattern(vector<ByteTaintPropagate *> &v_in_propag
     byte_curr_b_ra.disp_range_array();
     byte_next_b_ra.disp_range_array();
 
+    if(byte_curr_b_ra.get_size() == 0 || byte_next_b_ra.get_size() == 0) {
+        return false;
+    }
     // Expect two ranges in byte_curr_b_r:
     //  1) decrypted buffer range of current block
     //  2) extra 1 byte of decrypted buffer of next block

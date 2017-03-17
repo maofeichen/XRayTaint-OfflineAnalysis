@@ -33,6 +33,11 @@ private:
 	    }
 	};
 
+	struct pair_inout_{
+	    t_AliveContinueBuffer in_;
+	    t_AliveContinueBuffer out_;
+	};
+
 	// Due to there might be multiple same taint sources (same addr, different val),
 	// computes the interval to next different taint source
 	inline unsigned long comp_multi_src_interval(std::vector<unsigned long> &v_node_idx,
@@ -41,6 +46,7 @@ private:
 	inline std::string get_insn_addr(unsigned long idx, std::vector<Record> &v_rec);
 	inline void merge_propagate_res(std::unordered_set<Node, NodeHash> &propagate_res,
 	                                std::unordered_set<Node, NodeHash> &multi_propagate_res);
+	inline bool is_dupl_buf_inout(Detect::pair_inout_ &bufInOut, std::vector<Detect::pair_inout_> &vBufInOut);
 
 	// Computes propagate results for multiple sources
 	std::unordered_set<Node, NodeHash> comp_multi_src_propagate_res(
