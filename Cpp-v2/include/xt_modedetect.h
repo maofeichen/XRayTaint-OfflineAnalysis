@@ -87,6 +87,8 @@ private:
     // Analyzes if input range array has containing all ranges of
     // output range arrary. The 1 : n pattern in cbc enc
     bool analyze_enc_ra(RangeArray &in_ra, RangeArray &out_ra);
+    bool analyze_enc_ra_alter(RangeArray &in_ra, RangeArray &out_ra);
+
 
     bool analyze_dec(std::vector<ByteTaintPropagate *> &v_in_propagate,
                      Blocks &blocks,

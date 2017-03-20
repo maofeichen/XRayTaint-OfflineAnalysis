@@ -184,7 +184,8 @@ bool CBCDetect::analyze_enc_block(vector<ByteTaintPropagate *> &v_in_propagate,
 
         unsigned int block_sz = blocks[idx_block]->get_len();
         unsigned int idx_byte_begin = idx_block * block_sz;
-        for(; idx_byte_begin < block_sz; idx_byte_begin++){
+        unsigned int idx_byte_end   = (idx_block + 1) * block_sz;
+        for(; idx_byte_begin < idx_byte_end; idx_byte_begin++){
             is_all_bytes_found =
                     analyze_enc_byte(v_in_propagate, blocks, idx_block, idx_byte_begin,
                             out_addr_begin, out_len);
@@ -208,11 +209,11 @@ bool CBCDetect::analyze_enc_byte(vector<ByteTaintPropagate *> &v_in_propagate,
                      unsigned int out_len)
 {
     ByteTaintPropagate *in_byte_propa = v_in_propagate[idx_byte];
-    RangeArray in_byte_r(out_addr_begin, out_len);
+    RangeArray in_byte_ra(out_addr_begin, out_len);
     // RangeArray in_byte_r(MIN_ADDRESS, MAX_ADDRESS - MIN_ADDRESS + 1);
 
-    in_byte_r.get_common_range(*in_byte_propa->get_taint_propagate() );
-    in_byte_r.disp_range_array();
+    in_byte_ra.get_common_range(*in_byte_propa->get_taint_propagate() );
+    in_byte_ra.disp_range_array();
 
     int block_sz = blocks[idx_block]->get_len();
     int i_rest_bks = idx_block + 1;
@@ -224,24 +225,36 @@ bool CBCDetect::analyze_enc_byte(vector<ByteTaintPropagate *> &v_in_propagate,
         int i_rest_b_firstbyte = i_rest_bks * block_sz;
         ByteTaintPropagate *firstbyte_out_b_propa = v_in_propagate[i_rest_b_firstbyte];
 
-        RangeArray out_block_r(out_addr_begin, out_len);
+        RangeArray out_block_ra(out_addr_begin, out_len);
         // RangeArray out_block_r(MIN_ADDRESS, MAX_ADDRESS - MIN_ADDRESS + 1);
-        out_block_r.get_common_range(*firstbyte_out_b_propa->get_taint_propagate() );
-        out_block_r.disp_range_array();
+        out_block_ra.get_common_range(*firstbyte_out_b_propa->get_taint_propagate() );
+        out_block_ra.disp_range_array();
 
-        if(!analyze_enc_ra(in_byte_r, out_block_r) ){
+        if(in_byte_ra.get_size() != 1) {
+            cout << "analyze enc byte: in_byte_ra size is not 1" << endl;
+            return false;
+        }else {
+            // del its own range
+            in_byte_ra.del_range(in_byte_ra[0]->get_begin(), block_sz);
+        }
+
+        // if(!analyze_enc_ra(in_byte_ra, out_block_ra) ){
+        if(!analyze_enc_ra_alter(in_byte_ra, out_block_ra) ){
             return false;
         }
     }
 
+    return true;
+
     // After removing all common ranges with rest blocks, should only left
     // with range the current block decrypted text
     // the decrypted text buffer size should be same with the ciphertext block size
-    if(in_byte_r[0]->get_len() == block_sz){
-        return true;
-    }else {
-        return false;
-    }
+    
+    // if(in_byte_ra[0]->get_len() == block_sz){
+    //     return true;
+    // }else {
+    //     return false;
+    // }
 }
 
 bool CBCDetect::analyze_enc_ra(RangeArray &in_ra, RangeArray &out_ra)
@@ -279,6 +292,26 @@ bool CBCDetect::analyze_enc_ra(RangeArray &in_ra, RangeArray &out_ra)
 
     return false;
 }
+
+bool CBCDetect::analyze_enc_ra_alter(RangeArray &in_ra, RangeArray &out_ra)
+{
+    in_ra.disp_range_array();
+    out_ra.disp_range_array();
+
+    if(in_ra.get_size() != 1 && out_ra.get_size() != 1) {
+        cout << "analyze enc ra alter: given in out size is not 1" << endl;
+        return false;
+    }else {
+        if(in_ra.has_ident_range(out_ra[0]->get_begin(),
+                                 out_ra[0]->get_len() ) ) {
+            return true;
+        }else {
+            return false;
+        }
+    }
+
+}
+
 
 bool CBCDetect::analyze_dec(vector<ByteTaintPropagate *> &v_in_propagate,
                             Blocks &blocks,
