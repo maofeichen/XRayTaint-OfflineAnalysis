@@ -110,6 +110,17 @@ private:
                           unsigned int out_addr_begin,
                           unsigned int out_len);
 
+    void disp_block(std::vector<ByteTaintPropagate *> &v_in_propagate,
+                          Blocks &blocks,
+                          unsigned int idx_block,
+                          unsigned int out_addr_begin,
+                          unsigned int out_len);
+    void disp_byte(std::vector<ByteTaintPropagate *> &v_in_propagate,
+                          Blocks &blocks,
+                          unsigned int idx_block,
+                          unsigned int idx_byte,
+                          unsigned int out_addr_begin,
+                          unsigned int out_len);
     // current block i, next block i + 1. If block i and i+1 are
     // sucessive blocks in cbc dec, their decrypted buffer range
     // should be successive.
@@ -134,6 +145,7 @@ private:
                              unsigned int idx_block,
                              unsigned int out_addr_begin,
                              unsigned int out_len);
+
     // If either of range array has range containing a range in other,
     // remove that range in both arraies
     void rm_contain_ranges(RangeArray &ra1, RangeArray &ra2);
