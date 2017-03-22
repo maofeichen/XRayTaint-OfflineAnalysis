@@ -31,7 +31,9 @@ public:
     // Detects block for small buffer size < 64 bytes
     void detect_block_sz_small_win(Blocks &blocks,
                                  std::vector<ByteTaintPropagate *> &buf_taint_propagate,
-                                 unsigned int in_byte_sz);
+                                 unsigned int in_byte_sz,
+                                 unsigned int out_addr,
+                                 unsigned int out_byte_sz);
 
     void detect_mode_type(std::vector<ByteTaintPropagate *> &v_in_propagate,
                           Blocks &blocks);

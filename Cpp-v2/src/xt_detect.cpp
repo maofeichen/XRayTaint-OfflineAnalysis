@@ -28,8 +28,8 @@ void Detect::detect_cipher()
     // Store which IN and OUT buffer had been searched already
 	vector<pair_inout_> v_buf_inout;
 
-    vector<t_AliveFunctionCall>::iterator it_in_func = v_func_cont_buf_.end() - 3;
-    // vector<t_AliveFunctionCall>::iterator it_in_func = v_func_cont_buf_.begin() + 3;
+    // vector<t_AliveFunctionCall>::iterator it_in_func = v_func_cont_buf_.end() - 3;
+    vector<t_AliveFunctionCall>::iterator it_in_func = v_func_cont_buf_.begin() + 3;
 
     // Iterates each function call
     for(; it_in_func != v_func_cont_buf_.end() - 1; ++it_in_func){
@@ -59,20 +59,35 @@ void Detect::detect_cipher()
                         if(is_dupl_buf_inout(buf_inout, v_buf_inout) ) {
                             cout << "In and Out buffers had been searched, skip..." << endl;
                         }else {
-                            v_buf_inout.push_back(buf_inout);
+                            // v_buf_inout.push_back(buf_inout);
 
                             cout << "in: addr: " << hex << in_buf.beginAddress
                                     << " byte: " << dec << in_buf.size / 8 << endl;
                             cout << "out: addr: " << hex << out_buf.beginAddress
                                     << " byte: " << dec << out_buf.size / 8 << endl;
-                            detect_cipher_in_out(in_buf, out_buf, propagate);
+                            // detect_cipher_in_out(in_buf, out_buf, propagate);
 
-                            // if(in_buf.beginAddress == 0xbffff6ac) {
-                            //     detect_cipher_in_out(in_buf, out_buf, propagate);
-                            // }
+                            if(in_buf.beginAddress == 0x804b040 &&
+                               in_buf.size == 96 * 8 &&
+                               out_buf.beginAddress == 0x804b820 &&
+                               out_buf.size == 96 * 8) {
+
+                                int num_source = in_buf.vNodeIndex.size();
+                                cout << "number of source index in the input buffer: "
+                                        << dec << in_buf.vNodeIndex.size() << endl;
+                                
+                                vector<unsigned long>::const_iterator it_n_idx = it_in_buf->vNodeIndex.begin();
+                                for(; it_n_idx != it_in_buf->vNodeIndex.end(); ++it_n_idx){
+                                    cout << "src index: " << dec << *it_n_idx << endl;
+                                    XTNode node = get_mem_node(*it_n_idx);
+                                    cout << "node addr: " << hex << node.getIntAddr() << endl;
+                                }
+                                
+                                if(num_source == 36){
+                                    detect_cipher_in_out(in_buf, out_buf, propagate);
+                                }
+                            }
                         }
-
-
 
                         // Debug
                         // if(in_buf.beginAddress == 0xbffff6bc){
@@ -415,7 +430,8 @@ void Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
     //                                out.beginAddress, out.size / 8);
     // block_detect.detect_block_size_alter(blocks, in_taint_propagate, in.size / 8,
     //                                      out.beginAddress, out.size / 8);
-    block_detect.detect_block_sz_small_win(blocks, in_taint_propagate, in.size / 8);
+    block_detect.detect_block_sz_small_win(blocks, in_taint_propagate, in.size / 8,
+                                           out.beginAddress, out.size / 8);
 
     if(blocks.size() == 0){
         cout << "No block identified" << endl;

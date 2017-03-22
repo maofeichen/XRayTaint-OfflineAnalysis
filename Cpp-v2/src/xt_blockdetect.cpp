@@ -164,7 +164,9 @@ void BlockDetect::detect_block_size_alter(Blocks &blocks,
 
 void BlockDetect::detect_block_sz_small_win(Blocks &blocks,
                                  vector<ByteTaintPropagate *> &buf_taint_propagate,
-                                 unsigned int in_byte_sz)
+                                 unsigned int in_byte_sz,
+                                 unsigned int out_addr,
+                                 unsigned int out_byte_sz)
 {
     unsigned int b_begin_byte = 0;
     unsigned int b_end_byte   = in_byte_sz;
@@ -180,29 +182,34 @@ void BlockDetect::detect_block_sz_small_win(Blocks &blocks,
         // only works for the last cipher. But consider a mix cipher:
         // first enc then dec, the output range only for the dec, but not
         // the enc
-        RangeArray common(MIN_ADDRESS, MAX_ADDRESS - MIN_ADDRESS + 1);
+
+        RangeArray common(out_addr, out_byte_sz);
+        // RangeArray common(MIN_ADDRESS, MAX_ADDRESS - MIN_ADDRESS + 1);
         RangeArray prev_common;
 
         int i = b_begin_byte;
         for(; i < b_end_byte; i++){
             ByteTaintPropagate *firbyte_taint_propa = buf_taint_propagate[i];
-
-            if(firbyte_taint_propa->get_taint_propagate()->get_size() == 0) {
-                b_begin_byte++;
-                buf_sz--;
-                continue;
-            }
-
-            common.get_common_range(*firbyte_taint_propa->get_taint_propagate() );
-
             unsigned int firstbyte_addr = firbyte_taint_propa->get_taint_src();
             cout << "propcessing byte addr: " << hex << firstbyte_addr << endl;
+
+            common.get_common_range(*firbyte_taint_propa->get_taint_propagate() );
+            common.disp_range_array();
+
+            if(accumu_b_sz == 0 && common.get_size() == 0) {
+                b_begin_byte++;
+                buf_sz--;
+                break;
+            }
 
             if(accumu_b_sz == 0){
                 // For a potential block, uses the first two bytes of the block
                 // to determin the common propagate range
                 ByteTaintPropagate *secbyte_taint_propa = buf_taint_propagate[i+1];
                 common.get_common_range(*secbyte_taint_propa->get_taint_propagate() );
+
+                // filter out minimum size block
+                rm_minimum_range(common, MIN_BLOCK_SZ);
             }
 
             common.disp_range_array();
@@ -212,8 +219,11 @@ void BlockDetect::detect_block_sz_small_win(Blocks &blocks,
             // range, then we assume it is a byte in next block.
             // The assumption is all bytes belongs to the same block should have same
             // common range.
+            //
+            // We loose the constrain, only if the first range is identical is enough
             if(accumu_b_sz != 0 &&
-               !common.is_identical(prev_common) ){
+               !(common[0]->get_begin() == prev_common[0]->get_begin() &&
+               common[0]->get_len() == prev_common[0]->get_len() ) ) {
                 cout << "detecting block sz: find a block end" << endl;
                 save_block(accumu_b_sz, blocks, b_begin_byte, i);
 
@@ -221,6 +231,17 @@ void BlockDetect::detect_block_sz_small_win(Blocks &blocks,
                 accumu_b_sz = 0;
                 break;
             }
+
+
+            // if(accumu_b_sz != 0 &&
+            //    !common.is_identical(prev_common) ){
+            //     cout << "detecting block sz: find a block end" << endl;
+            //     save_block(accumu_b_sz, blocks, b_begin_byte, i);
+
+            //     buf_sz -= accumu_b_sz;
+            //     accumu_b_sz = 0;
+            //     break;
+            // }
 
             prev_common = common;
             accumu_b_sz++;

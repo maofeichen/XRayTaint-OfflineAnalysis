@@ -138,6 +138,18 @@ bool CBCDetect::analyze_mode_improve(vector<ByteTaintPropagate *> &v_in_propagat
     return true;
 }
 
+inline unsigned int CBCDetect::get_next_b_begin_addr(RangeArray &ra,
+                                                     unsigned int addr_byte_to_next_b)
+{
+    for(int i = 0; i < ra.get_size(); i++) {
+        Range r = *ra[i];
+        if(r.has_range(addr_byte_to_next_b, 1) ) {
+            return r.get_begin();
+        }
+    }
+    return 0;
+}
+
 inline bool CBCDetect::is_in_order_impact(unsigned int addr_to_nex_b_byte,
                                    unsigned int addr_next_b_r_begin,
                                    unsigned int idx_byte)
@@ -344,22 +356,31 @@ bool CBCDetect::analyze_dec_block(vector<ByteTaintPropagate *> &v_in_propagate,
 {
     if(!is_last){
         unsigned int block_sz = blocks[idx_block]->get_len();
+        unsigned int len_next_b_range = 0;
+        bool is_sec_last_b = (idx_block == blocks.size() - 2) ? true : false;
 
-        unsigned int i_1stbyte_curr_bk  = idx_block * block_sz;
-        unsigned int i_1stbyte_next_bk = (idx_block+1) * block_sz;
+        if(is_sec_last_b) {
+            unsigned int i_1stbyte_curr_bk  = idx_block * block_sz;
+            unsigned int i_1stbyte_next_bk = (idx_block+1) * block_sz;
 
-        // Uses length of decrypted text of next block, instead of length
-        // of current block decrypted text, due to if next block is the last,
-        // then its size might be smaller than the decrypted text of current block
-        unsigned int len_next_b_range =
-                get_next_bk_range_len(v_in_propagate, i_1stbyte_curr_bk, i_1stbyte_next_bk);
+            // Uses length of decrypted text of next block, instead of length
+            // of current block decrypted text, due to if next block is the last,
+            // then its size might be smaller than the decrypted text of current block
+            len_next_b_range = get_next_bk_range_len(v_in_propagate, i_1stbyte_curr_bk, i_1stbyte_next_bk,
+                    out_addr_begin, out_len);
+        }else {
+            len_next_b_range = block_sz;
+        }
 
         if(len_next_b_range != 0) {
+            // If the range > block sz, uses block sz
+            len_next_b_range = min(len_next_b_range, block_sz);
+
             bool is_all_bytes_fit = true;
             int idx_byte = 0;
 
-            for(; idx_byte < len_next_b_range &&
-                  is_all_bytes_fit; idx_byte++){
+            for(; idx_byte < len_next_b_range /* &&
+                  is_all_bytes_fit */; idx_byte++){
                 is_all_bytes_fit = analyze_dec_byte(v_in_propagate, blocks, idx_byte,
                         idx_block, out_addr_begin, out_len);
             }
@@ -370,6 +391,12 @@ bool CBCDetect::analyze_dec_block(vector<ByteTaintPropagate *> &v_in_propagate,
             return false;
         }
     }else{
+        // Debug
+        // unsigned int block_sz = blocks[idx_block]->get_len();
+        // for(int i = 0; i < block_sz; i++) {
+        //     has_one_to_one_pattern(v_in_propagate, blocks, i, idx_block, out_addr_begin, out_len);
+        // }
+
         // last block does not has the pattern
         return true;
     }
@@ -388,7 +415,8 @@ bool CBCDetect::analyze_dec_byte(vector<ByteTaintPropagate *> &v_in_propagate,
 
     is_one_to_one = has_one_to_one_pattern(v_in_propagate, blocks, idx_byte, idx_block,
             out_addr_begin, out_len);
-    is_successive = is_range_successive(v_in_propagate, blocks, idx_block);
+    is_successive = is_range_successive(v_in_propagate, blocks, idx_block,
+            out_addr_begin, out_len);
     if(is_one_to_one && is_successive ){
         return true;
     }else{
@@ -399,7 +427,9 @@ bool CBCDetect::analyze_dec_byte(vector<ByteTaintPropagate *> &v_in_propagate,
 
 unsigned int CBCDetect::get_next_bk_range_len(vector<ByteTaintPropagate *> &v_in_propagate,
                                        unsigned int i_1stbyte_curr_bk,
-                                       unsigned int i_1stbyte_next_bk)
+                                       unsigned int i_1stbyte_next_bk,
+                                       unsigned int out_addr_begin,
+                                       unsigned int out_len)
 {
     ByteTaintPropagate *firstbyte_curr_bk_propa = v_in_propagate[i_1stbyte_curr_bk];
     ByteTaintPropagate *firstbyte_next_bk_propa = v_in_propagate[i_1stbyte_next_bk];
@@ -409,8 +439,10 @@ unsigned int CBCDetect::get_next_bk_range_len(vector<ByteTaintPropagate *> &v_in
         return 0;
     }
 
-    RangeArray curr_ra(MIN_ADDRESS, MAX_ADDRESS - MIN_ADDRESS + 1);
-    RangeArray next_ra(MIN_ADDRESS, MAX_ADDRESS - MIN_ADDRESS + 1);
+    RangeArray curr_ra(out_addr_begin, out_len);
+    RangeArray next_ra(out_addr_begin, out_len);
+    // RangeArray curr_ra(MIN_ADDRESS, MAX_ADDRESS - MIN_ADDRESS + 1);
+    // RangeArray next_ra(MIN_ADDRESS, MAX_ADDRESS - MIN_ADDRESS + 1);
 
     curr_ra.get_common_range(*firstbyte_curr_bk_propa->get_taint_propagate() );
     next_ra.get_common_range(*firstbyte_next_bk_propa->get_taint_propagate() );
@@ -419,15 +451,26 @@ unsigned int CBCDetect::get_next_bk_range_len(vector<ByteTaintPropagate *> &v_in
     next_ra.disp_range_array();
 
     rm_ident_ranges(curr_ra, next_ra);
-    rm_contain_ranges(curr_ra, next_ra);
+    // rm_contain_ranges(curr_ra, next_ra);
 
-    // To find: one range in current block should be continue with one range
+    curr_ra.disp_range_array();
+    next_ra.disp_range_array();
+
+    // To find: one range in current block should be successive with one range
     // in next block
     for(int i = 0; i < curr_ra.get_size(); i++){
         for(int j = 0; j < next_ra.get_size(); j++) {
             if( (curr_ra[i]->get_end() - 1) == next_ra[j]->get_begin() ) {
                 return next_ra[j]->get_len();
             }
+        }
+    }
+
+    // Or it contains the next block range
+    for(int i = 0; i < next_ra.get_size(); i++) {
+        Range r = *next_ra[i];
+        if(curr_ra.has_range(r.get_begin(), r.get_len() ) ) {
+            return r.get_end();
         }
     }
 
@@ -454,17 +497,17 @@ bool CBCDetect::has_one_to_one_pattern(vector<ByteTaintPropagate *> &v_in_propag
     // RangeArray byte_curr_b_ra(MIN_ADDRESS, MAX_ADDRESS - MIN_ADDRESS + 1);
     // RangeArray byte_next_b_ra(MIN_ADDRESS, MAX_ADDRESS - MIN_ADDRESS + 1);
 
-    byte_curr_b_ra.disp_range_array();
-    byte_next_b_ra.disp_range_array();
-
     byte_curr_b_ra.get_common_range(*byte_curr_b_propa->get_taint_propagate() );
     byte_next_b_ra.get_common_range(*byte_next_b_propa->get_taint_propagate() );
+
+    byte_curr_b_ra.disp_range_array();
+    byte_next_b_ra.disp_range_array();
 
     // rm_minimum_range(byte_curr_b_ra, MIN_BUF_SZ);
     rm_minimum_range(byte_next_b_ra, MIN_BUF_SZ);
 
     rm_ident_ranges(byte_curr_b_ra, byte_next_b_ra);
-    rm_contain_ranges(byte_curr_b_ra, byte_next_b_ra);
+    // rm_contain_ranges(byte_curr_b_ra, byte_next_b_ra);
 
     byte_curr_b_ra.disp_range_array();
     byte_next_b_ra.disp_range_array();
@@ -478,31 +521,35 @@ bool CBCDetect::has_one_to_one_pattern(vector<ByteTaintPropagate *> &v_in_propag
     byte_curr_b_ra.get_common_range(byte_next_b_ra);
     byte_curr_b_ra.disp_range_array();
 
-    // Observation: byte_curr_b_ra should only contain 1 range with 1 byte len
-    if(byte_curr_b_ra.get_size() == 1 &&
-       byte_curr_b_ra[0]->get_len() == 1) {
-        unsigned int byte_addr_to_next_bk = byte_curr_b_ra[0]->get_begin();
-        unsigned int byte_addr_next_bk_begin = 0;
+    // Observation: byte_curr_b_ra may not contain 1 range,
+    // but should with 1 byte len
+    int i = 0;
+    for(; i < byte_curr_b_ra.get_size(); i++) {
+        Range r = *byte_curr_b_ra[i];
 
-        // Finds the begin addr of range of next block
-        for(int i = 0; i < byte_next_b_ra.get_size(); i++){
-            if(byte_next_b_ra[i]->has_range(byte_addr_to_next_bk, 1) ) {
-                byte_addr_next_bk_begin = byte_next_b_ra[i]->get_begin();
-                break;
+        for(int j = 0; j < r.get_len(); j++){
+            bool is_in_order = false;
+
+            unsigned int addr_byte_to_next_b = r.get_begin() + j;
+            unsigned int addr_byte_next_b_begin =
+                    get_next_b_begin_addr(byte_next_b_ra, addr_byte_to_next_b);
+
+            is_in_order = is_in_order_impact(addr_byte_to_next_b, addr_byte_next_b_begin, idx_byte);
+            if(is_in_order) {
+                return true;
             }
         }
-
-        return is_in_order_impact(byte_addr_to_next_bk, byte_addr_next_bk_begin, idx_byte);
-
-    }else {
-        cout << "has on to one pattern: the given byte does not has one to one pattern" << endl;
-        return false;
     }
+
+    cout << "The given byte does not has 1:1 pattern to its next block" << endl;
+    return false;
 }
 
 bool CBCDetect::is_range_successive(vector<ByteTaintPropagate *> &v_in_propagate,
                              Blocks &blocks,
-                             unsigned int idx_block)
+                             unsigned int idx_block,
+                             unsigned int out_addr_begin,
+                             unsigned int out_len)
 {
     unsigned int block_sz = blocks[idx_block]->get_len();
 
@@ -514,8 +561,10 @@ bool CBCDetect::is_range_successive(vector<ByteTaintPropagate *> &v_in_propagate
     ByteTaintPropagate *byte2nd_curr_bk_propa = v_in_propagate[idx_2ndbyte_curr_bk];
     ByteTaintPropagate *byte1st_next_b_propa = v_in_propagate[idx_1stbyte_next_bk];
 
-    RangeArray curr_bk_ra(MIN_ADDRESS, MAX_ADDRESS - MIN_ADDRESS + 1);
-    RangeArray next_bk_ra(MIN_ADDRESS, MAX_ADDRESS - MIN_ADDRESS + 1);
+    RangeArray curr_bk_ra(out_addr_begin, out_len);
+    RangeArray next_bk_ra(out_addr_begin, out_len);
+    // RangeArray curr_bk_ra(MIN_ADDRESS, MAX_ADDRESS - MIN_ADDRESS + 1);
+    // RangeArray next_bk_ra(MIN_ADDRESS, MAX_ADDRESS - MIN_ADDRESS + 1);
 
     curr_bk_ra.get_common_range(*byte1st_curr_bk_propa->get_taint_propagate() );
     curr_bk_ra.get_common_range(*byte2nd_curr_bk_propa->get_taint_propagate() );
@@ -525,11 +574,19 @@ bool CBCDetect::is_range_successive(vector<ByteTaintPropagate *> &v_in_propagate
     rm_minimum_range(next_bk_ra, MIN_BUF_SZ);
 
     rm_ident_ranges(curr_bk_ra, next_bk_ra);
-    rm_contain_ranges(curr_bk_ra, next_bk_ra);
+    // rm_contain_ranges(curr_bk_ra, next_bk_ra);
 
     curr_bk_ra.disp_range_array();
     next_bk_ra.disp_range_array();
 
+    // If contains
+    for(int i = 0; i < next_bk_ra.get_size(); i++) {
+        if(curr_bk_ra.has_range(next_bk_ra[i]->get_begin(), 1) ){
+            return true;
+        }
+    }
+
+    // If successive
     for(int i = 0; i < curr_bk_ra.get_size(); i++){
         for(int j = 0; j < next_bk_ra.get_size(); j++) {
             if(curr_bk_ra[i]->get_end() == next_bk_ra[j]->get_begin() ) {

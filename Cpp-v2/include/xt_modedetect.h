@@ -62,6 +62,9 @@ private:
     CBCDetect() { mode_name = "cbc"; }
     ~CBCDetect() {}
 
+    // Finds the begin addr of range of next block
+    inline unsigned int get_next_b_begin_addr(RangeArray &ra,
+                                              unsigned int addr_byte_to_next_b);
     // Determines if the impact byte to next block's decrypted text buffer,
     // is in order to its byte position in the current block
     inline bool is_in_order_impact(unsigned int addr_to_nex_b_byte,
@@ -113,7 +116,9 @@ private:
     // Get the len of decrypted buffer range in block i+1
     unsigned int get_next_bk_range_len(std::vector<ByteTaintPropagate *> &v_in_propagate,
                                        unsigned int i_1stbyte_curr_bk,
-                                       unsigned int i_1stbyte_next_bk);
+                                       unsigned int i_1stbyte_next_bk,
+                                       unsigned int out_addr_begin,
+                                       unsigned int out_len);
     // determines if the byte of current block has 1:1 pattern to
     // next block's decrypted text buffer
     bool has_one_to_one_pattern(std::vector<ByteTaintPropagate *> &v_in_propagate,
@@ -126,7 +131,9 @@ private:
     // next block's propagate range
     bool is_range_successive(std::vector<ByteTaintPropagate *> &v_in_propagate,
                              Blocks &blocks,
-                             unsigned int idx_block);
+                             unsigned int idx_block,
+                             unsigned int out_addr_begin,
+                             unsigned int out_len);
     // If either of range array has range containing a range in other,
     // remove that range in both arraies
     void rm_contain_ranges(RangeArray &ra1, RangeArray &ra2);
