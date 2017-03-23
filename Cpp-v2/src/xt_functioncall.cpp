@@ -146,10 +146,10 @@ void XT_FunctionCall::create_continuous_buffer(
 		// If contains
 		if( current_addr > (*it).getIntAddr() ){
 		    // Debug: uses only 1 source instead of multiple
-			continue;
+			// continue;
 
-		    // nodeIndex = (*it).getIndex();
-			// aliveBuffer.vNodeIndex.push_back(nodeIndex);
+		    nodeIndex = (*it).getIndex();
+			aliveBuffer.vNodeIndex.push_back(nodeIndex);
 		}
 		// If continue
 		else if( current_addr == (*it).getIntAddr() ){

@@ -180,11 +180,12 @@ vector<string> XT_Liveness::analyze_alive_buffer_per_function(vector<string> &v)
         }
         else if(XT_Util::equal_mark(*it, flag::TCG_QEMU_LD) ){
             // Debug
-            // v_ld = XT_Util::split((*it).c_str(), '\t');
-            // s_mem_addr = v_ld[1];
-            // i_mem_addr = stoul(s_mem_addr, nullptr, 16);
-            // if(is_mem_alive(i_func_esp, i_mem_addr) )
-            //     v_new.push_back(*it);
+            v_ld = XT_Util::split((*it).c_str(), '\t');
+            s_mem_addr = v_ld[1];
+            i_mem_addr = stoul(s_mem_addr, nullptr, 16);
+            if(is_mem_alive(i_func_esp, i_mem_addr) ) {
+                v_new.push_back(*it);
+            }
         }
     }
 
