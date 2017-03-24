@@ -6,7 +6,8 @@ set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -std=c++11")
 
 include_directories(./include)
 set(HEADER_FILES include/xt_util.h include/xt_detector.h include/xt_node.h
-        include/xt_record.h include/xt_log.h include/xt_file.h include/xt_flag.h)
+        include/xt_record.h include/xt_log.h include/xt_file.h include/xt_flag.h
+        include/xt_preprocess.h)
 aux_source_directory(./src SOURCE_FILES)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 

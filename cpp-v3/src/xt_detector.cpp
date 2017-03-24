@@ -1,6 +1,9 @@
 #include "xt_file.h"
 #include "xt_detector.h"
 #include "xt_log.h"
+#include "xt_preprocess.h"
+
+#include <iostream>
 
 using namespace std;
 
@@ -12,9 +15,18 @@ Detector::Detector(string fn, bool dump) {
 void Detector::detect() {
   xt_file::File file(fn_);
   vector<string> v_s_log = file.read();
+  cout << "init log entries: " << v_s_log.size() << endl;
+
+  PreProcess pre_pro;
+  v_s_log = pre_pro.clean_unuse_insn_mark(v_s_log);
+  cout << "log entries after cleaning insn mark: " << v_s_log.size() << endl;
+
+  v_s_log = pre_pro.clean_empty_func_mark(v_s_log);
+  cout << "log entries after cleaning empty function mark: " << v_s_log.size()
+       << endl;
 
   Log log(v_s_log);
-  log.print_log();
+  // log.print_log();
 }
 
 string Detector::get_time() {
