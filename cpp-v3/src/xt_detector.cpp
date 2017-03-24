@@ -25,6 +25,10 @@ void Detector::detect() {
   cout << "log entries after cleaning empty function mark: " << v_s_log.size()
        << endl;
 
+  v_s_log = pre_pro.clean_invalid_func_mark(v_s_log);
+  cout << "log entries after cleaning invalid function mark: " << v_s_log.size()
+       << endl;
+
   Log log(v_s_log);
   // log.print_log();
 }
