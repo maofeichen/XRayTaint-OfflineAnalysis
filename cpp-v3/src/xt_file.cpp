@@ -32,3 +32,24 @@ vector<string> xt_file::File::read() {
 
   return v;
 }
+
+void xt_file::File::write_str_log(std::string path,
+                                  std::vector<std::string> &v_s_log) {
+  if(v_s_log.empty() ) {
+    cout << "write log: log is empty" << endl;
+    return;
+  }
+
+  cout << "write log path: " << path << endl;
+
+  ofstream fp(path.c_str() );
+  if(fp.is_open() ) {
+    for(auto it = v_s_log.begin(); it != v_s_log.end(); ++it) {
+      fp << *it << '\n';
+    }
+
+    fp.close();
+  }else {
+    cout << "error: write log - can't open file" << endl;
+  }
+}

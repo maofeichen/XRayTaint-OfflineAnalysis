@@ -2,6 +2,7 @@
 #define XT_LOG_H
 
 #include <cstdint>
+#include "xt_flag.h"
 #include <string>
 #include <vector>
 #include "xt_record.h"
@@ -10,6 +11,8 @@ class Log{
  public:
   Log(std::vector<std::string> &v_s_log);
 
+  // If a mem rec (load/store), analyze its addr, sz, reset flag
+  void analyze_mem_record();
   Record get_record(uint32_t index);
   uint32_t find_record(std::string s_rec);
   uint32_t get_size();
@@ -17,6 +20,19 @@ class Log{
   void print_log();
  private:
   std::vector<Record> v_rec_;
+
+  inline uint8_t decode_byte_sz(uint8_t sz_encode);
+  inline xt_flag::Mem_Type get_mem_type(uint32_t flag);
+  inline bool is_in_mem_range(uint32_t flag);
+  inline void update_mem_node(Node node,
+                              std::string flag_update,
+                              uint8_t sz_byte);
+
+  void analyze_mem_record(uint32_t flag, std::vector<Record>::iterator it_rec);
+  void update_store_ptr(std::vector<Record>::iterator it_rec, uint32_t flag);
+  void update_store(std::vector<Record>::iterator it_rec, uint32_t flag);
+  void update_load_ptr(std::vector<Record>::iterator it_rec, uint32_t flag);
+  void update_load(std::vector<Record>::iterator it_rec, uint32_t flag);
 
   void init_log(std::vector<std::string> &v_s_log);
 };

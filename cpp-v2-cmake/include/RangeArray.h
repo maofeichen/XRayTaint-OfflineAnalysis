@@ -15,9 +15,9 @@ public:
         begin_addr_ = begin_addr;
         end_addr_   = begin_addr + len;
     }
-    unsigned int set_begin(unsigned int begin_addr) { begin_addr_ = begin_addr; }
+    void set_begin(unsigned int begin_addr) { begin_addr_ = begin_addr; }
     unsigned int get_begin() {return begin_addr_; }
-    unsigned int set_end(unsigned int end_addr) { end_addr_ = end_addr; }
+    void set_end(unsigned int end_addr) { end_addr_ = end_addr; }
     unsigned int get_end() {return end_addr_; }
     unsigned int get_len() {return end_addr_ - begin_addr_; }
 

@@ -77,7 +77,6 @@ void XT_File::write_continue_buffer(string p, vector<t_AliveFunctionCall> &v)
         cout << "error open file: " << p << std::endl;
 }
 
-/*
 void XT_File::write_continuous_buffer(
     std::string path, 
     XT_Liveness &function_call_liveness
@@ -187,5 +186,3 @@ void XT_File::writeAvalResult(std::string p, std::vector<AvalResBetweenInOut> &v
     }
     fclose(stdout);
 }
-
-*/

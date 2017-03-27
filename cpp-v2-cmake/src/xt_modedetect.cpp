@@ -663,3 +663,13 @@ void CBCDetect::rm_ident_ranges(RangeArray &ra1, RangeArray &ra2)
 
 DetectFactory DetectFactory::detect_factory_;
 std::vector<ModeDetect *> DetectFactory::detectors;
+
+void DetectFactory::begin() {
+    cout << "number of detectors: " << detectors.size() << endl;
+    it_detector = detectors.begin();
+}
+
+void DetectFactory::register_detector(ModeDetect *det) {
+    detectors.push_back(det);
+    cout << "number of detectors: " << detectors.size() << endl;
+}

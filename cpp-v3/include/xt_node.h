@@ -10,16 +10,20 @@ class Node{
   Node(uint32_t index, bool is_mark, std::string flag, std::string addr,
        std::string val);
 
-  bool is_mark;
+  bool        is_mark();
   uint32_t    get_index();
 
+  void        set_flag(std::string flag);
   std::string get_flag();
   std::string get_addr();
   std::string get_val();
+  void        set_int_addr(uint32_t i_addr);
   uint32_t    get_int_addr();
+  void        set_sz_bit(uint32_t sz_bit);
   uint32_t    get_sz_bit();
   uint32_t    get_sz_byte();
 
+  void print_mem_node();
   void print_node();
 
  private:

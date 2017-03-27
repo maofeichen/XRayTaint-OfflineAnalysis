@@ -13,6 +13,9 @@ Detector::Detector(string fn, bool dump) {
 }
 
 void Detector::detect() {
+  string curr_time = get_time();
+  curr_time        = '-' + curr_time;
+
   xt_file::File file(fn_);
   vector<string> v_s_log = file.read();
   cout << "init log entries: " << v_s_log.size() << endl;
@@ -29,8 +32,15 @@ void Detector::detect() {
   cout << "log entries after cleaning invalid function mark: " << v_s_log.size()
        << endl;
 
+  if(dump_) {
+    string path = xt_file::res_path + fn_ + xt_file::preprocess + curr_time +
+        xt_file::ext;
+    file.write_str_log(path, v_s_log);
+  }
+
   Log log(v_s_log);
   // log.print_log();
+  log.analyze_mem_record();
 }
 
 string Detector::get_time() {

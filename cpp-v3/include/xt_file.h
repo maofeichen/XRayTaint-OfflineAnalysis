@@ -9,7 +9,7 @@ namespace xt_file {
   const std::string log_path  =
       "/home/xtaint/Workplace/XRayTaint-OfflineAnalysis/test_file/";
   const std::string res_path  =
-      "/home/xtaint/Workplace/XRayTaint-OfflineAnalysis/test_result";
+      "/home/xtaint/Workplace/XRayTaint-OfflineAnalysis/test_result/";
 
   const std::string preprocess    = "-preprocess";
   const std::string add_mem_sz    = "-add_mem_sz";
@@ -24,6 +24,8 @@ class xt_file::File{
  public:
   File(std::string fn);
   std::vector<std::string> read();
+
+  void write_str_log(std::string path, std::vector<std::string> &v_s_log);
  private:
   std::string fn_;
 };

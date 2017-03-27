@@ -26,7 +26,9 @@ int main(int argc, char const *argv[])
 	po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "produce help message")
-        ("input-file,i", po::value< string >(), "input file");
+        ("input-file,i", po::value< string >(), "input file")
+        ("dump-result,d", po::value< bool >(), "dump result: yes/no, 1/0")
+        ;
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -37,18 +39,22 @@ int main(int argc, char const *argv[])
         return 1;
     }
 
-    if(vm.count("input-file") ){
+    if(vm.count("input-file") &&
+        vm.count("dump-result") ){
         cout << "input log: " << vm["input-file"].as< string >() << endl;
 
         vector<string> v_fp = XT_Util::split( vm["input-file"].as< string >().c_str(), '/' );
         // also remove ".txt"
-        fn = v_fp.back().substr(0, v_fp.back().size() - 4); 
+        fn = v_fp.back().substr(0, v_fp.back().size() - 4);
+
+        bool is_dump = vm["dump-result"].as< bool >();
+        cout << "is dump result: " << is_dump << endl;
 
         XT_DetectAvalanche da(false, 
                               TAINT_FUNC_CALL_MARK, 
                               TAINT_BUF_BEGIN_ADDR, 
                               TAINT_BUF_SIZE);
-        da.detect_avalanche(fn, false);
+        da.detect_avalanche(fn, is_dump);
     } 
     
     return 0;

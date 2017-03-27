@@ -48,6 +48,14 @@ const int G_TEMP_ESP            = 0xfffa;
 const int G_TEMP_EBP            = 0xfffb;
 const int G_TEMP_ESI            = 0xfffc;
 const int G_TEMP_EDI            = 0xfffd;
+
+enum Mem_Type{
+  M_LOAD,
+  M_LOAD_PTR,
+  M_STORE,
+  M_STORE_PTR,
+  M_UNKNOW
+};
 }
 
 #endif //XT_FLAG_H

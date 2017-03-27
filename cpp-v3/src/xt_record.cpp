@@ -40,7 +40,19 @@ bool Record::init_record(std::string s_rec) {
     string dst_val  = v_s_rec[5];
     dst_            = Node(index_, is_mark_, flag, dst_addr, dst_val);
   }
+
+  return true;
 }
+
+bool Record::is_makr() { return is_mark_; }
+
+void Record::set_index(uint32_t index) { index_ = index; }
+
+uint32_t Record::get_index() { return index_; }
+
+Node Record::get_src_node() { return  src_; }
+
+Node Record::get_dst_node() { return dst_; }
 
 void Record::print_record() {
   cout << "src: ";

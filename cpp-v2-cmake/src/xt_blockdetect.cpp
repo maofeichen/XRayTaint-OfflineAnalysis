@@ -193,9 +193,12 @@ void BlockDetect::detect_block_sz_small_win(Blocks &blocks,
             unsigned int firstbyte_addr = firbyte_taint_propa->get_taint_src();
             cout << "propcessing byte addr: " << hex << firstbyte_addr << endl;
 
-            RangeArray curr_byte_ra = *firbyte_taint_propa->get_taint_propagate();
-            if(curr_byte_ra.get_size() == 0) {
-                save_block(accumu_b_sz, blocks, b_begin_byte, i);
+            // RangeArray curr_byte_ra =
+            //   *firbyte_taint_propa->get_taint_propagate();
+            // curr_byte_ra.disp_range_array();
+
+            if(firbyte_taint_propa->get_taint_propagate()->get_size() == 0) {
+              save_block(accumu_b_sz, blocks, b_begin_byte, i);
 
                 if(accumu_b_sz == 0) {
                     buf_sz--;
@@ -205,6 +208,18 @@ void BlockDetect::detect_block_sz_small_win(Blocks &blocks,
                 accumu_b_sz = 0;
                 break;
             }
+
+          //            if(curr_byte_ra.get_size() == 0) {
+          //                save_block(accumu_b_sz, blocks, b_begin_byte, i);
+          //
+          //                if(accumu_b_sz == 0) {
+          //                    buf_sz--;
+          //                } else {
+          //                    buf_sz      -= accumu_b_sz;
+          //                }
+          //                accumu_b_sz = 0;
+          //                break;
+          //            }
 
             common.get_common_range(*firbyte_taint_propa->get_taint_propagate() );
             common.disp_range_array();

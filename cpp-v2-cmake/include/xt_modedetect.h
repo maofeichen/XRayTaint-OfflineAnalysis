@@ -156,11 +156,11 @@ class DetectFactory{
 public:
     static DetectFactory &get_instance() { return detect_factory_; }
 
-    void begin() { it_detector = detectors.begin(); }
+    void begin();
     void next()  { it_detector++; }
     bool at_end() { return ( it_detector == detectors.end() ); }
 
-    void register_detector(ModeDetect *det) { detectors.push_back(det); }
+    void register_detector(ModeDetect *det);
     ModeDetect *get_detector() { return *it_detector; }
 
 private:
