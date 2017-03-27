@@ -67,3 +67,17 @@ bool XT_Util::isMarkRecord(string &flag)
     else
         return false;
 }
+
+bool XT_Util::is_mark(string flag) {
+    if(equal_mark(flag, flag::XT_INSN_ADDR) ||
+        equal_mark(flag, flag::XT_CALL_INSN) ||
+        equal_mark(flag, flag::XT_CALL_INSN_SEC) ||
+        equal_mark(flag, flag::XT_CALL_INSN_FF2) ||
+        equal_mark(flag, flag::XT_CALL_INSN_FF2_SEC) ||
+        equal_mark(flag, flag::XT_RET_INSN) ||
+        equal_mark(flag, flag::XT_RET_INSN_SEC) ) {
+        return true;
+    } else {
+        return false;
+    }
+}

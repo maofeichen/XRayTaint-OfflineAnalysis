@@ -180,7 +180,7 @@ Detect::comp_multi_src_propagate_res(unsigned int multi_src_interval,
     unordered_set<Node, NodeHash> propagate_res;
     unordered_set<Node, NodeHash> multi_propagate_res;
 
-    for(int i = 0; i < multi_src_interval; i++){
+    for(uint32_t i = 0; i < multi_src_interval; i++){
         XTNode node = get_mem_node(*it_multi_src_idx);
         NodePropagate taint_src = init_taint_source(node, log_rec_);
         propagate_res = propagate.getPropagateResult(taint_src, log_rec_, byte_pos);
@@ -410,7 +410,6 @@ void Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
     //     cout << "taint src: " << hex << in_taint_propagate[i]->get_taint_src() << endl;
     //     in_taint_propagate[i]->get_taint_propagate()->disp_range_array();
     // }
-
 
     Blocks blocks;
     BlockDetect block_detect(out.beginAddress, out.size / 8);

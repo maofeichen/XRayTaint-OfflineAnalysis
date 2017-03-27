@@ -32,47 +32,48 @@ void XT_DetectAvalanche::detect_avalanche(string logPath, bool isWriteFile) {
   string c_time = get_time();
   c_time = '-' + c_time;
 
-  vector<string> xtLog;
+  vector<string> v_s_log;
   // Read file
   XT_File xtFile = (XT_FILE_PATH + logPath + XT_FILE_EXT);
-  xtLog = xtFile.read();
+  v_s_log = xtFile.read();
 
   // Preprocess
   XT_PreProcess xtPreProc;
-  xtLog = xtPreProc.clean_empty_instruction_mark(xtLog);
-  cout << "num of entries after clean insn mark: " << xtLog.size() << endl;
-  xtLog = xtPreProc.clean_empty_function_mark(xtLog);
-  cout << "num of entries after clean empyt func mark: " << xtLog.size()
+  v_s_log = xtPreProc.clean_empty_instruction_mark(v_s_log);
+  cout << "num of entries after clean insn mark: " << v_s_log.size() << endl;
+  v_s_log = xtPreProc.clean_empty_function_mark(v_s_log);
+  cout << "num of entries after clean empyt func mark: " << v_s_log.size()
        << endl;
-  xtLog = xtPreProc.clean_nonempty_function_mark(xtLog);
-  cout << "num of entries after clean func mark: " << xtLog.size() << endl;
+  // v_s_log = xtPreProc.clean_nonempty_function_mark(v_s_log);
+  v_s_log = xtPreProc.clean_function_call_mark(v_s_log);
+  cout << "num of entries after clean func mark: " << v_s_log.size() << endl;
   if (isWriteFile)
     xtFile.write(
-        XT_RESULT_PATH + logPath + XT_PREPROCESS + c_time + XT_FILE_EXT, xtLog);
+        XT_RESULT_PATH + logPath + XT_PREPROCESS + c_time + XT_FILE_EXT, v_s_log);
 
 
   // Add memory size infomation
-  xtLog = xtPreProc.parseMemSizeInfo(xtLog);
+  v_s_log = xtPreProc.parseMemSizeInfo(v_s_log);
   if (isWriteFile)
     xtFile.write(
         XT_RESULT_PATH + logPath + XT_ADD_SIZE_INFO + c_time + XT_FILE_EXT,
-        xtLog);
+        v_s_log);
 
   // Add index for each record
-  xtLog = xtPreProc.addRecordIndex(xtLog);
+  v_s_log = xtPreProc.addRecordIndex(v_s_log);
   if (isWriteFile)
     xtFile.write(XT_RESULT_PATH + logPath + XT_ADD_INDEX + c_time + XT_FILE_EXT,
-                 xtLog);
+                 v_s_log);
 
   // Initialize XTLog object after adding memory size
-  XTLog o_xtLog(xtLog);
+  XTLog o_xtLog(v_s_log);
 
 
   // Buffer liveness analysis
   XT_Liveness xtLiveness;
   vector<string> aliveBuf;
-  aliveBuf = XT_Liveness::analyze_alive_buffer(xtLog);
-  // aliveBuf =  xtLiveness.insert_load_buffer(aliveBuf, xtLog);
+  aliveBuf = XT_Liveness::analyze_alive_buffer(v_s_log);
+  // aliveBuf =  xtLiveness.insert_load_buffer(aliveBuf, v_s_log);
   if (isWriteFile)
     xtFile.write(XT_RESULT_PATH + logPath + XT_ALIVE_BUF + c_time + XT_FILE_EXT,
                  aliveBuf);
@@ -90,7 +91,7 @@ void XT_DetectAvalanche::detect_avalanche(string logPath, bool isWriteFile) {
 
   // Converts string format to Record format
   vector<Record> xtLogRec;
-  xtLogRec = xtPreProc.convertToRec(xtLog);
+  xtLogRec = xtPreProc.convertToRec(v_s_log);
 
   // Searches avalanche effect
   vector<AvalResBetweenInOut> vAvalResult;
