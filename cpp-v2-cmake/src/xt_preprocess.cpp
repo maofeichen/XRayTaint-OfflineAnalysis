@@ -117,7 +117,12 @@ vector<string> XT_PreProcess::clean_size_mark(vector<string> &v)
 }
 
 vector<string> XT_PreProcess::clean_function_call_mark(vector<string> &v_s_log) {
-  vector<string> v = clean_nonempyt_func_mark_fast(v_s_log);
+  vector<string> v;
+  v = clean_empty_function_mark(v_s_log);
+  cout << "num of entries after clean empyt func mark: " << v.size()
+       << endl;
+  v = clean_nonempyt_func_mark_fast(v);
+  cout << "num of entries after clean func mark: " << v.size() << endl;
   return v;
 }
 

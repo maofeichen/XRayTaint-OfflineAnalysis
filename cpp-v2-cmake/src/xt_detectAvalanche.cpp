@@ -18,6 +18,8 @@
 
 using namespace std;
 
+XT_DetectAvalanche::XT_DetectAvalanche() {}
+
 XT_DetectAvalanche::XT_DetectAvalanche(bool isAddInputBuffer,
                                        string funcCallMark,
                                        unsigned int beginAddress,
@@ -28,85 +30,91 @@ XT_DetectAvalanche::XT_DetectAvalanche(bool isAddInputBuffer,
   m_size = size;
 }
 
-void XT_DetectAvalanche::detect_avalanche(string logPath, bool isWriteFile) {
+void XT_DetectAvalanche::detect_avalanche(string logPath, bool is_dump) {
   string c_time = get_time();
   c_time = '-' + c_time;
 
   vector<string> v_s_log;
   // Read file
-  XT_File xtFile = (XT_FILE_PATH + logPath + XT_FILE_EXT);
-  v_s_log = xtFile.read();
+  XT_File xt_file = (XT_FILE_PATH + logPath + XT_FILE_EXT);
+  v_s_log = xt_file.read();
 
   // Preprocess
-  XT_PreProcess xtPreProc;
-  v_s_log = xtPreProc.clean_empty_instruction_mark(v_s_log);
+  XT_PreProcess preproc;
+  v_s_log = preproc.clean_empty_instruction_mark(v_s_log);
   cout << "num of entries after clean insn mark: " << v_s_log.size() << endl;
-  v_s_log = xtPreProc.clean_empty_function_mark(v_s_log);
-  cout << "num of entries after clean empyt func mark: " << v_s_log.size()
-       << endl;
-  // v_s_log = xtPreProc.clean_nonempty_function_mark(v_s_log);
-  v_s_log = xtPreProc.clean_function_call_mark(v_s_log);
-  cout << "num of entries after clean func mark: " << v_s_log.size() << endl;
-  if (isWriteFile)
-    xtFile.write(
-        XT_RESULT_PATH + logPath + XT_PREPROCESS + c_time + XT_FILE_EXT, v_s_log);
 
+  v_s_log = preproc.clean_function_call_mark(v_s_log);
+  // v_s_log = preproc.clean_empty_function_mark(v_s_log);
+  // v_s_log = preproc.clean_nonempty_function_mark(v_s_log);
+  if (is_dump) {
+    xt_file.write(
+        XT_RESULT_PATH + logPath + XT_PREPROCESS + c_time + XT_FILE_EXT,
+        v_s_log);
+  }
 
   // Add memory size infomation
-  v_s_log = xtPreProc.parseMemSizeInfo(v_s_log);
-  if (isWriteFile)
-    xtFile.write(
+  v_s_log = preproc.parseMemSizeInfo(v_s_log);
+  if (is_dump) {
+    xt_file.write(
         XT_RESULT_PATH + logPath + XT_ADD_SIZE_INFO + c_time + XT_FILE_EXT,
         v_s_log);
+  }
 
   // Add index for each record
-  v_s_log = xtPreProc.addRecordIndex(v_s_log);
-  if (isWriteFile)
-    xtFile.write(XT_RESULT_PATH + logPath + XT_ADD_INDEX + c_time + XT_FILE_EXT,
-                 v_s_log);
+  v_s_log = preproc.addRecordIndex(v_s_log);
+  if (is_dump) {
+    xt_file.write(
+        XT_RESULT_PATH + logPath + XT_ADD_INDEX + c_time + XT_FILE_EXT,
+        v_s_log);
+  }
 
   // Initialize XTLog object after adding memory size
-  XTLog o_xtLog(v_s_log);
-
+  XTLog o_log(v_s_log);
 
   // Buffer liveness analysis
-  XT_Liveness xtLiveness;
-  vector<string> aliveBuf;
-  aliveBuf = XT_Liveness::analyze_alive_buffer(v_s_log);
-  // aliveBuf =  xtLiveness.insert_load_buffer(aliveBuf, v_s_log);
-  if (isWriteFile)
-    xtFile.write(XT_RESULT_PATH + logPath + XT_ALIVE_BUF + c_time + XT_FILE_EXT,
-                 aliveBuf);
+  XT_Liveness xt_liveness;
+  vector<string> v_s_alive_buf;
+
+  v_s_alive_buf = XT_Liveness::analyze_alive_buffer(v_s_log);
+  // v_s_alive_buf =  xt_liveness.insert_load_buffer(v_s_alive_buf, v_s_log);
+  if (is_dump) {
+    xt_file.write(
+        XT_RESULT_PATH + logPath + XT_ALIVE_BUF + c_time + XT_FILE_EXT,
+        v_s_alive_buf);
+  }
 
   // Create continuous buffers in each function call
-  vector<t_AliveFunctionCall> vAliveFunction;
-  XT_Liveness functionLiveness(aliveBuf);
-  vAliveFunction = functionLiveness.create_function_call_buffer(o_xtLog);
-  functionLiveness.propagate_alive_buffer(vAliveFunction);
-  vAliveFunction = functionLiveness.filter_kernel_buffer(vAliveFunction);
-  if (isWriteFile)
-    xtFile.write_continue_buffer(
+  vector<t_AliveFunctionCall> v_alive_func;
+  XT_Liveness func_live(v_s_alive_buf);
+  v_alive_func = func_live.create_function_call_buffer(o_log);
+
+  func_live.propagate_alive_buffer(v_alive_func);
+  v_alive_func = func_live.filter_kernel_buffer(v_alive_func);
+  if (is_dump) {
+    xt_file.write_continue_buffer(
         XT_RESULT_PATH + logPath + CONT_BUF + c_time + XT_FILE_EXT,
-        vAliveFunction);
+        v_alive_func);
+  }
 
   // Converts string format to Record format
-  vector<Record> xtLogRec;
-  xtLogRec = xtPreProc.convertToRec(v_s_log);
+  vector<Record> log_rec;
+  log_rec = preproc.convertToRec(v_s_log);
 
   // Searches avalanche effect
-  vector<AvalResBetweenInOut> vAvalResult;
   /*
-  vector<XT_FunctionCall> v_xtFunctionCall = functionLiveness.getAliveFunctionCall();
-  SearchAvalanche sa(v_xtFunctionCall, vAliveFunctionCall, xtLogRec, o_xtLog);
+  vector<AvalResBetweenInOut> vAvalResult;
+  vector<XT_FunctionCall> v_xtFunctionCall = func_live.getAliveFunctionCall();
+  SearchAvalanche sa(v_xtFunctionCall, vAliveFunctionCall, log_rec, o_log);
   */
-  // SearchAvalanche sa(vAliveFunction, xtLogRec, o_xtLog);
+  // SearchAvalanche sa(v_alive_func, log_rec, o_log);
   // vAvalResult = sa.detect_avalanche();
-  //    if(isWriteFile){
-  //        xtFile.writeAvalResult(XT_RESULT_PATH + logPath + AVAL_RES + c_time + XT_FILE_EXT, vAvalResult);
+  //    if(is_dump){
+  //        xt_file.writeAvalResult(XT_RESULT_PATH + logPath + AVAL_RES + c_time + XT_FILE_EXT, vAvalResult);
   //    }
 
   // Detects after liveness analysis
-  Detect det(vAliveFunction, o_xtLog, xtLogRec);
+  Detect det(v_alive_func, o_log, log_rec);
   det.detect_cipher();
 }
 

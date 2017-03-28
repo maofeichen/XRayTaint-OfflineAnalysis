@@ -15,9 +15,6 @@ class XT_PreProcess {
 
   std::vector<std::string> clean_function_call_mark(std::vector<std::string>
                                                     &v_s_log);
-  std::vector<string> clean_empty_function_mark(vector<string> &);
-  std::vector<string> clean_nonempty_function_mark(vector<string> &);
-
 
   std::vector<std::string> clean_empty_instruction_mark(std::vector<std::string> &s_vXTLog);
 
@@ -36,5 +33,7 @@ class XT_PreProcess {
 
   std::vector<std::string> clean_nonempyt_func_mark_fast(
       std::vector<std::string> &v_s_log);
+  std::vector<string> clean_empty_function_mark(vector<string> &);
+  std::vector<string> clean_nonempty_function_mark(vector<string> &);
 };
 #endif
