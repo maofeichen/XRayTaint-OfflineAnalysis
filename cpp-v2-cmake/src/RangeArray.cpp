@@ -5,6 +5,46 @@
 
 using namespace std;
 
+Range::Range(Range &r) {
+  begin_addr_ = r.get_begin();
+  end_addr_   = r.get_end();
+
+  for(auto it = r.get_byte_val_map().begin(); it != r.get_byte_val_map().end
+      (); ++it) {
+    byte_val_map_.insert(*it);
+  }
+}
+
+Range::Range(uint32_t begin_addr, uint32_t len, uint32_t val) {
+  if(len != 1) {
+    cout << "err: init range, len is not 1 byte" << endl;
+  }
+  begin_addr_ = begin_addr;
+  end_addr_   = begin_addr + len;
+  byte_val_map_.insert(pair<uint32_t, uint32_t >(begin_addr, val) );
+}
+
+Range::Range(uint32_t begin_addr,
+             uint32_t len,
+             multimap<uint32_t, uint32_t> &byte_val_map) {
+  begin_addr_ = begin_addr;
+  end_addr_   = begin_addr + len;
+  for(auto it = byte_val_map.begin(); it != byte_val_map.end(); ++it) {
+    byte_val_map_.insert(*it);
+  }
+}
+
+void Range::add_byte_val(uint32_t byte_addr, uint32_t val) {
+  byte_val_map_.insert(pair<uint32_t, uint32_t >(byte_addr, val) );
+}
+
+void Range::disp_byte_val_map() {
+  for(auto it = byte_val_map_.begin(); it != byte_val_map_.end(); ++it) {
+    cout << "addr: " << hex << it->first << " val: " << hex << it->second
+         << endl;
+  }
+}
+
 void Range::disp_range()
 {
     cout << "begin addr: " << hex << begin_addr_
@@ -22,6 +62,11 @@ bool Range::has_range(unsigned int begin_addr, unsigned int len)
 }
 
 RangeArray::RangeArray() {init(); }
+
+RangeArray::RangeArray(Range &r) {
+  init();
+  add_range(r);
+}
 
 RangeArray::RangeArray(unsigned int begin_addr, unsigned int len)
 {
@@ -54,23 +99,60 @@ RangeArray &RangeArray::operator=(const RangeArray &r)
     return *this;
 }
 
-void RangeArray::add_range(unsigned int begin_addr, unsigned int len)
-{
-    // Binary search
-    int low = 0;
-    int mid = low;
-    int high = array_used_;
+void RangeArray::add_range(Range &r) {
+  // Binary search
+  int low = 0;
+  int mid = low;
+  int high = array_used_;
 
-    while(low < high){
-        mid = low + (high - low) / 2;
-        if(ref_rray_[mid]->get_begin() < begin_addr ){
-            low = mid + 1;
-        } else{
-            high = mid;
-        }
+  while (low < high) {
+    mid = low + (high - low) / 2;
+    if(ref_rray_[mid]->get_begin() < r.get_begin() ) {
+      low = mid + 1;
+    } else {
+      high = mid;
     }
+  }
 
-    insert_range(low, begin_addr, len);
+  insert_range(low, r);
+}
+
+void RangeArray::add_range(unsigned int begin_addr, unsigned int len) {
+  // Binary search
+  int low = 0;
+  int mid = low;
+  int high = array_used_;
+
+  while (low < high) {
+    mid = low + (high - low) / 2;
+    if (ref_rray_[mid]->get_begin() < begin_addr) {
+      low = mid + 1;
+    } else {
+      high = mid;
+    }
+  }
+
+  insert_range(low, begin_addr, len);
+}
+
+void RangeArray::add_range(uint32_t begin_addr,
+                           uint32_t len,
+                           std::multimap<uint32_t, uint32_t> &byte_val_map) {
+  // Binary search
+  int low = 0;
+  int mid = low;
+  int high = array_used_;
+
+  while (low < high) {
+    mid = low + (high - low) / 2;
+    if (ref_rray_[mid]->get_begin() < begin_addr) {
+      low = mid + 1;
+    } else {
+      high = mid;
+    }
+  }
+
+  insert_range(low, begin_addr, len, byte_val_map);
 }
 
 bool RangeArray::del_range(unsigned int begin_addr, unsigned int len)
@@ -322,38 +404,108 @@ void RangeArray::reset() {
     array_used_ = 0;
 }
 
+void RangeArray::insert_range(int pos, Range &r) {
+  if (pos > array_used_) {
+    cout << "insert_range: pos is larger than used" << endl;
+    return;
+  }
+
+  Range *range = new Range(r);
+
+  if (array_used_ + 1 > array_size_) {
+    // grow size
+    array_size_ += array_size_;
+    Range **new_array = new Range *[array_size_];
+    for (int i = 0; i < pos; i++) {
+      new_array[i] = ref_rray_[i];
+    }
+
+    new_array[pos] = range;
+
+    for (int i = pos + 1; i < array_used_ + 1; i++) {
+      new_array[i] = ref_rray_[i - 1];
+    }
+
+    delete[] ref_rray_;
+    ref_rray_ = new_array;
+  } else {
+    for (int i = array_used_ - 1; i >= pos; i--) {
+      ref_rray_[i + 1] = ref_rray_[i];
+    }
+    ref_rray_[pos] = range;
+  }
+  array_used_++;
+}
+
 void RangeArray::insert_range(int pos,
                               unsigned int begin_addr,
                               unsigned int len)
 {
-    if(pos > array_used_){
-        cout << "insert_range: pos is larger than used" << endl;
-        return;
+  if (pos > array_used_) {
+    cout << "insert_range: pos is larger than used" << endl;
+    return;
+  }
+
+  Range *range = new Range(begin_addr, len);
+
+  if (array_used_ + 1 > array_size_) {
+    // grow size
+    array_size_ += array_size_;
+    Range **new_array = new Range *[array_size_];
+    for (int i = 0; i < pos; i++) {
+      new_array[i] = ref_rray_[i];
     }
 
-    Range *range = new Range(begin_addr, len);
+    new_array[pos] = range;
 
-    if(array_used_ + 1 > array_size_){
-        // grow size
-        array_size_ += array_size_;
-        Range **new_array = new Range *[array_size_];
-        for(int i = 0; i < pos; i++){
-            new_array[i] = ref_rray_[i];
-        }
-
-        new_array[pos] = range;
-
-        for(int i = pos + 1; i < array_used_ + 1; i++){
-            new_array[i] = ref_rray_[i - 1];
-        }
-
-        delete[] ref_rray_;
-        ref_rray_ = new_array;
-    }else{
-        for (int i = array_used_ - 1; i >= pos; i--){
-            ref_rray_[i+1] = ref_rray_[i];
-        }
-        ref_rray_[pos] = range;
+    for (int i = pos + 1; i < array_used_ + 1; i++) {
+      new_array[i] = ref_rray_[i - 1];
     }
-    array_used_++;
+
+    delete[] ref_rray_;
+    ref_rray_ = new_array;
+  } else {
+    for (int i = array_used_ - 1; i >= pos; i--) {
+      ref_rray_[i + 1] = ref_rray_[i];
+    }
+    ref_rray_[pos] = range;
+  }
+  array_used_++;
+}
+
+
+void RangeArray::insert_range(int pos,
+                              uint32_t begin_addr,
+                              uint32_t len,
+                              multimap<uint32_t, uint32_t> &byte_val_map) {
+  if (pos > array_used_) {
+    cout << "insert_range: pos is larger than used" << endl;
+    return;
+  }
+
+  Range *range = new Range(begin_addr, len, byte_val_map);
+
+  if (array_used_ + 1 > array_size_) {
+    // grow size
+    array_size_ += array_size_;
+    Range **new_array = new Range *[array_size_];
+    for (int i = 0; i < pos; i++) {
+      new_array[i] = ref_rray_[i];
+    }
+
+    new_array[pos] = range;
+
+    for (int i = pos + 1; i < array_used_ + 1; i++) {
+      new_array[i] = ref_rray_[i - 1];
+    }
+
+    delete[] ref_rray_;
+    ref_rray_ = new_array;
+  } else {
+    for (int i = array_used_ - 1; i >= pos; i--) {
+      ref_rray_[i + 1] = ref_rray_[i];
+    }
+    ref_rray_[pos] = range;
+  }
+  array_used_++;
 }

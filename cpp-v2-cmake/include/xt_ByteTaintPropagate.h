@@ -3,16 +3,16 @@
 
 #include "RangeArray.h"
 
-class ByteTaintPropagate{
-public:
-    ByteTaintPropagate(unsigned int addr);
-    ~ByteTaintPropagate() {};
+class ByteTaintPropagate {
+ public:
+  ByteTaintPropagate(unsigned int addr);
+  ~ByteTaintPropagate() {};
 
-    unsigned int get_taint_src() {return taint_src_; }
-    RangeArray *get_taint_propagate();
-private:
-    unsigned int taint_src_;
-    RangeArray range_array_;
+  unsigned int get_taint_src() { return taint_src_; }
+  RangeArray *get_taint_propagate();
+ private:
+  unsigned int taint_src_;
+  RangeArray range_array_;
 };
 
 #endif /* XT_BYTETAINTPROPAGATE_H_ */

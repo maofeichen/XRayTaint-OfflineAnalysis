@@ -1,3 +1,4 @@
+#include "xt_aval_in_out.h"
 #include "xt_blockdetect.h"
 #include "xt_ByteTaintPropagate.h"
 #include "xt_detect.h"
@@ -5,6 +6,7 @@
 #include "xt_util.h"
 
 #include <algorithm>
+#include <map>
 #include <string>
 #include <iostream>
 
@@ -272,74 +274,152 @@ Detect::gen_in_propagate_byte(t_AliveContinueBuffer &in, Propagate &propagate)
     return in_vec_propagate_byte;
 }
 
-void Detect::gen_byte_range_array(vector<Detect::propagate_byte_> v_propagate_byte,
-                                  RangeArray *range_array)
+void Detect::gen_range_array_per_byte(vector<Detect::propagate_byte_> v_propagate_byte,
+                                      RangeArray *range_array)
 {
     if(v_propagate_byte.empty() ){
+        cout << "error: gen range array per byte, give vector of propagated "
+            "bytes is empty" << endl;
         return;
     }
 
     sort(v_propagate_byte.begin(), v_propagate_byte.end() );
 
-    vector<propagate_byte_>::const_iterator it_propagate_byte;
-    it_propagate_byte = v_propagate_byte.begin();
+    vector<propagate_byte_>::const_iterator it_propagate_byte =
+        v_propagate_byte.begin();
+    // it_propagate_byte = v_propagate_byte.begin();
 
     unsigned long range_begin_addr = (*it_propagate_byte).addr;
     unsigned int range_len = 1;
 
-    for(; it_propagate_byte != v_propagate_byte.end(); ++it_propagate_byte){
-        unsigned long curr_begin_addr = (*it_propagate_byte).addr;
 
-        if(range_begin_addr + range_len == curr_begin_addr){
+    for(; it_propagate_byte != v_propagate_byte.end(); ++it_propagate_byte){
+        unsigned long curr_addr = (*it_propagate_byte).addr;
+
+        if(range_begin_addr + range_len == curr_addr){
             range_len++;
         }
-        else if(range_begin_addr + range_len < curr_begin_addr){
+        else if(range_begin_addr + range_len < curr_addr){
             // cout << "a new range, previous range: " <<
             //         "addr: " << hex << range_begin_addr <<
             //         " len: " << dec << range_len << " bytes" << endl;
 
             range_array->add_range(range_begin_addr, range_len);
-            // range_array.add_range(range_begin_addr, range_len);
 
             // Init for next range
-            range_begin_addr = curr_begin_addr;
+            range_begin_addr = curr_addr;
             range_len = 1;
         }
     }
-
     // range_array.disp_range_array();
 }
 
-void Detect::gen_in_range_array(t_AliveContinueBuffer &in,
-	                            vector< vector<Detect::propagate_byte_> > &in_vec_propagate_byte,
-	                            vector<ByteTaintPropagate *> &in_taint_propagate)
-{
-    // vector<RangeArray *> v_range_array;
+void Detect::gen_range_array_per_byte_with_val(vector<Detect::propagate_byte_> v_propagate_byte,
+                                               RangeArray *range_array) {
+  if (v_propagate_byte.empty()) {
+    cout << "error: gen range array per byte, give vector of propagated "
+        "bytes is empty" << endl;
+    return;
+  }
 
-    unsigned long begin_addr = in.beginAddress;
-    vector< vector<propagate_byte_> >::const_iterator it_in_byte;
+  sort(v_propagate_byte.begin(), v_propagate_byte.end());
+//  for(auto it = v_propagate_byte.begin(); it != v_propagate_byte.end(); ++it) {
+//    cout << "propagated addr: " << hex << it->addr << " val: " << it->val
+//         << endl;
+//  }
 
-    it_in_byte = in_vec_propagate_byte.begin();
-    for(; it_in_byte != in_vec_propagate_byte.end(); ++it_in_byte){
-        // RangeArray *range_array = new RangeArray();
-        // gen_byte_range_array(*it_in_byte, range_array);
-        // range_array->disp_range_array();
+  vector<propagate_byte_>::const_iterator it_propagate_byte =
+      v_propagate_byte.begin();
 
-        // v_range_array.push_back(range_array);
+  uint32_t r_begin_addr = it_propagate_byte->addr;
+  uint32_t r_len        = 1;
+  uint32_t r_val        = stoul(it_propagate_byte->val, nullptr, 16);
 
-        ByteTaintPropagate *byte_taint_propagate =
-                new ByteTaintPropagate(begin_addr);
-        gen_byte_range_array(*it_in_byte, byte_taint_propagate->get_taint_propagate() );
-        // byte_taint_propagate->get_taint_propagate()->disp_range_array();
+  std::multimap<uint32_t, uint32_t> byte_val_map;
+  byte_val_map.insert(pair<uint32_t, uint32_t>(r_begin_addr, r_val) );
 
-        in_taint_propagate.push_back(byte_taint_propagate);
+  for(it_propagate_byte += 1; it_propagate_byte != v_propagate_byte.end();
+      ++it_propagate_byte) {
+    uint32_t curr_range = r_begin_addr + r_len;
+    uint32_t curr_addr = it_propagate_byte->addr;
 
-        begin_addr++;
+//    cout << "current range: " << hex << curr_range << endl;
+//    cout << "current addr: " << hex << curr_addr << endl;
+    if(curr_range > curr_addr) {
+      // multi values for same propagated byte
+      uint32_t byte_val = stoul(it_propagate_byte->val, nullptr, 16);
+      byte_val_map.insert(pair<uint32_t,uint32_t>(curr_addr, byte_val) );
+
+//      cout << "byte val: " << it_propagate_byte->val << endl;
+//      cout << "byte val in hex: " << hex << byte_val << endl;
+    } else if (curr_range == curr_addr) {
+      // next continuous byte
+      uint32_t byte_val = stoi(it_propagate_byte->val, nullptr, 16);
+      byte_val_map.insert(pair<uint32_t,uint32_t>(curr_addr, byte_val) );
+      // r.add_byte_val(curr_addr, byte_val);
+      r_len++;
+
+//      cout << "byte val: " << it_propagate_byte->val << endl;
+//      cout << "byte val in hex: " << hex << byte_val << endl;
+    } else {
+      // range smaller than current addr
+      range_array->add_range(r_begin_addr, r_len, byte_val_map);
+//      range_array->at(0)->disp_range();
+//      range_array->at(0)->disp_byte_val_map();
+
+      r_begin_addr = curr_addr;
+      r_len        = 1;
+      r_val        = stoul(it_propagate_byte->val, nullptr, 16);
+      byte_val_map.clear();
+      byte_val_map.insert(pair<uint32_t,uint32_t>(r_begin_addr, r_val) );
     }
+  }
 
-    // for(int i = 0; i < in_taint_propagate.size(); i++){
-    //     in_taint_propagate[i]->get_taint_propagate()->disp_range_array();
-    // }
+//  for(int i = 0; i < range_array->get_size(); i++) {
+//    range_array->at(i)->disp_range();
+//    range_array->at(i)->disp_byte_val_map();
+//  }
+
+}
+
+void Detect::gen_in_range_array(t_AliveContinueBuffer &in,
+                                vector<vector<Detect::propagate_byte_> > &in_vec_propagate_byte,
+                                vector<ByteTaintPropagate *> &in_taint_propagate) {
+  cout << "generating range arrays of input buffer..." << endl;
+
+  // vector<RangeArray *> v_range_array;
+  unsigned long begin_addr = in.beginAddress;
+  vector<vector<propagate_byte_> >::const_iterator it_in_byte;
+
+  it_in_byte = in_vec_propagate_byte.begin();
+  for (; it_in_byte != in_vec_propagate_byte.end(); ++it_in_byte) {
+    // RangeArray *range_array = new RangeArray();
+    // gen_range_array_per_byte(*it_in_byte, range_array);
+    // range_array->disp_range_array();
+    // v_range_array.push_back(range_array);
+
+    ByteTaintPropagate *byte_taint_propagate =
+        new ByteTaintPropagate(begin_addr);
+//    gen_range_array_per_byte(*it_in_byte,
+//                             byte_taint_propagate->get_taint_propagate());
+    gen_range_array_per_byte_with_val(*it_in_byte,
+                                      byte_taint_propagate->get_taint_propagate() );
+
+    // byte_taint_propagate->get_taint_propagate()->disp_range_array();
+
+    in_taint_propagate.push_back(byte_taint_propagate);
+    begin_addr++;
+  }
+
+//  for(int i = 0; i < in_taint_propagate.size(); i++){
+//    cout << "byte addr: " << hex << in_taint_propagate[i]->get_taint_src()
+//         << " can propagate to ranges: " << endl;
+//    for(int j = 0; j < in_taint_propagate[i]->get_taint_propagate()->get_size
+//        (); j++) {
+//      in_taint_propagate[i]->get_taint_propagate()->at(j)->disp_range();
+//      in_taint_propagate[i]->get_taint_propagate()->at(j)->disp_byte_val_map();
+//    }
+//  }
 }
 
 
@@ -395,36 +475,45 @@ Detect::init_taint_source(XTNode &node, std::vector<Record> &log_rec)
 }
 
 void Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
-	                              t_AliveContinueBuffer &out,
-	                              Propagate &propagate)
-{
-    vector< vector<propagate_byte_> > in_vec_propagate_byte;
-    in_vec_propagate_byte = gen_in_propagate_byte(in, propagate);
-    cout << "numbef of bytes in in buffer: " << dec << in.size / 8 << endl;
-    cout << "number of vector of propagte bytes: " << dec << in_vec_propagate_byte.size() << endl;
+                                  t_AliveContinueBuffer &out,
+                                  Propagate &propagate) {
+    // Aval_In_Out aval_in_out(in, out);
 
-    vector<ByteTaintPropagate *> in_taint_propagate;
-    gen_in_range_array(in, in_vec_propagate_byte, in_taint_propagate);
+    vector<vector<propagate_byte_> > v_in_propagated_byte;
+    v_in_propagated_byte = gen_in_propagate_byte(in, propagate);
+    //    cout << "numbef of bytes in in buffer: " << dec << in.size / 8 << endl;
+    //    cout << "number of vector of propagte bytes: " << dec
+    //         << v_in_propagated_byte.size() << endl;
+    if( (in.size / 8) != v_in_propagated_byte.size() ) {
+        cout << "err: num of bytes of input, and num of propagated bytes is "
+            "not matched" << endl;
+        return;
+    }
 
-    // for(int i = 0; i < in_taint_propagate.size(); i++){
-    //     cout << "taint src: " << hex << in_taint_propagate[i]->get_taint_src() << endl;
-    //     in_taint_propagate[i]->get_taint_propagate()->disp_range_array();
+    vector<ByteTaintPropagate *> v_in_taint_propagate;
+    gen_in_range_array(in, v_in_propagated_byte, v_in_taint_propagate);
+    // for(int i = 0; i < v_in_taint_propagate.size(); i++){
+    //     cout << "taint src: " << hex << v_in_taint_propagate[i]->get_taint_src() << endl;
+    //     v_in_taint_propagate[i]->get_taint_propagate()->disp_range_array();
     // }
 
     Blocks blocks;
     BlockDetect block_detect(out.beginAddress, out.size / 8);
 
-    // block_detect.detect_block_size(blocks, in_taint_propagate, in.size / 8,
+    // block_detect.detect_block_size(blocks, v_in_taint_propagate, in.size / 8,
     //                                out.beginAddress, out.size / 8);
-    // block_detect.detect_block_size_alter(blocks, in_taint_propagate, in.size / 8,
+    // block_detect.detect_block_size_alter(blocks, v_in_taint_propagate, in.size / 8,
     //                                      out.beginAddress, out.size / 8);
-    block_detect.detect_block_sz_small_win(blocks, in_taint_propagate, in.size / 8,
-                                           out.beginAddress, out.size / 8);
+    block_detect.detect_block_sz_small_win(blocks,
+                                           v_in_taint_propagate,
+                                           in.size / 8,
+                                           out.beginAddress,
+                                           out.size / 8);
 
-    if(blocks.size() == 0){
+    if (blocks.size() == 0) {
         cout << "No block identified" << endl;
         return;
     }
 
-    block_detect.detect_mode_type(in_taint_propagate, blocks);
+    block_detect.detect_mode_type(v_in_taint_propagate, blocks);
 }

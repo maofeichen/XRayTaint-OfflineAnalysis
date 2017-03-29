@@ -14,7 +14,7 @@ set(HEADER_FILES include/xt_util.h include/xt_constant.h include/xt_data.h
         include/xt_node.h include/xt_preprocess.h include/xt_propagate.h
         include/xt_record.h include/xt_taintpropagate.h
         include/xt_blockdetect.h include/xt_detect.h include/xt_modedetect.h
-        include/xt_searchavalanche.h)
+        include/xt_searchavalanche.h include/xt_aval_in_out.h)
 aux_source_directory(./src SOURCE_FILES)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 
