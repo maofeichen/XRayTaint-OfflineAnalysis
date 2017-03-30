@@ -4,6 +4,11 @@
 
 using namespace std;
 
+Range::Range() {
+  begin_addr_ = 0;
+  end_addr_   = 0;
+}
+
 Range::Range(Range &r) {
   begin_addr_ = r.get_begin();
   end_addr_   = r.get_end();
@@ -33,6 +38,13 @@ Range::Range(uint32_t begin_addr,
   }
 }
 
+void Range::set_byte_val_map(std::multimap<uint32_t, uint32_t> &byte_val_map) {
+  byte_val_map_.clear();
+  for(auto it = byte_val_map.begin(); it != byte_val_map.end(); ++ it) {
+    byte_val_map_.insert(*it);
+  }
+}
+
 void Range::add_byte_val(uint32_t byte_addr, uint32_t val) {
   byte_val_map_.insert(pair<uint32_t, uint32_t >(byte_addr, val) );
 }
@@ -58,6 +70,14 @@ bool Range::has_range(unsigned int begin_addr, unsigned int len)
     }else {
         return false;
     }
+}
+
+bool Range::is_continuous_range(Range &r) {
+  if(end_addr_ == r.get_begin() ) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 bool Range::is_identical_range(Range &r) {

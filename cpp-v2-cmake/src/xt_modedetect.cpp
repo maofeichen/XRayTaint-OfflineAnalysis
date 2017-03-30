@@ -7,23 +7,71 @@ int ModeDetect::TYPE_UNDEF = 0;
 int ModeDetect::TYPE_ENC   = 1;
 int ModeDetect::TYPE_DEC   = 2;
 
-ModeDetect::ModeDetect() : input(0,0), output(0,0)
-{
-    DetectFactory::get_instance().register_detector(this);
-    type_enc_dec = TYPE_UNDEF;
+ModeDetect::ModeDetect() : input(0, 0), output(0, 0) {
+  DetectFactory::get_instance().register_detector(this);
+  type_enc_dec = TYPE_UNDEF;
+  DetectFactory::get_instance().count_num_detector();
 }
 
 ModeDetect::~ModeDetect() {}
 
-void ModeDetect::rm_minimum_range(RangeArray &ra, unsigned int minimum_range)
-{
-    for(int i = 0; i < ra.get_size(); ) {
-        if(ra[i]->get_len() < minimum_range){
-            ra.remove_range(i);
-            continue;
-        }
-        i++;
+bool ModeDetect::is_padding(RangeArraySPtr last_block) {
+  RangeArray last_out_block;
+  last_out_block.add_range(*last_block->at(res_block_idx::idx_out_block) );
+
+  multimap<uint32_t,uint32_t> &byte_val_map =
+      last_out_block.at(0)->get_byte_val_map();
+
+  multimap<uint32_t,uint32_t>::reverse_iterator rit =
+      byte_val_map.rbegin();
+
+  // last byte's val indicates number of paddings
+  uint32_t num_padding = rit->second;
+  for(uint32_t i = 0; i < num_padding; i++) {
+    cout << "addr: " << hex << rit->first << endl;
+    cout << "val: " << hex << rit->second << endl;
+    if(num_padding != rit->second) {
+      return false;
     }
+    rit++;
+  }
+
+//  for(; rit != byte_val_map.rbegin()+1; ++rit) {
+//    cout << "addr: " << hex << rit->first << endl;
+//    cout << "val: " << hex << rit->second << endl;
+//    if(num_padding != rit->second) {
+//      return false;
+//    }
+//  }
+
+  return true;
+}
+
+void ModeDetect::rm_minimum_range(RangeArray &ra, unsigned int minimum_range) {
+  for (int i = 0; i < ra.get_size();) {
+    if (ra[i]->get_len() < minimum_range) {
+      ra.remove_range(i);
+      continue;
+    }
+    i++;
+  }
+}
+
+DetectFactory DetectFactory::detect_factory_;
+std::vector<ModeDetect *> DetectFactory::detectors_;
+
+void DetectFactory::begin() {
+  cout << "number of detectors_: " << detectors_.size() << endl;
+  it_detector = detectors_.begin();
+}
+
+void DetectFactory::count_num_detector() {
+  cout << "number of detectors_: " << detectors_.size() << endl;
+}
+
+void DetectFactory::register_detector(ModeDetect *det) {
+  detectors_.push_back(det);
+  cout << "number of detectors_: " << detectors_.size() << endl;
 }
 
 CBCDetect CBCDetect::cbc_;
@@ -641,35 +689,278 @@ void CBCDetect::rm_contain_ranges(RangeArray &ra1, RangeArray &ra2)
     }
 }
 
-void CBCDetect::rm_ident_ranges(RangeArray &ra1, RangeArray &ra2)
-{
-    int ra2_sz = ra2.get_size();
-    int i = 0;
+void CBCDetect::rm_ident_ranges(RangeArray &ra1, RangeArray &ra2) {
+  int ra2_sz = ra2.get_size();
+  int i = 0;
 
-    while(i < ra2_sz){
-        unsigned int r2_begin = ra2[i]->get_begin();
-        unsigned int r2_len   = ra2[i]->get_len();
+  while (i < ra2_sz) {
+    unsigned int r2_begin = ra2[i]->get_begin();
+    unsigned int r2_len = ra2[i]->get_len();
 
-        if(ra1.has_ident_range(r2_begin, r2_len) ){
-            ra1.del_range(r2_begin, r2_len);
-            ra2.del_range(r2_begin, r2_len);
+    if (ra1.has_ident_range(r2_begin, r2_len)) {
+      ra1.del_range(r2_begin, r2_len);
+      ra2.del_range(r2_begin, r2_len);
 
-            ra2_sz = ra2.get_size();
-        }else {
-            i++;
-        }
+      ra2_sz = ra2.get_size();
+    } else {
+      i++;
     }
+  }
 }
 
-DetectFactory DetectFactory::detect_factory_;
-std::vector<ModeDetect *> DetectFactory::detectors;
+ECBDetect ECBDetect::ecb_;
 
-void DetectFactory::begin() {
-    cout << "number of detectors: " << detectors.size() << endl;
-    it_detector = detectors.begin();
+bool ECBDetect::analyze_mode(std::vector<ByteTaintPropagate *> &v_in_propagate,
+                             Blocks &blocks) {
+
 }
 
-void DetectFactory::register_detector(ModeDetect *det) {
-    detectors.push_back(det);
-    cout << "number of detectors: " << detectors.size() << endl;
+bool ECBDetect::analyze_ecb_mode(vector<ByteTaintPropagate *> &v_in_propa,
+                                 RangeArray &in_blocks,
+                                 V_Ptr_RangeArray &out_propa_ra) {
+  cout << "num of blocks: " << in_blocks.get_size() << endl;
+  cout << "num of corresponding propagated range arrays: "
+       << out_propa_ra.size() << endl;
+
+  if(in_blocks.get_size() != out_propa_ra.size() ) {
+    cout << "error: num of blocks and their propagated common ranges are not "
+        "matched..." << endl;
+    return false;
+  }
+
+  // We don't konw if it's enc or dec until recognizing its padding, thus
+  // detects pattern first.
+  // The pattern of ecb in both enc and dec are:
+  // 1 : n
+  uint32_t i = 0;
+  while (i < in_blocks.get_size() ) {
+    // Uses rangearray to store the detected block results:
+    // 1) the 1st range is the input block range
+    // 2) the 2nd range is the corresponding output block of the input
+    RangeArray *res_block = new RangeArray();
+
+    bool is_det = false;
+    bool is_last_block = (i == in_blocks.get_size() - 1) ? true : false;
+
+    if (!is_last_block) {
+      is_det = analyze_ecb_block(*in_blocks[i], out_propa_ra[i], res_block);
+      if (is_det) {
+        if (v_res_block_.empty()) {
+          // always stores the 1st detected blcok
+          v_res_block_.push_back(RangeArraySPtr(res_block));
+        } else {
+          if (is_continuous_block(res_block)) {
+            v_res_block_.push_back(RangeArraySPtr(res_block));
+          } else {
+            cout << "current result block is not continuous" << endl;
+          }
+        }
+      } else {
+        cout << "given block does not fit the pattern of ecb" << endl;
+      }
+    } else {
+      uint32_t common_block_sz = v_res_block_.back()->at(0)->get_len();
+      is_det = analyze_ecb_last_block(*in_blocks[i], common_block_sz,
+                                     out_propa_ra[i], res_block);
+      if(is_det &&
+          is_continuous_block(res_block) ) {
+        v_res_block_.push_back(RangeArraySPtr(res_block) );
+      } else {
+        cout << "last block is not continuous" << endl;
+      }
+    }
+
+    i++;
+  }
+
+  analyze_ecb_enc_dec();
+}
+
+void ECBDetect::analyze_ecb_enc_dec() {
+  if(v_res_block_.empty() ) {
+    cout << "err: analyzing ecb enc or dec: there is no result block." << endl;
+    return;
+  }
+
+  RangeArraySPtr last_block = v_res_block_.back();
+  last_block->at(res_block_idx::idx_in_block)->disp_range();
+  last_block->at(res_block_idx::idx_out_block)->disp_range();
+  last_block->at(res_block_idx::idx_out_block)->disp_byte_val_map();
+
+  if(is_padding(last_block) ){
+    cout << "analyzing ecb: detects padding, it is a decryption operation"
+         << endl;
+  } else {
+    cout << "analyzing ecb: detects no padding, it is a encryption operation"
+         << endl;
+  }
+}
+
+bool ECBDetect::analyze_ecb_block(Range &block,
+                                  RangeArraySPtr block_propa_ra,
+                                  RangeArray *res_block) {
+  if(block.get_len() == 0) {
+    cout << "analyze ecb block: given block is empty..." << endl;
+    return false;
+  }
+
+  if(block_propa_ra->get_size() == 0) {
+    cout << "analyze ecb block: given block propagated ranges are empty..."
+         << endl;
+    return false;
+  }
+
+  block.disp_range();
+  block_propa_ra->at(0)->disp_range();
+  block_propa_ra->at(0)->disp_byte_val_map();
+
+  // We only consider the first range of the given propagated range arrays,
+  // due to:
+  // 1) ranges in range array are in increased order
+  // 2) ecb mode is ...
+  uint32_t block_sz             = block.get_len();
+  uint32_t block_propa_range_sz = block_propa_ra->at(0)->get_len();
+
+  if(block_propa_range_sz == block_sz) {
+    res_block->add_range(block);
+    res_block->add_range(*block_propa_ra->at(0) );
+
+    res_block->at(0)->disp_range();
+    res_block->at(1)->disp_range();
+    res_block->at(1)->disp_byte_val_map();
+
+    return true;
+  } else if(block_propa_range_sz > block_sz) {
+    // the propagated range of the block might be larger than the block size,
+    // overtainted.
+    // We only used the block sz
+    res_block->add_range(block);
+
+    // saves the block sz width propagate range
+    multimap<uint32_t,uint32_t> byte_val_map;
+
+    uint32_t addr = block_propa_ra->at(0)->get_begin();
+    cout << "addr: " << hex << addr << endl;
+    uint32_t end_addr = addr + block_sz;
+    for(; addr < end_addr; addr++ ) {
+      pair<multimap<uint32_t,uint32_t>::iterator,
+           multimap<uint32_t,uint32_t>::iterator> ret;
+      ret = block_propa_ra->at(0)->get_byte_val_map().equal_range(addr);
+
+      for(multimap<uint32_t,uint32_t>::iterator it = ret.first;
+          it != ret.second; ++it) {
+        byte_val_map.insert(*it);
+      }
+    }
+
+    res_block->add_range(block_propa_ra->at(0)->get_begin(),
+                         block_sz, byte_val_map);
+
+    res_block->at(0)->disp_range();
+    res_block->at(1)->disp_range();
+    res_block->at(1)->disp_byte_val_map();
+
+  } else {
+    cout << "analyze ecb block: the block propagated range is smaller than "
+        "block size..." << endl;
+    return false;
+  }
+
+}
+
+bool ECBDetect::analyze_ecb_last_block(Range &block,
+                                       uint32_t block_sz,
+                                       RangeArraySPtr block_propa_ra,
+                                       RangeArray *res_block) {
+  if(block.get_len() == 0) {
+    cout << "analyze ecb block: given block is empty..." << endl;
+    return false;
+  }
+
+  if(block_propa_ra->get_size() == 0) {
+    cout << "analyze ecb block: given block propagated ranges are empty..."
+         << endl;
+    return false;
+  }
+
+  block.disp_range();
+  block_propa_ra->at(0)->disp_range();
+  block_propa_ra->at(0)->disp_byte_val_map();
+
+  // We only consider the first range of the given propagated range arrays,
+  // due to:
+  // 1) ranges in range array are in increased order
+  // 2) ecb mode is ...
+  uint32_t block_propa_range_sz = block_propa_ra->at(0)->get_len();
+
+  if(block_propa_range_sz == block_sz) {
+    res_block->add_range(block);
+    res_block->add_range(*block_propa_ra->at(0) );
+
+    res_block->at(0)->disp_range();
+    res_block->at(1)->disp_range();
+    res_block->at(1)->disp_byte_val_map();
+
+    return true;
+  } else if(block_propa_range_sz > block_sz) {
+    // the propagated range of the block might be larger than the block size,
+    // overtainted.
+    // We only used the block sz
+    res_block->add_range(block);
+
+    // saves the block sz width propagate range
+    multimap<uint32_t,uint32_t> byte_val_map;
+
+    uint32_t addr = block_propa_ra->at(0)->get_begin();
+    cout << "addr: " << hex << addr << endl;
+    uint32_t end_addr = addr + block_sz;
+    for(; addr < end_addr; addr++ ) {
+      pair<multimap<uint32_t,uint32_t>::iterator,
+           multimap<uint32_t,uint32_t>::iterator> ret;
+      ret = block_propa_ra->at(0)->get_byte_val_map().equal_range(addr);
+
+      for(multimap<uint32_t,uint32_t>::iterator it = ret.first;
+          it != ret.second; ++it) {
+        byte_val_map.insert(*it);
+      }
+    }
+
+    res_block->add_range(block_propa_ra->at(0)->get_begin(),
+                         block_sz, byte_val_map);
+
+    res_block->at(0)->disp_range();
+    res_block->at(1)->disp_range();
+    res_block->at(1)->disp_byte_val_map();
+  } else {
+    cout << "analyze ecb block: the block propagated range is smaller than "
+        "block size..." << endl;
+    return false;
+  }
+}
+
+bool ECBDetect::is_continuous_block(RangeArray *curr_res_block) {
+  RangeArraySPtr prev_res_block = v_res_block_.back();
+
+  bool is_block_continue        = false;
+  bool is_propa_range_continue  = false;
+
+  prev_res_block->at(0)->disp_range();
+  curr_res_block->at(0)->disp_range();
+
+  prev_res_block->at(1)->disp_range();
+  prev_res_block->at(1)->disp_byte_val_map();
+  curr_res_block->at(1)->disp_range();
+  curr_res_block->at(1)->disp_byte_val_map();
+
+  is_block_continue =
+      prev_res_block->at(0)->is_continuous_range(*curr_res_block->at(0) );
+  is_propa_range_continue =
+      prev_res_block->at(1)->is_continuous_range(*curr_res_block->at(1) );
+
+  if(is_block_continue && is_propa_range_continue) {
+    return true;
+  } else {
+    cout << "current result block is not continuous with its previous" << endl;
+    return false;
+  }
 }

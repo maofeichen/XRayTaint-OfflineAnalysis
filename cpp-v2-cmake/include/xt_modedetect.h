@@ -31,8 +31,9 @@ class ModeDetect {
   unsigned int MIN_ADDRESS = 0x300;
   unsigned int MAX_ADDRESS = 0xc0000000;
   unsigned int WINDOW_SIZE = 64; // 64 bytes
-
   unsigned int MIN_BUF_SZ = 8;
+
+  enum res_block_idx {  idx_in_block = 0, idx_out_block = 1};
 
   std::string mode_name;
   int type_enc_dec;
@@ -40,9 +41,42 @@ class ModeDetect {
   Range input;
   Range output;
 
+  // Determines if given block cipher is padding or not.
+  // 1) Only detects PKCS7 padding and
+  // 2) there will be false positive, when if it is enc, the cipher text
+  //    happens to be:
+  //    01
+  //    02 02
+  //    03 03 03
+  //    etc
+  bool is_padding(RangeArraySPtr last_block);
   // Removes ranges smaller than minimum range in the given range array
   void rm_minimum_range(RangeArray &ra, unsigned int minimum_range);
+};
+
+class DetectFactory {
+ public:
+  static DetectFactory &get_instance() { return detect_factory_; }
+  static std::vector<ModeDetect *> &get_detectors() { return detectors_; };
+
+  void begin();
+  void next() { it_detector++; }
+  bool at_end() { return (it_detector == detectors_.end()); }
+
+  void count_num_detector();
+  void register_detector(ModeDetect *det);
+  ModeDetect *get_detector() { return *it_detector; }
+
  private:
+  static DetectFactory detect_factory_;
+  static std::vector<ModeDetect *> detectors_;
+
+  std::vector<ModeDetect *>::iterator it_detector;
+
+  DetectFactory() {};
+  ~DetectFactory() {};
+  DetectFactory(const DetectFactory&);
+  DetectFactory & operator=(const DetectFactory&);
 };
 
 class CBCDetect : public ModeDetect {
@@ -153,25 +187,34 @@ class CBCDetect : public ModeDetect {
   void rm_ident_ranges(RangeArray &ra1, RangeArray &ra2);
 };
 
-class DetectFactory {
+class ECBDetect : public ModeDetect{
  public:
-  static DetectFactory &get_instance() { return detect_factory_; }
+  static ECBDetect &get_instance() { return ecb_; }
 
-  void begin();
-  void next() { it_detector++; }
-  bool at_end() { return (it_detector == detectors.end()); }
-
-  void register_detector(ModeDetect *det);
-  ModeDetect *get_detector() { return *it_detector; }
-
+  bool analyze_mode(std::vector<ByteTaintPropagate *> &v_in_propagate,
+                    Blocks &blocks);
+  bool analyze_ecb_mode(std::vector<ByteTaintPropagate *> &v_in_propa,
+                    RangeArray &in_blocks,
+                    V_Ptr_RangeArray &out_propa_ra);
  private:
-  static DetectFactory detect_factory_;
-  static std::vector<ModeDetect *> detectors;
 
-  std::vector<ModeDetect *>::iterator it_detector;
 
-  DetectFactory() {};
-  ~DetectFactory() {};
+  static ECBDetect ecb_;
+  ECBDetect() { mode_name = "ecb"; }
+  ~ECBDetect() {}
+
+  V_Ptr_RangeArray v_res_block_; // stores results of block detections
+
+  void analyze_ecb_enc_dec();
+
+  bool analyze_ecb_block(Range &block, RangeArraySPtr block_propa_ra,
+                         RangeArray *res_block);
+  bool analyze_ecb_last_block(Range &block, uint32_t block_sz,
+                              RangeArraySPtr block_propa_ra,
+                              RangeArray *res_block);
+  // Determines if current result block and previous result block
+  // (stores in v_res_block_) is continuous block
+  bool is_continuous_block(RangeArray *curr_res_block);
 };
 
 #endif /* XT_MODEDETECT_H_ */

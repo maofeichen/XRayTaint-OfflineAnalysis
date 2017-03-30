@@ -13,6 +13,7 @@
 
 class Range {
  public:
+  Range();
   Range(Range &r);
   Range(unsigned int begin_addr, unsigned int len) {
     begin_addr_ = begin_addr;
@@ -29,6 +30,7 @@ class Range {
   unsigned int get_end() { return end_addr_; }
   unsigned int get_len() { return end_addr_ - begin_addr_; }
 
+  void set_byte_val_map(std::multimap<uint32_t,uint32_t> &byte_val_map);
   std::multimap <uint32_t , uint32_t > &get_byte_val_map() {
     return byte_val_map_;
   }
@@ -37,6 +39,7 @@ class Range {
   void disp_byte_val_map();
   void disp_range();
   bool has_range(unsigned int begin_addr, unsigned int len);
+  bool is_continuous_range(Range &r);
   bool is_identical_range(Range &r);
   bool is_identical_byte_val_map(std::multimap<uint32_t,uint32_t> &byte_val_map);
 

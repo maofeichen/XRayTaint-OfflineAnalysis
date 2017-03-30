@@ -19,6 +19,9 @@ class BlockDetect {
               uint32_t out_len);
   ~BlockDetect() {};
 
+  RangeArray &get_in_blocks() { return in_blocks_; }
+  V_Ptr_RangeArray &get_out_propa_ra() { return  propa_out_ra_; }
+
   void detect_block_size(std::vector<ByteTaintPropagate *> &buf_taint_propagate);
   // Not used!
   void detect_block_size_ori(Blocks &blocks,
@@ -26,6 +29,7 @@ class BlockDetect {
                              unsigned int in_byte_sz,
                              unsigned int out_addr,
                              unsigned int out_byte_sz);
+  // Not used!
   void detect_block_size_alter(Blocks &blocks,
                                std::vector<ByteTaintPropagate *> &buf_taint_propagate,
                                unsigned int in_byte_sz,
@@ -40,6 +44,7 @@ class BlockDetect {
 
   void detect_mode_type(std::vector<ByteTaintPropagate *> &v_in_propagate,
                         Blocks &blocks);
+  void detect_mode_type_with_val(std::vector<ByteTaintPropagate *> &v_in_propagate);
 
  private:
   unsigned int MIN_BLOCK_SZ = 8;

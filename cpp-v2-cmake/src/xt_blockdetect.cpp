@@ -322,6 +322,22 @@ void BlockDetect::detect_mode_type(vector<ByteTaintPropagate *> &v_in_propagate,
 
 }
 
+void BlockDetect::detect_mode_type_with_val(vector<ByteTaintPropagate *> &v_in_propagate) {
+  if(in_blocks_.get_size() == 0) {
+    cout << "no blocks found..." << endl;
+    return;
+  } else if(in_blocks_.get_size() == 1) {
+    cout << "only one block found..." << endl;
+    return;
+  }
+
+  // We don't use singleton factory, buggy
+  // DetectFactory &det_fac = DetectFactory::get_instance();
+  // det_fac.count_num_detector();
+  ECBDetect &det_ecb = ECBDetect::get_instance();
+  det_ecb.analyze_ecb_mode(v_in_propagate, get_in_blocks(), get_out_propa_ra());
+}
+
 void BlockDetect::detect_block_size_with_val(vector<ByteTaintPropagate *> &buf_taint_propagate) {
   uint32_t b_begin_byte = 0;
   uint32_t b_end_byte = in_len_;
