@@ -30,7 +30,7 @@ void Detect::detect_cipher()
     // Store which IN and OUT buffer had been searched already
 	vector<pair_inout_> v_buf_inout;
 
-    vector<t_AliveFunctionCall>::iterator it_in_func = v_func_cont_buf_.end() - 3;
+    vector<t_AliveFunctionCall>::iterator it_in_func = v_func_cont_buf_.end() - 4;
     // vector<t_AliveFunctionCall>::iterator it_in_func = v_func_cont_buf_.begin() + 3;
 
     // Iterates each function call
@@ -67,30 +67,31 @@ void Detect::detect_cipher()
                                     << " byte: " << dec << in_buf.size / 8 << endl;
                             cout << "out: addr: " << hex << out_buf.beginAddress
                                     << " byte: " << dec << out_buf.size / 8 << endl;
+                            // detect_cipher_in_out(in_buf, out_buf, propagate);
+
+                            if (in_buf.beginAddress == 0x804b0a0 &&
+                              in_buf.size == 92 * 8 &&
+                              out_buf.beginAddress == 0x804b880 &&
+                              out_buf.size == 96 * 8) {
+
+                            int num_source = in_buf.vNodeIndex.size();
+                            cout
+                                << "number of source index in the input buffer: "
+                                << dec << in_buf.vNodeIndex.size() << endl;
+
                             detect_cipher_in_out(in_buf, out_buf, propagate);
 
-                            // if(in_buf.beginAddress == 0x804b040 &&
-                            //    in_buf.size == 96 * 8 &&
-                            //    out_buf.beginAddress == 0x804a080 &&
-                            //    out_buf.size == 92 * 8) {
+                            if (num_source == 24) {
+                              // vector<unsigned long>::const_iterator it_n_idx = it_in_buf->vNodeIndex.begin();
+                              // for(; it_n_idx != it_in_buf->vNodeIndex.end(); ++it_n_idx){
+                              //     cout << "src index: " << dec << *it_n_idx << endl;
+                              //     XTNode node = get_mem_node(*it_n_idx);
+                              //     cout << "node addr: " << hex << node.getIntAddr() << endl;
+                              // }
 
-                            //     int num_source = in_buf.vNodeIndex.size();
-                            //     cout << "number of source index in the input buffer: "
-                            //             << dec << in_buf.vNodeIndex.size() << endl;
-                                
-                            //     detect_cipher_in_out(in_buf, out_buf, propagate);
-                                
-                            //     if(num_source == 24){
-                            //         // vector<unsigned long>::const_iterator it_n_idx = it_in_buf->vNodeIndex.begin();
-                            //         // for(; it_n_idx != it_in_buf->vNodeIndex.end(); ++it_n_idx){
-                            //         //     cout << "src index: " << dec << *it_n_idx << endl;
-                            //         //     XTNode node = get_mem_node(*it_n_idx);
-                            //         //     cout << "node addr: " << hex << node.getIntAddr() << endl;
-                            //         // }
-                                    
-                            //         // detect_cipher_in_out(in_buf, out_buf, propagate);
-                            //     }
-                            // }
+                              // detect_cipher_in_out(in_buf, out_buf, propagate);
+                            }
+                          }
                         }
                     }
                 }
@@ -477,43 +478,57 @@ Detect::init_taint_source(XTNode &node, std::vector<Record> &log_rec)
 void Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
                                   t_AliveContinueBuffer &out,
                                   Propagate &propagate) {
-    // Aval_In_Out aval_in_out(in, out);
+  // Aval_In_Out aval_in_out(in, out);
 
-    vector<vector<propagate_byte_> > v_in_propagated_byte;
-    v_in_propagated_byte = gen_in_propagate_byte(in, propagate);
-    //    cout << "numbef of bytes in in buffer: " << dec << in.size / 8 << endl;
-    //    cout << "number of vector of propagte bytes: " << dec
-    //         << v_in_propagated_byte.size() << endl;
-    if( (in.size / 8) != v_in_propagated_byte.size() ) {
-        cout << "err: num of bytes of input, and num of propagated bytes is "
-            "not matched" << endl;
-        return;
-    }
+  vector<vector<propagate_byte_> > v_in_propagated_byte;
+  v_in_propagated_byte = gen_in_propagate_byte(in, propagate);
+  //    cout << "numbef of bytes in in buffer: " << dec << in.size / 8 << endl;
+  //    cout << "number of vector of propagte bytes: " << dec
+  //         << v_in_propagated_byte.size() << endl;
+  if ((in.size / 8) != v_in_propagated_byte.size()) {
+    cout << "err: num of bytes of input, and num of propagated bytes is "
+        "not matched" << endl;
+    return;
+  }
 
-    vector<ByteTaintPropagate *> v_in_taint_propagate;
-    gen_in_range_array(in, v_in_propagated_byte, v_in_taint_propagate);
-    // for(int i = 0; i < v_in_taint_propagate.size(); i++){
-    //     cout << "taint src: " << hex << v_in_taint_propagate[i]->get_taint_src() << endl;
-    //     v_in_taint_propagate[i]->get_taint_propagate()->disp_range_array();
-    // }
+  vector<ByteTaintPropagate *> v_in_taint_propagate;
+  gen_in_range_array(in, v_in_propagated_byte, v_in_taint_propagate);
+//  for (int i = 0; i < v_in_taint_propagate.size(); i++) {
+//    cout << "taint src: " << hex << v_in_taint_propagate[i]->get_taint_src()
+//         << endl;
+//    uint32_t addr = v_in_taint_propagate[i]->get_taint_src();
+//    if(addr == 0x804b0e0) {
+//      cout << "addr: 804b0e0" << endl;
+//    }
+//    for(int j = 0; j < v_in_taint_propagate[i]->get_taint_propagate()
+//        ->get_size(); j++) {
+//      v_in_taint_propagate[i]->get_taint_propagate()->at(j)->disp_range();
+//      v_in_taint_propagate[i]->get_taint_propagate()->at(j)
+//          ->disp_byte_val_map();
+//    }
+//  }
 
-    Blocks blocks;
-    BlockDetect block_detect(out.beginAddress, out.size / 8);
+  BlockDetect blk_detect(in.beginAddress, in.size / 8, out.beginAddress,
+                         out.size / 8);
+  blk_detect.detect_block_size(v_in_taint_propagate);
 
-    // block_detect.detect_block_size(blocks, v_in_taint_propagate, in.size / 8,
-    //                                out.beginAddress, out.size / 8);
-    // block_detect.detect_block_size_alter(blocks, v_in_taint_propagate, in.size / 8,
-    //                                      out.beginAddress, out.size / 8);
-    block_detect.detect_block_sz_small_win(blocks,
-                                           v_in_taint_propagate,
-                                           in.size / 8,
-                                           out.beginAddress,
-                                           out.size / 8);
+/*  Blocks blocks;
+  BlockDetect block_detect(out.beginAddress, out.size / 8);
 
-    if (blocks.size() == 0) {
-        cout << "No block identified" << endl;
-        return;
-    }
+  // block_detect.detect_block_size_ori(blocks, v_in_taint_propagate, in.size / 8,
+  //                                out.beginAddress, out.size / 8);
+  // block_detect.detect_block_size_alter(blocks, v_in_taint_propagate, in.size / 8,
+  //                                      out.beginAddress, out.size / 8);
+  block_detect.detect_block_sz_small_win(blocks,
+                                         v_in_taint_propagate,
+                                         in.size / 8,
+                                         out.beginAddress,
+                                         out.size / 8);
 
-    block_detect.detect_mode_type(v_in_taint_propagate, blocks);
+  if (blocks.size() == 0) {
+    cout << "No block identified" << endl;
+    return;
+  }
+
+  block_detect.detect_mode_type(v_in_taint_propagate, blocks);*/
 }

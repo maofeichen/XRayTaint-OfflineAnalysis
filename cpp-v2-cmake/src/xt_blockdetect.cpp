@@ -10,11 +10,25 @@ BlockDetect::BlockDetect(unsigned int out_begin_addr, unsigned int out_len)
     out_len_        = out_len;
 }
 
-void BlockDetect::detect_block_size(Blocks &blocks,
-                                    vector<ByteTaintPropagate *> &buf_taint_propagate,
-                                    unsigned int in_byte_sz,
-                                    unsigned int out_addr,
-                                    unsigned int out_byte_sz)
+BlockDetect::BlockDetect(uint32_t in_begin_addr,
+                         uint32_t in_len,
+                         uint32_t out_begin_addr,
+                         uint32_t out_len) {
+  in_begin_addr_ = in_begin_addr;
+  in_len_        = in_len;
+  out_begin_addr_= out_begin_addr;
+  out_len_       = out_len;
+}
+
+void BlockDetect::detect_block_size(vector<ByteTaintPropagate *> &buf_taint_propagate) {
+  detect_block_size_with_val(buf_taint_propagate);
+}
+
+void BlockDetect::detect_block_size_ori(Blocks &blocks,
+                                        vector<ByteTaintPropagate *> &buf_taint_propagate,
+                                        unsigned int in_byte_sz,
+                                        unsigned int out_addr,
+                                        unsigned int out_byte_sz)
 {
     int begin_byte = 0;
     int end_byte   = in_byte_sz;
@@ -308,6 +322,120 @@ void BlockDetect::detect_mode_type(vector<ByteTaintPropagate *> &v_in_propagate,
 
 }
 
+void BlockDetect::detect_block_size_with_val(vector<ByteTaintPropagate *> &buf_taint_propagate) {
+  uint32_t b_begin_byte = 0;
+  uint32_t b_end_byte = in_len_;
+
+  uint32_t buf_sz = in_len_;
+  uint32_t accumu_b_sz = 0;
+
+  RangeArray last_common;
+
+  while (buf_sz - accumu_b_sz > 0) {
+    // Initially common range cover full address space of output range
+    RangeArray common(out_begin_addr_, out_len_);
+    RangeArray prev_common;
+
+    uint32_t i = b_begin_byte;
+    for (; i < b_end_byte; i++) {
+      common.disp_range_array();
+      prev_common.disp_range_array();
+      common.disp_byte_val_map_array();
+      prev_common.disp_byte_val_map_array();
+
+      // Iterate each byte to see if they have same propagated range
+      ByteTaintPropagate *first_byte_propa = buf_taint_propagate[i];
+
+      uint32_t first_byte_addr = first_byte_propa->get_taint_src();
+      cout << "byte addr: " << hex << first_byte_addr << endl;
+
+      // Debug
+//      if(first_byte_addr == 0x804b0df) {
+//        cout << "processing addr: 0x804b0df" << endl;
+//      }
+
+      first_byte_propa->get_taint_propagate()->disp_range_array();
+
+      if (first_byte_propa->get_taint_propagate()->get_size() == 0) {
+        // handle byte propagation is empty case
+        cout << "Block detect: byte propagation is empty..." << endl;
+        break;
+      }
+
+      common.get_common_range_with_val(*first_byte_propa->get_taint_propagate());
+      common.disp_range_array();
+      // common.disp_byte_val_map_array();
+
+      if (common.get_size() == 0) {
+        // handle case the common range is empty
+      }
+
+      /*if(accumu_b_sz == 0) {
+        // Do we need it?
+        // A potential block, uses first two bytes to determine the common
+        // propagate range
+        ByteTaintPropagate *sec_byte_propa = buf_taint_propagate[i+1];
+        common.get_common_range_with_val(*sec_byte_propa->get_taint_propagate());
+        common.disp_range_array();
+        common.disp_byte_val_map_array();
+      }*/
+
+      common.disp_range_array();
+      prev_common.disp_range_array();
+      common.disp_byte_val_map_array();
+      prev_common.disp_byte_val_map_array();
+
+      // handles case than ends a block
+      if(is_block_end(common, prev_common, accumu_b_sz) ) {
+//        ByteTaintPropagate *byte_propa = buf_taint_propagate[b_begin_byte];
+//        uint32_t addr = byte_propa->get_taint_src();
+        save_block_with_val(b_begin_byte, accumu_b_sz, prev_common);
+
+        b_begin_byte = i;
+        buf_sz       -= accumu_b_sz;
+        accumu_b_sz  = 0;
+        break;
+      }
+
+      prev_common = common;
+      accumu_b_sz++;
+    }
+
+    last_common = prev_common;
+  } // end while
+
+  // save the last block if any
+//  ByteTaintPropagate *byte_propa = buf_taint_propagate[b_begin_byte];
+//  uint32_t addr = byte_propa->get_taint_src();
+  save_block_with_val(b_begin_byte, accumu_b_sz, last_common);
+}
+
+bool BlockDetect::is_block_end(RangeArray &common,
+                               RangeArray &prev_common,
+                               uint32_t accumu_b_sz) {
+  if(accumu_b_sz == 0) {
+    // begin of a potential block, common and prev_common will be different
+    return false;
+  }
+
+  if(prev_common.get_size() == 0 ||
+      common.get_size() == 0) {
+    // if prev is non empty, and current is, indicating they are different,
+    // which should be end of a block
+    return true;
+    // return false;
+  }
+
+  // Determines if 1st range of prev_common and common are identical,
+  // to determine if it same block
+  // This methond holds due to...
+  if(prev_common[0]->is_identical_range(*common[0]) ) {
+    return false;
+  } else {
+    return true;
+  }
+}
+
 void BlockDetect::rm_minimum_range(RangeArray &ra, unsigned int minimum_range)
 {
     for(int i = 0; i < ra.get_size(); ) {
@@ -320,7 +448,7 @@ void BlockDetect::rm_minimum_range(RangeArray &ra, unsigned int minimum_range)
 }
 
 bool BlockDetect::save_block(unsigned accumu_b_sz, Blocks &blocks,
-            unsigned int &b_begin_byte, int i_byte)
+                             unsigned int &b_begin_byte, int i_byte)
 {
     if(accumu_b_sz < MIN_BLOCK_SZ){
         b_begin_byte++;
@@ -329,4 +457,46 @@ bool BlockDetect::save_block(unsigned accumu_b_sz, Blocks &blocks,
         // advances to next taint source byte, no need to plus extra 1
         b_begin_byte = i_byte;
     }
+}
+
+bool BlockDetect::save_block_with_val(uint32_t b_begin_idx,
+                                      uint32_t accumu_b_sz,
+                                      RangeArray &ra_common) {
+  if(accumu_b_sz < MIN_BLOCK_SZ) {
+    return false;
+  } else {
+    in_blocks_.add_range(b_begin_idx, accumu_b_sz);
+    in_blocks_.disp_range_array();
+
+    RangeArray *propa_ra = new RangeArray();
+    for(uint32_t i = 0; i < ra_common.get_size(); i++) {
+      propa_ra->add_range(*ra_common[i]);
+    }
+    propa_out_ra_.push_back(RangeArraySPtr(propa_ra) );
+
+    propa_ra->disp_range_array();
+    propa_ra->disp_byte_val_map_array();
+
+    for(uint32_t i=0; i < propa_out_ra_.size(); i++) {
+      propa_out_ra_[i]->disp_range_array();
+      propa_out_ra_[i]->disp_byte_val_map_array();
+    }
+
+//    multimap<uint32_t, uint32_t> byte_val_map;
+//    for(auto it = r_common.get_byte_val_map().begin();
+//        it != r_common.get_byte_val_map().end(); ++it) {
+//      byte_val_map.insert(*it);
+//    }
+
+//    uint32_t len = b_idx_end - b_idx_begin;
+//    Range r(b_idx_begin, len, byte_val_map);
+//    r.disp_range();
+//    r.disp_byte_val_map();
+//    blocks_.push_back(r);
+
+//    in_blocks_.add_range(b_begin_idx, accumu_b_sz, byte_val_map);
+//    in_blocks_.disp_range_array();
+//    in_blocks_.disp_byte_val_map_array();
+    return true;
+  }
 }

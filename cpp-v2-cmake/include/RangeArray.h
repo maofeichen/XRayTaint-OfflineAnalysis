@@ -37,6 +37,8 @@ class Range {
   void disp_byte_val_map();
   void disp_range();
   bool has_range(unsigned int begin_addr, unsigned int len);
+  bool is_identical_range(Range &r);
+  bool is_identical_byte_val_map(std::multimap<uint32_t,uint32_t> &byte_val_map);
 
  private:
   unsigned int begin_addr_;
@@ -62,13 +64,18 @@ class RangeArray {
   void add_range(unsigned int begin_addr, unsigned int len);
   void add_range(uint32_t begin_addr, uint32_t len,
                  std::multimap<uint32_t,uint32_t> &byte_val_map);
+
   // Deletes range in the range array, given the range
   bool del_range(unsigned int begin_addr, unsigned int len);
   void disp_range_array();
+  void disp_byte_val_map_array();
 
   // Result common ranges stores in common
   void get_common_range(RangeArray &ra_right, RangeArray &common);
+  void get_common_range_with_val(RangeArray &ra_right, RangeArray &common);
   RangeArray &get_common_range(RangeArray &r);
+  RangeArray &get_common_range_with_val(RangeArray &r);
+
   unsigned int get_size() const;
 
   bool has_ident_range(unsigned int begin_addr, unsigned int len);
@@ -89,7 +96,12 @@ class RangeArray {
   unsigned int array_used_;
 
   void copy(const RangeArray &src);
+  void copy_with_val(const RangeArray &src);
   void init();
+
+  std::multimap<uint32_t, uint32_t> get_byte_val_map(Range &r,
+                                                     uint32_t range_begin,
+                                                     uint32_t range_len);
 
   void insert_range(int pos, Range &r);
   void insert_range(int pos, unsigned int begin_addr, unsigned int len);

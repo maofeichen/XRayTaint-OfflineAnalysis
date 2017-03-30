@@ -8,46 +8,69 @@
 
 #include <vector>
 
-class BlockDetect{
-public:
-    unsigned int MIN_ADDRESS = 0x300;
-    unsigned int MAX_ADDRESS = 0xc0000000;
-    unsigned int WINDOW_SIZE = 64; // 64 bytes
+class BlockDetect {
+ public:
+  unsigned int MIN_ADDRESS = 0x300;
+  unsigned int MAX_ADDRESS = 0xc0000000;
+  unsigned int WINDOW_SIZE = 64; // 64 bytes
 
-    BlockDetect(unsigned int out_begin_addr, unsigned int out_len);
-    ~BlockDetect() {};
+  BlockDetect(unsigned int out_begin_addr, unsigned int out_len);
+  BlockDetect(uint32_t in_begin_addr, uint32_t in_len, uint32_t out_begin_addr,
+              uint32_t out_len);
+  ~BlockDetect() {};
 
-    // Not used!
-    void detect_block_size(Blocks &blocks,
-                           std::vector<ByteTaintPropagate *> &buf_taint_propagate,
-                           unsigned int in_byte_sz,
-                           unsigned int out_addr,
-                           unsigned int out_byte_sz);
-    void detect_block_size_alter(Blocks &blocks,
+  void detect_block_size(std::vector<ByteTaintPropagate *> &buf_taint_propagate);
+  // Not used!
+  void detect_block_size_ori(Blocks &blocks,
+                             std::vector<ByteTaintPropagate *> &buf_taint_propagate,
+                             unsigned int in_byte_sz,
+                             unsigned int out_addr,
+                             unsigned int out_byte_sz);
+  void detect_block_size_alter(Blocks &blocks,
+                               std::vector<ByteTaintPropagate *> &buf_taint_propagate,
+                               unsigned int in_byte_sz,
+                               unsigned int out_addr,
+                               unsigned int out_byte_sz);
+  // Detects block for small buffer size < 64 bytes
+  void detect_block_sz_small_win(Blocks &blocks,
                                  std::vector<ByteTaintPropagate *> &buf_taint_propagate,
                                  unsigned int in_byte_sz,
                                  unsigned int out_addr,
                                  unsigned int out_byte_sz);
-    // Detects block for small buffer size < 64 bytes
-    void detect_block_sz_small_win(Blocks &blocks,
-                                 std::vector<ByteTaintPropagate *> &buf_taint_propagate,
-                                 unsigned int in_byte_sz,
-                                 unsigned int out_addr,
-                                 unsigned int out_byte_sz);
 
-    void detect_mode_type(std::vector<ByteTaintPropagate *> &v_in_propagate,
-                          Blocks &blocks);
+  void detect_mode_type(std::vector<ByteTaintPropagate *> &v_in_propagate,
+                        Blocks &blocks);
 
-private:
-    unsigned int MIN_BLOCK_SZ     = 8;
+ private:
+  unsigned int MIN_BLOCK_SZ = 8;
 
-    unsigned int out_begin_addr_  = 0;
-    unsigned int out_len_         = 0;
-    // Removes ranges smaller than minimum range in the given range array
-    void rm_minimum_range(RangeArray &ra, unsigned int minimum_range);
-    bool save_block(unsigned accumu_b_sz, Blocks &blocks,
-            unsigned int &b_begin_byte, int i_byte);
+  uint32_t in_begin_addr_;
+  uint32_t in_len_;
+  unsigned int out_begin_addr_ = 0;
+  unsigned int out_len_ = 0;
+
+  // block is essentially a range, thus using RangeAraay could represent blocks
+  RangeArray in_blocks_;    // blocks detects in input
+  // the common propagate range array that each block propagate to
+  V_Ptr_RangeArray propa_out_ra_;
+
+
+  // Detects blocks via both by addresses and values. Same block should
+  // 1) propagate to same address range, and
+  // 2) val of those range should be same
+  void detect_block_size_with_val(std::vector<ByteTaintPropagate *> &buf_taint_propagate);
+  // Determines if a block ends by comparing previous accumulate common range,
+  // with current byte accumulate common range
+  bool is_block_end(RangeArray &common, RangeArray &prev_common,
+                    uint32_t accumu_b_sz);
+
+  // Removes ranges smaller than minimum range in the given range array
+  void rm_minimum_range(RangeArray &ra, unsigned int minimum_range);
+  bool save_block(unsigned accumu_b_sz, Blocks &blocks,
+                  unsigned int &b_begin_byte, int i_byte);
+  bool save_block_with_val(uint32_t b_begin_idx,
+                           uint32_t accumu_b_sz,
+                           RangeArray &ra_common);
 };
-
 
 #endif /* XT_BLOCKDETECT_H_ */
