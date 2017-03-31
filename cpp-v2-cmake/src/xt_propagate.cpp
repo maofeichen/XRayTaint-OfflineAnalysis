@@ -261,7 +261,7 @@ unordered_set<Node, NodeHash> Propagate::search_propagate(NodePropagate &taint_s
         src = record.getSourceNode();
         dst = record.getDestinationNode();
 
-        // cout << "record: " << record_idx << " src " << src.getAddr() << " val: " << src.getVal() << " dst: " << dst.getAddr() << " val: " << dst.getVal() << endl;
+//        cout << "record: " << record_idx << " src " << src.getAddr() << " val: " << src.getVal() << " dst: " << dst.getAddr() << " val: " << dst.getVal() << endl;
 
         if(!src.isMark() ){
             taint = 0;
@@ -431,7 +431,12 @@ void Propagate::handle_destinate_node_mem(XTNode &xt_node,
 
         for(unsigned int byteIdx = 0; byteIdx < memByteSz; byteIdx++){
             if((taint >> byteIdx) & 0x1){
+                // string s_byte_addr = v_mem_val[byteIdx].addr;
+                // cout << "byte addr: " << s_byte_addr << endl;
                 unsigned int i_byte_addr = stoul(v_mem_val[byteIdx].addr, nullptr, 10);
+
+
+
                 string byte_val = v_mem_val[byteIdx].val;
 
                 if(memValMap_.find(i_byte_addr) != memValMap_.end() ){
@@ -443,6 +448,12 @@ void Propagate::handle_destinate_node_mem(XTNode &xt_node,
                 // Inserts to propagate result
                 // Inserts based on the taint info, but now insert all
                 cout << "propagate to: " << hex << i_byte_addr << " val: " << byte_val << endl;
+
+                // Debug
+                if(i_byte_addr == 0xbffff10f) {
+                  cout << "propagate to byte: 0xbffff10f" << endl;
+                }
+
                 Node node;
                 // convert_mem_xtnode(xt_node, node, i_byte_addr);
                 convert_to_byte_node(xt_node, node, i_byte_addr, byte_val);
@@ -478,7 +489,7 @@ void Propagate::handle_destinate_node(XTNode &xtNode,
         }else
             globalTempMap_[intNodeAddr] = temp_data;
     }else{
-        intNodeAddr = stoul(nodeAddr, nullptr, 10);
+        intNodeAddr = stoul(nodeAddr, nullptr, 16);
         tempDataType_ temp_data = {taint, nodeVal};
 
         if(localTempMap_.find(intNodeAddr) != localTempMap_.end() ){
@@ -780,28 +791,27 @@ inline void Propagate::convert_to_byte_node(XTNode &xt_node, Node &node,
     node.sz     = 8; // 1 byte
 }
 
-inline bool Propagate::is_global_temp(string &addr)
-{
-    unsigned int i_addr = stoul(addr, nullptr, 16);
-    switch(i_addr){
-        case flag::G_TEMP_UNKNOWN:
-        case flag::G_TEMP_ENV:
-        case flag::G_TEMP_CC_OP:
-        case flag::G_TEMP_CC_SRC:
-        case flag::G_TEMP_CC_DST:
-        case flag::G_TEMP_CC_TMP:
-        case flag::G_TEMP_EAX:
-        case flag::G_TEMP_ECX:
-        case flag::G_TEMP_EDX:
-        case flag::G_TEMP_EBX:
-        case flag::G_TEMP_ESP:
-        case flag::G_TEMP_EBP:
-        case flag::G_TEMP_ESI:
-        case flag::G_TEMP_EDI:
-            return true;
-    }
+inline bool Propagate::is_global_temp(string &addr) {
+  // cout << "addr: " << addr << endl;
+  unsigned int i_addr = stoul(addr, nullptr, 16);
+  switch (i_addr) {
+    case flag::G_TEMP_UNKNOWN:
+    case flag::G_TEMP_ENV:
+    case flag::G_TEMP_CC_OP:
+    case flag::G_TEMP_CC_SRC:
+    case flag::G_TEMP_CC_DST:
+    case flag::G_TEMP_CC_TMP:
+    case flag::G_TEMP_EAX:
+    case flag::G_TEMP_ECX:
+    case flag::G_TEMP_EDX:
+    case flag::G_TEMP_EBX:
+    case flag::G_TEMP_ESP:
+    case flag::G_TEMP_EBP:
+    case flag::G_TEMP_ESI:
+    case flag::G_TEMP_EDI:return true;
+  }
 
-    return false;
+  return false;
 }
 
 inline bool Propagate::is_mem_load(std::string &addr)
