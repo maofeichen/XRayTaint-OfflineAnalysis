@@ -135,6 +135,11 @@ RangeArray::RangeArray(Range &r) {
   add_range(r);
 }
 
+RangeArray::RangeArray(const Range &r)
+{
+
+}
+
 RangeArray::RangeArray(unsigned int begin_addr, unsigned int len)
 {
     init();

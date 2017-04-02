@@ -1,4 +1,5 @@
 #include "xt_blockdetect.h"
+#include "xt_blockmodedetector.h"
 
 #include <iostream>
 using namespace std;
@@ -21,7 +22,8 @@ BlockDetect::BlockDetect(uint32_t in_begin_addr,
 }
 
 void BlockDetect::detect_block_size(vector<ByteTaintPropagate *> &buf_taint_propagate) {
-  detect_block_size_with_val(buf_taint_propagate);
+//  detect_block_size_with_val(buf_taint_propagate);
+  detect_block_size_handling_last_block(buf_taint_propagate);
 }
 
 void BlockDetect::detect_block_size_ori(Blocks &blocks,
@@ -295,8 +297,12 @@ void BlockDetect::detect_block_sz_small_win(Blocks &blocks,
     }
 }
 
-void BlockDetect::detect_mode_type(vector<ByteTaintPropagate *> &v_in_propagate,
-                                   Blocks &blocks)
+void BlockDetect::detect_mode_type(vector<ByteTaintPropagate *> &v_in_propagate) {
+  detect_mode_type_with_val(v_in_propagate);
+}
+
+void BlockDetect::detect_mode_type_ori(vector<ByteTaintPropagate *> &v_in_propagate,
+                                       Blocks &blocks)
 {
     DetectFactory &det_fac = DetectFactory::get_instance();
 
@@ -334,11 +340,18 @@ void BlockDetect::detect_mode_type_with_val(vector<ByteTaintPropagate *> &v_in_p
   // We don't use singleton factory, buggy
   // DetectFactory &det_fac = DetectFactory::get_instance();
   // det_fac.count_num_detector();
-  ECBDetect &det_ecb = ECBDetect::get_instance();
-  det_ecb.analyze_ecb_mode(v_in_propagate, get_in_blocks(), get_out_propa_ra());
+
+  // Detects ECB
+//  ECBDetect &det_ecb = ECBDetect::get_instance();
+//  det_ecb.analyze_ecb_mode(v_in_propagate, get_in_blocks(), get_out_propa_ra());
+
+  CFBDetector det_cfb;
+  det_cfb.analyze_mode(in_blocks_, propa_out_ra_, v_in_propagate);
 }
 
-void BlockDetect::detect_block_size_with_val(vector<ByteTaintPropagate *> &buf_taint_propagate) {
+void BlockDetect::detect_block_size_with_val(
+    vector<ByteTaintPropagate *> &buf_taint_propagate) {
+
   uint32_t b_begin_byte = 0;
   uint32_t b_end_byte = in_len_;
 
@@ -356,74 +369,263 @@ void BlockDetect::detect_block_size_with_val(vector<ByteTaintPropagate *> &buf_t
     for (; i < b_end_byte; i++) {
       common.disp_range_array();
       prev_common.disp_range_array();
+
       common.disp_byte_val_map_array();
       prev_common.disp_byte_val_map_array();
 
-      // Iterate each byte to see if they have same propagated range
-      ByteTaintPropagate *first_byte_propa = buf_taint_propagate[i];
+      if(accumu_b_sz == 0) {
+        // Handles block begins
+        // For a potential block, uses the first two byte propagations to
+        // setup the common ranges
+        bool is_init = init_block(common, i, i + 1, buf_taint_propagate);
 
-      uint32_t first_byte_addr = first_byte_propa->get_taint_src();
-      cout << "byte addr: " << hex << first_byte_addr << endl;
+        if(!is_init ||
+            common.get_size() == 0) {
+          cout << "Potential block first two bytes have no common." << endl;
+          b_begin_byte = i;
+          buf_sz--;
+          break;
+        } else {
+          // Init block successfully
+          prev_common = common;
+          accumu_b_sz++;
+        }
+      } else {
+        bool is_ext = extend_block(common, i, buf_taint_propagate);
 
-      // Debug
-//      if(first_byte_addr == 0x804b0df) {
-//        cout << "processing addr: 0x804b0df" << endl;
+        if(!is_ext) {
+          save_block_with_val(b_begin_byte, accumu_b_sz, prev_common);
+
+          b_begin_byte = i;
+          buf_sz -= accumu_b_sz;
+          accumu_b_sz = 0;
+          break;
+        } else {
+          // extend the current byte to current common range successfully,
+          // needs to test if the block ends
+          if (is_block_end(common, prev_common, accumu_b_sz)) {
+            save_block_with_val(b_begin_byte, accumu_b_sz, prev_common);
+
+            b_begin_byte = i;
+            buf_sz -= accumu_b_sz;
+            accumu_b_sz = 0;
+            break;
+          } else {
+            // not end, continue
+            prev_common = common;
+            accumu_b_sz++;
+          }
+        }
+      }
+
+//      // Iterate each byte to see if they have same propagated range
+//      ByteTaintPropagate *first_byte_propa = buf_taint_propagate[i];
+//
+//      uint32_t first_byte_addr = first_byte_propa->get_taint_src();
+//      cout << "byte addr: " << hex << first_byte_addr << endl;
+//
+//      first_byte_propa->get_taint_propagate()->disp_range_array();
+//
+//      // ToDo
+//      if (first_byte_propa->get_taint_propagate()->get_size() == 0) {
+//        // handle byte propagation is empty case
+//        cout << "Block detect: byte propagation is empty..." << endl;
+//        return;
 //      }
+//
+//      common.get_common_range_with_val(*first_byte_propa->get_taint_propagate());
+//      common.disp_range_array();
+//      // common.disp_byte_val_map_array();
+//
+//      // ToDo
+//      if (common.get_size() == 0) {
+//        // handle case the common range is empty
+//        cout << "After intersect with current range array, common is empty"
+//             << endl;
+//      }
+//
+//      /*if(accumu_b_sz == 0) {
+//        // Do we need it?
+//        // A potential block, uses first two bytes to determine the common
+//        // propagate range
+//        ByteTaintPropagate *sec_byte_propa = buf_taint_propagate[i+1];
+//        common.get_common_range_with_val(*sec_byte_propa->get_taint_propagate());
+//        common.disp_range_array();
+//        common.disp_byte_val_map_array();
+//      }*/
+//
+//      common.disp_range_array();
+//      prev_common.disp_range_array();
+//      common.disp_byte_val_map_array();
+//      prev_common.disp_byte_val_map_array();
+//
+//      // handles case than ends a block
+//      if(is_block_end(common, prev_common, accumu_b_sz) ) {
+//        save_block_with_val(b_begin_byte, accumu_b_sz, prev_common);
+//
+//        b_begin_byte = i;
+//        buf_sz       -= accumu_b_sz;
+//        accumu_b_sz  = 0;
+//        break;
+//      }
+//
+//      prev_common = common;
+//      accumu_b_sz++;
 
-      first_byte_propa->get_taint_propagate()->disp_range_array();
-
-      if (first_byte_propa->get_taint_propagate()->get_size() == 0) {
-        // handle byte propagation is empty case
-        cout << "Block detect: byte propagation is empty..." << endl;
-        break;
-      }
-
-      common.get_common_range_with_val(*first_byte_propa->get_taint_propagate());
-      common.disp_range_array();
-      // common.disp_byte_val_map_array();
-
-      if (common.get_size() == 0) {
-        // handle case the common range is empty
-      }
-
-      /*if(accumu_b_sz == 0) {
-        // Do we need it?
-        // A potential block, uses first two bytes to determine the common
-        // propagate range
-        ByteTaintPropagate *sec_byte_propa = buf_taint_propagate[i+1];
-        common.get_common_range_with_val(*sec_byte_propa->get_taint_propagate());
-        common.disp_range_array();
-        common.disp_byte_val_map_array();
-      }*/
-
-      common.disp_range_array();
-      prev_common.disp_range_array();
-      common.disp_byte_val_map_array();
-      prev_common.disp_byte_val_map_array();
-
-      // handles case than ends a block
-      if(is_block_end(common, prev_common, accumu_b_sz) ) {
-//        ByteTaintPropagate *byte_propa = buf_taint_propagate[b_begin_byte];
-//        uint32_t addr = byte_propa->get_taint_src();
-        save_block_with_val(b_begin_byte, accumu_b_sz, prev_common);
-
-        b_begin_byte = i;
-        buf_sz       -= accumu_b_sz;
-        accumu_b_sz  = 0;
-        break;
-      }
-
-      prev_common = common;
-      accumu_b_sz++;
     }
 
     last_common = prev_common;
   } // end while
 
   // save the last block if any
-//  ByteTaintPropagate *byte_propa = buf_taint_propagate[b_begin_byte];
-//  uint32_t addr = byte_propa->get_taint_src();
   save_block_with_val(b_begin_byte, accumu_b_sz, last_common);
+}
+
+void BlockDetect::detect_block_size_handling_last_block(
+    vector<ByteTaintPropagate *> &buf_taint_propagate)
+{
+  uint32_t b_begin_byte = 0;
+  uint32_t b_end_byte = in_len_;
+
+  uint32_t buf_sz = in_len_;
+  uint32_t accumu_b_sz = 0;
+
+//  RangeArray last_common;
+
+  uint32_t block_sz = 0;
+
+  // loops until reaching the begin of potential last block
+  while (buf_sz - accumu_b_sz > block_sz) {
+    // Initially common range cover full address space of output range
+    RangeArray common(out_begin_addr_, out_len_);
+    RangeArray prev_common;
+
+    uint32_t i = b_begin_byte;
+    for (; i < b_end_byte; i++) {
+      common.disp_range_array();
+      prev_common.disp_range_array();
+
+      common.disp_byte_val_map_array();
+      prev_common.disp_byte_val_map_array();
+
+      if(accumu_b_sz == 0) {
+        // Handles block begins
+        // For a potential block, uses the first two byte propagations to
+        // setup the common ranges
+        bool is_init = init_block(common, i, i + 1, buf_taint_propagate);
+
+        if(!is_init ||
+            common.get_size() == 0) {
+          cout << "Potential block first two bytes have no common." << endl;
+          b_begin_byte = i;
+          buf_sz--;
+          break;
+        } else {
+          // Init block successfully
+          prev_common = common;
+          accumu_b_sz++;
+        }
+      } else {
+        bool is_ext = extend_block(common, i, buf_taint_propagate);
+
+        if(!is_ext) {
+          save_block_with_val(b_begin_byte, accumu_b_sz, prev_common);
+
+          b_begin_byte = i;
+          buf_sz -= accumu_b_sz;
+          accumu_b_sz = 0;
+          break;
+        } else {
+          // extend the current byte to current common range successfully,
+          // needs to test if the block ends
+          if (is_block_end(common, prev_common, accumu_b_sz)) {
+            save_block_with_val(b_begin_byte, accumu_b_sz, prev_common);
+
+            b_begin_byte = i;
+            buf_sz -= accumu_b_sz;
+            accumu_b_sz = 0;
+            break;
+          } else {
+            // not end, continue
+            prev_common = common;
+            accumu_b_sz++;
+          }
+        }
+      }
+    }
+
+    // update block size if any
+    if(in_blocks_.get_size() > 0) {
+      uint32_t num_block = in_blocks_.get_size();
+      block_sz = in_blocks_.at(num_block - 1)->get_len();
+    }
+
+//    last_common = prev_common;
+  } // end while
+
+
+  // save the last block if any
+  in_blocks_.add_range(b_begin_byte, buf_sz);
+//  save_block_with_val(b_begin_byte, accumu_b_sz, last_common);
+}
+
+bool BlockDetect::init_block(RangeArray &common,
+                             uint32_t idx_byte_a,
+                             uint32_t idx_byte_b,
+                             vector<ByteTaintPropagate *> &buf_taint_propagate)
+{
+  uint32_t buf_sz = buf_taint_propagate.size();
+  if(idx_byte_a > buf_sz - 1 ||
+      idx_byte_b > buf_sz - 1) {
+    cout << "error: intersect common range: given idx is invalid." << endl;
+    return false;
+  }
+
+  ByteTaintPropagate *a = buf_taint_propagate[idx_byte_a];
+  ByteTaintPropagate *b = buf_taint_propagate[idx_byte_b];
+
+  if(a->get_taint_propagate()->get_size() == 0 ||
+      b->get_taint_propagate()->get_size() == 0) {
+    cout << "intersect common range: give bytes propagations are empty."
+         << endl;
+    return false;
+  }
+
+  common.get_common_range_with_val(*a->get_taint_propagate() );
+  common.get_common_range_with_val(*b->get_taint_propagate() );
+
+  return true;
+}
+
+bool BlockDetect::extend_block(RangeArray &common,
+                               uint32_t idx_byte,
+                               vector<ByteTaintPropagate *> &buf_taint_propagate)
+{
+  uint32_t buf_sz = buf_taint_propagate.size();
+  if(idx_byte > buf_sz - 1) {
+    cout << "error: extend block: given idx is invalid." << endl;
+    return false;
+  }
+
+  ByteTaintPropagate *byte = buf_taint_propagate[idx_byte];
+
+  if(byte->get_taint_propagate()->get_size() == 0) {
+    cout << "extend block: give bytes propagations are empty."
+         << endl;
+    return false;
+  }
+
+  cout << "extend block: byte addr: " << hex
+      << byte->get_taint_src() << endl;
+  cout << "before intersecting current byte: " << endl;
+  common.disp_range_array();
+
+  common.get_common_range_with_val(*byte->get_taint_propagate() );
+
+  cout << "after intersecting current byte: " << endl;
+  common.disp_range_array();
+
+  return true;
 }
 
 bool BlockDetect::is_block_end(RangeArray &common,
@@ -498,21 +700,6 @@ bool BlockDetect::save_block_with_val(uint32_t b_begin_idx,
       propa_out_ra_[i]->disp_byte_val_map_array();
     }
 
-//    multimap<uint32_t, uint32_t> byte_val_map;
-//    for(auto it = r_common.get_byte_val_map().begin();
-//        it != r_common.get_byte_val_map().end(); ++it) {
-//      byte_val_map.insert(*it);
-//    }
-
-//    uint32_t len = b_idx_end - b_idx_begin;
-//    Range r(b_idx_begin, len, byte_val_map);
-//    r.disp_range();
-//    r.disp_byte_val_map();
-//    blocks_.push_back(r);
-
-//    in_blocks_.add_range(b_begin_idx, accumu_b_sz, byte_val_map);
-//    in_blocks_.disp_range_array();
-//    in_blocks_.disp_byte_val_map_array();
     return true;
   }
 }

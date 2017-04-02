@@ -56,6 +56,7 @@ class RangeArray {
  public:
   RangeArray();
   RangeArray(Range &r);
+  RangeArray(const Range &r);
   RangeArray(unsigned int begin_addr, unsigned int len);
   ~RangeArray();
 

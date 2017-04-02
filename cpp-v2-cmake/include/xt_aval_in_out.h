@@ -1,3 +1,4 @@
+// ! Currently not use
 // Maintains data during avalanche detection: block detection, mode detection,
 // etc
 #ifndef XT_AVAL_IN_OUT_H

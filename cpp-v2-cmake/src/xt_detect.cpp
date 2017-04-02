@@ -21,84 +21,87 @@ Detect::Detect(vector<t_AliveFunctionCall> v_func_cont_buf,
     log_rec_ = log_rec;
 }
 
-void Detect::detect_cipher()
-{
-    cout << "Detecting cipher after liveness analysis..." << endl;
+void Detect::detect_cipher() {
+  cout << "Detecting cipher after liveness analysis..." << endl;
 
-    Propagate propagate(xt_log_);
+  Propagate propagate(xt_log_);
 
-    // Store which IN and OUT buffer had been searched already
-	vector<pair_inout_> v_buf_inout;
+  // Store which IN and OUT buffer had been searched already
+  vector<pair_inout_> v_buf_in_out;
 
-    vector<t_AliveFunctionCall>::iterator it_in_func = v_func_cont_buf_.end() - 4;
-    // vector<t_AliveFunctionCall>::iterator it_in_func = v_func_cont_buf_.begin() + 3;
+  vector<t_AliveFunctionCall>::iterator it_in_func = v_func_cont_buf_.end() - 4;
+  // vector<t_AliveFunctionCall>::iterator it_in_func = v_func_cont_buf_.begin() + 3;
 
-    // Iterates each function call
-    for(; it_in_func != v_func_cont_buf_.end() - 1; ++it_in_func){
-        vector<t_AliveFunctionCall>::const_iterator it_out_func = it_in_func + 1;
+  // Iterates each function call
+  for (; it_in_func != v_func_cont_buf_.end() - 1; ++it_in_func) {
+    vector<t_AliveFunctionCall>::const_iterator it_out_func = it_in_func + 1;
 
-        for(; it_out_func != v_func_cont_buf_.end(); ++it_out_func){
-            // Iterates each continuous buffer in each function call
-            vector<t_AliveContinueBuffer> v_in_buf = (*it_in_func).vAliveContinueBuffer;
-            vector<t_AliveContinueBuffer>::const_iterator it_in_buf = v_in_buf.begin();
+    for (; it_out_func != v_func_cont_buf_.end(); ++it_out_func) {
+      // Iterates each continuous buffer in each function call
+      vector<t_AliveContinueBuffer>
+          v_in_buf = (*it_in_func).vAliveContinueBuffer;
+      vector<t_AliveContinueBuffer>::const_iterator
+          it_in_buf = v_in_buf.begin();
 
-            for(; it_in_buf != v_in_buf.end(); ++it_in_buf){
-                vector<t_AliveContinueBuffer> v_out_buf = (*it_out_func).vAliveContinueBuffer;
-                vector<t_AliveContinueBuffer>::const_iterator it_out_buf = v_out_buf.begin();
+      for (; it_in_buf != v_in_buf.end(); ++it_in_buf) {
+        vector<t_AliveContinueBuffer>
+            v_out_buf = (*it_out_func).vAliveContinueBuffer;
+        vector<t_AliveContinueBuffer>::const_iterator
+            it_out_buf = v_out_buf.begin();
 
-                for(; it_out_buf != v_out_buf.end(); ++it_out_buf){
-                    if( (*it_in_buf).beginAddress != (*it_out_buf).beginAddress){
-                        t_AliveContinueBuffer in_buf = *it_in_buf;
-                        t_AliveContinueBuffer out_buf = *it_out_buf;
+        for (; it_out_buf != v_out_buf.end(); ++it_out_buf) {
+          if ((*it_in_buf).beginAddress != (*it_out_buf).beginAddress) {
+            t_AliveContinueBuffer in_buf = *it_in_buf;
+            t_AliveContinueBuffer out_buf = *it_out_buf;
 
-                        pair_inout_ buf_inout;
+            pair_inout_ buf_in_out;
 
-                        buf_inout.in_.beginAddress  = in_buf.beginAddress;
-                        buf_inout.in_.size          = in_buf.size;
-                        buf_inout.out_.beginAddress = out_buf.beginAddress;
-                        buf_inout.out_.size         = out_buf.size;
+            buf_in_out.in_.beginAddress   = in_buf.beginAddress;
+            buf_in_out.in_.size           = in_buf.size;
+            buf_in_out.out_.beginAddress  = out_buf.beginAddress;
+            buf_in_out.out_.size          = out_buf.size;
 
-                        if(is_dupl_buf_inout(buf_inout, v_buf_inout) ) {
-                            cout << "In and Out buffers had been searched, skip..." << endl;
-                        }else {
-                            v_buf_inout.push_back(buf_inout);
+            if (is_dupl_buf_inout(buf_in_out, v_buf_in_out)) {
+              cout << "In and Out buffers had been searched, skip..." << endl;
+            } else {
+              v_buf_in_out.push_back(buf_in_out);
 
-                            cout << "in: addr: " << hex << in_buf.beginAddress
-                                    << " byte: " << dec << in_buf.size / 8 << endl;
-                            cout << "out: addr: " << hex << out_buf.beginAddress
-                                    << " byte: " << dec << out_buf.size / 8 << endl;
-                            // detect_cipher_in_out(in_buf, out_buf, propagate);
+              cout << "in: addr: " << hex << in_buf.beginAddress
+                   << " byte: " << dec << in_buf.size / 8 << endl;
+              cout << "out: addr: " << hex << out_buf.beginAddress
+                   << " byte: " << dec << out_buf.size / 8 << endl;
+              // detect_cipher_in_out(in_buf, out_buf, propagate);
 
-                            if (in_buf.beginAddress == 0x804b880 &&
-                              in_buf.size == 96 * 8 &&
-                              out_buf.beginAddress == 0x804c060 &&
-                              out_buf.size == 96 * 8) {
+              if (in_buf.beginAddress == 0x804b0a0 &&
+                  in_buf.size == 92 * 8 &&
+                  out_buf.beginAddress == 0x804b880 &&
+                  out_buf.size == 92 * 8) {
 
-                            int num_source = in_buf.vNodeIndex.size();
-                            cout
-                                << "number of source index in the input buffer: "
-                                << dec << in_buf.vNodeIndex.size() << endl;
+                int num_source = in_buf.vNodeIndex.size();
+                cout
+                    << "number of source index in the input buffer: "
+                    << dec << in_buf.vNodeIndex.size() << endl;
 
-                            detect_cipher_in_out(in_buf, out_buf, propagate);
+                detect_cipher_in_out(in_buf, out_buf, propagate);
 
-                            if (num_source == 24) {
-                              // vector<unsigned long>::const_iterator it_n_idx = it_in_buf->vNodeIndex.begin();
-                              // for(; it_n_idx != it_in_buf->vNodeIndex.end(); ++it_n_idx){
-                              //     cout << "src index: " << dec << *it_n_idx << endl;
-                              //     XTNode node = get_mem_node(*it_n_idx);
-                              //     cout << "node addr: " << hex << node.getIntAddr() << endl;
-                              // }
-
-                              // detect_cipher_in_out(in_buf, out_buf, propagate);
-                            }
-                          }
-                        }
-                    }
-                }
+//                if (num_source == 24) {
+//                  vector<unsigned long>::const_iterator it_n_idx =
+//                      it_in_buf->vNodeIndex.begin();
+//                  for (; it_n_idx != it_in_buf->vNodeIndex.end(); ++it_n_idx) {
+//                    cout << "src index: " << dec << *it_n_idx << endl;
+//                    XTNode node = get_mem_node(*it_n_idx);
+//                    cout << "node addr: " << hex << node.getIntAddr() << endl;
+//                  }
+//
+//                  detect_cipher_in_out(in_buf, out_buf, propagate);
+//                }
+              }
             }
+          }
         }
+      }
     }
-
+  }
 }
 
 inline unsigned long
@@ -508,12 +511,15 @@ void Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
 //    }
 //  }
 
-  BlockDetect blk_detect(in.beginAddress, in.size / 8, out.beginAddress,
-                         out.size / 8);
-  blk_detect.detect_block_size(v_in_taint_propagate);
-  blk_detect.detect_mode_type_with_val(v_in_taint_propagate);
+  BlockDetect block_detector(in.beginAddress,
+                             in.size / 8,
+                             out.beginAddress,
+                             out.size / 8);
+  block_detector.detect_block_size(v_in_taint_propagate);
+  block_detector.detect_mode_type(v_in_taint_propagate);
 
-/*  Blocks blocks;
+  /*
+  Blocks blocks;
   BlockDetect block_detect(out.beginAddress, out.size / 8);
 
   // block_detect.detect_block_size_ori(blocks, v_in_taint_propagate, in.size / 8,
@@ -531,5 +537,6 @@ void Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
     return;
   }
 
-  block_detect.detect_mode_type(v_in_taint_propagate, blocks);*/
+  block_detect.detect_mode_type_ori(v_in_taint_propagate, blocks);
+  */
 }
