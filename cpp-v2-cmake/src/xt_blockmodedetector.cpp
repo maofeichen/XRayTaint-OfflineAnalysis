@@ -318,20 +318,24 @@ bool CFBDetector::analyze_dec_last_block(uint32_t idx_block,
                                          const vector<ByteTaintPropagate *> &in_byte_propa)
 {
   // Last block does not has a common range, it only has 1:1 pattern
-  uint32_t block_sz    = in_blocks.at(idx_block)->get_len();
-  uint32_t idx_b_begin = idx_block * block_sz;
-  uint32_t idx_b_end   = idx_b_begin + block_sz;
+  uint32_t prev_block_sz    = in_blocks.at(idx_block-1)->get_len();
+  uint32_t curr_block_sz    = in_blocks.at(idx_block)->get_len();
+  uint32_t idx_b_begin = idx_block * prev_block_sz;
+  uint32_t idx_b_end   = idx_b_begin + curr_block_sz;
 
   uint32_t b_begin_propa_addr =
       in_byte_propa[idx_b_begin]->get_taint_propagate()->at(0)->get_begin();
 
   uint32_t i = idx_b_begin;
   for(; i < idx_b_end; i++) {
+    cout << "byte idx: " << i << endl;
     in_byte_propa[i]->get_taint_propagate()->disp_range_array();
 
     bool is_byte_det = false;
-    is_byte_det = analyze_enc_last_byte(idx_b_begin, i, b_begin_propa_addr,
+    is_byte_det = analyze_enc_byte(idx_b_begin, i, b_begin_propa_addr,
                                        in_byte_propa);
+//    is_byte_det = analyze_enc_last_byte(idx_b_begin, i, b_begin_propa_addr,
+//                                       in_byte_propa);
 
     if (!is_byte_det) {
       cout << "cfb dec last block: does not fit pattern" << endl;
