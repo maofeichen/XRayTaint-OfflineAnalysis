@@ -72,9 +72,9 @@ void Detect::detect_cipher() {
                    << " byte: " << dec << out_buf.size / 8 << endl;
               // detect_cipher_in_out(in_buf, out_buf, propagate);
 
-              if (in_buf.beginAddress == 0x804b0a0 &&
+              if (in_buf.beginAddress == 0x804b880 &&
                   in_buf.size == 92 * 8 &&
-                  out_buf.beginAddress == 0x804b880 &&
+                  out_buf.beginAddress == 0x804c060 &&
                   out_buf.size == 92 * 8) {
 
                 int num_source = in_buf.vNodeIndex.size();

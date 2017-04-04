@@ -24,6 +24,9 @@ class BlockModeDetector{
   static uint8_t TYPE_ENC;
   static uint8_t TYPE_DEC;
 
+  Range input_;
+  Range output_;
+
   bool valid_input(const RangeArray &in_blocks,
                    const VSPtrRangeArray &in_block_propa_ra,
                    const std::vector<ByteTaintPropagate *> &in_byte_propa);
@@ -41,32 +44,55 @@ class CFBDetector : public BlockModeDetector{
   bool analyze_enc(const RangeArray &in_blocks,
                    const VSPtrRangeArray &in_block_propa_ra,
                    const std::vector<ByteTaintPropagate *> &in_byte_propa);
+  // cfb avalanche pattern: 1:1, 1:n (can only propagate to next output block)
+  bool analyze_dec(const RangeArray &in_blocks,
+                   const VSPtrRangeArray &in_block_propa_ra,
+                   const std::vector<ByteTaintPropagate *> &in_byte_propa);
+
   bool analyze_enc_block(uint32_t idx_block,
                          const RangeArray &in_blocks,
-                   const VSPtrRangeArray &in_block_propa_ra,
-                   const std::vector<ByteTaintPropagate *> &in_byte_propa);
+                         const VSPtrRangeArray &in_block_propa_ra,
+                         const std::vector<ByteTaintPropagate *> &in_byte_propa);
+  bool analyze_dec_block(uint32_t idx_block,
+                         const RangeArray &in_blocks,
+                         const VSPtrRangeArray &in_block_propa_ra,
+                         const std::vector<ByteTaintPropagate *> &in_byte_propa);
+
   bool analyze_enc_reg_block(uint32_t idx_block,
-                         const RangeArray &in_blocks,
-                   const VSPtrRangeArray &in_block_propa_ra,
-                   const std::vector<ByteTaintPropagate *> &in_byte_propa);
+                             const RangeArray &in_blocks,
+                             const VSPtrRangeArray &in_block_propa_ra,
+                             const std::vector<ByteTaintPropagate *> &in_byte_propa);
   bool analyze_enc_last_sec_block(uint32_t idx_block,
-                         const RangeArray &in_blocks,
-                   const VSPtrRangeArray &in_block_propa_ra,
-                   const std::vector<ByteTaintPropagate *> &in_byte_propa);
+                                  const RangeArray &in_blocks,
+                                  const VSPtrRangeArray &in_block_propa_ra,
+                                  const std::vector<ByteTaintPropagate *> &in_byte_propa);
   bool analyze_enc_last_block(uint32_t idx_block,
-                         const RangeArray &in_blocks,
-                          const VSPtrRangeArray &in_block_propa_ra,
-                   const std::vector<ByteTaintPropagate *> &in_byte_propa);
+                              const RangeArray &in_blocks,
+                              const VSPtrRangeArray &in_block_propa_ra,
+                              const std::vector<ByteTaintPropagate *> &in_byte_propa);
+
+  bool analyze_dec_reg_block(uint32_t idx_block,
+                             const RangeArray &in_blocks,
+                             const VSPtrRangeArray &in_block_propa_ra,
+                             const std::vector<ByteTaintPropagate *> &in_byte_propa);
+  bool analyze_dec_last_block(uint32_t idx_block,
+                              const RangeArray &in_blocks,
+                              const VSPtrRangeArray &in_block_propa_ra,
+                              const std::vector<ByteTaintPropagate *> &in_byte_propa);
 
   // Returns true if the current block has 1 : n, 1 : n, 1 : n, ect. pattern
   bool analyze_enc_block_pattern(uint32_t idx_block,
-                         const RangeArray &in_blocks,
-                         const VSPtrRangeArray &in_block_propa_ra);
+                                 const RangeArray &in_blocks,
+                                 const VSPtrRangeArray &in_block_propa_ra);
+  // Returns true if the current block has 1 : n pattern
+  bool analyze_dec_block_pattern(uint32_t idx_block,
+                                 const RangeArray &in_blocks,
+                                 const VSPtrRangeArray &in_block_propa_ra);
 
-  bool analyze_enc_reg_byte(uint32_t idx_block_begin,
-                            uint32_t idx_byte,
-                            uint32_t block_begin_propa_addr,
-                            const std::vector<ByteTaintPropagate *> &in_byte_propa);
+  bool analyze_enc_byte(uint32_t idx_block_begin,
+                        uint32_t idx_byte,
+                        uint32_t block_begin_propa_addr,
+                        const std::vector<ByteTaintPropagate *> &in_byte_propa);
   // Returns true if last byte of block has the 1:1 pattern
   bool analyze_enc_last_byte(uint32_t idx_block_begin,
                              uint32_t idx_byte,
@@ -80,6 +106,5 @@ class CFBDetector : public BlockModeDetector{
                                    Range &to_one);
 
   uint32_t exclude_range_begin(const uint32_t l_begin, const uint32_t r_begin);
-  bool analyze_dec();
 };
 #endif //XT_MODEDETECTOR_H
