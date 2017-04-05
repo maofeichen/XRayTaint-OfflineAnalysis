@@ -297,8 +297,8 @@ void BlockDetect::detect_block_sz_small_win(Blocks &blocks,
     }
 }
 
-void BlockDetect::detect_mode_type(vector<ByteTaintPropagate *> &v_in_propagate) {
-  detect_mode_type_with_val(v_in_propagate);
+bool BlockDetect::detect_mode_type(vector<ByteTaintPropagate *> &v_in_propagate) {
+  return detect_mode_type_with_val(v_in_propagate);
 }
 
 void BlockDetect::detect_mode_type_ori(vector<ByteTaintPropagate *> &v_in_propagate,
@@ -328,13 +328,13 @@ void BlockDetect::detect_mode_type_ori(vector<ByteTaintPropagate *> &v_in_propag
 
 }
 
-void BlockDetect::detect_mode_type_with_val(vector<ByteTaintPropagate *> &v_in_propagate) {
+bool BlockDetect::detect_mode_type_with_val(vector<ByteTaintPropagate *> &v_in_propagate) {
   if(in_blocks_.get_size() == 0) {
     cout << "no blocks found..." << endl;
-    return;
+    return false;
   } else if(in_blocks_.get_size() == 1) {
     cout << "only one block found..." << endl;
-    return;
+    return false;
   }
 
   in_blocks_.disp_range_array();
@@ -347,7 +347,7 @@ void BlockDetect::detect_mode_type_with_val(vector<ByteTaintPropagate *> &v_in_p
   // det_ecb.analyze_ecb_mode(v_in_propagate, get_in_blocks(), get_out_propa_ra());
 
   CFBDetector det_cfb;
-  det_cfb.analyze_mode(in_blocks_, propa_out_ra_, v_in_propagate);
+  return det_cfb.analyze_mode(in_blocks_, propa_out_ra_, v_in_propagate);
 }
 
 void BlockDetect::detect_block_size_with_val(

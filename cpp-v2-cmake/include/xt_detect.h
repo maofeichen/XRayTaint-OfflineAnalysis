@@ -87,7 +87,7 @@ class Detect {
   NodePropagate init_taint_source(XTNode &node, std::vector<Record> &log_rec);
 
   // Detects cipher between a potential input and output buffers
-  void detect_cipher_in_out(t_AliveContinueBuffer &in,
+  bool detect_cipher_in_out(t_AliveContinueBuffer &in,
                             t_AliveContinueBuffer &out,
                             Propagate &propagate);
 };

@@ -108,7 +108,7 @@ class CFBDetector : public BlockModeDetector{
                                    Range &to_one);
 
   uint32_t exclude_range_begin(const uint32_t l_begin, const uint32_t r_begin);
-  void set_output_begin(uint32_t idx_block,
+  inline void set_output_begin(uint32_t idx_block,
                         uint32_t idx_byte,
                         const RangeArray in_blocks,
                         const std::vector<ByteTaintPropagate *> &in_byte_propa);
