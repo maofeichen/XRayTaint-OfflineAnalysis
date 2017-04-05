@@ -337,13 +337,14 @@ void BlockDetect::detect_mode_type_with_val(vector<ByteTaintPropagate *> &v_in_p
     return;
   }
 
+  in_blocks_.disp_range_array();
   // We don't use singleton factory, buggy
   // DetectFactory &det_fac = DetectFactory::get_instance();
   // det_fac.count_num_detector();
 
   // Detects ECB
-//  ECBDetect &det_ecb = ECBDetect::get_instance();
-//  det_ecb.analyze_ecb_mode(v_in_propagate, get_in_blocks(), get_out_propa_ra());
+  // ECBDetect &det_ecb = ECBDetect::get_instance();
+  // det_ecb.analyze_ecb_mode(v_in_propagate, get_in_blocks(), get_out_propa_ra());
 
   CFBDetector det_cfb;
   det_cfb.analyze_mode(in_blocks_, propa_out_ra_, v_in_propagate);

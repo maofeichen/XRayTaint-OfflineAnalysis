@@ -16,7 +16,7 @@ class BlockModeDetector{
 
   uint32_t type;
 
-  virtual bool analyze_mode(const RangeArray &in_blocks,
+  virtual bool analyze_mode(RangeArray &in_blocks,
                             const VSPtrRangeArray &in_block_propa_ra,
                             const std::vector<ByteTaintPropagate *> &in_byte_propa) = 0;
  protected:
@@ -36,7 +36,7 @@ class CFBDetector : public BlockModeDetector{
  public:
   CFBDetector();
 
-  bool analyze_mode(const RangeArray &in_blocks,
+  bool analyze_mode(RangeArray &in_blocks,
                     const VSPtrRangeArray &in_block_propa_ra,
                     const std::vector<ByteTaintPropagate *> &in_byte_propa);
  private:
@@ -80,7 +80,7 @@ class CFBDetector : public BlockModeDetector{
                               const VSPtrRangeArray &in_block_propa_ra,
                               const std::vector<ByteTaintPropagate *> &in_byte_propa);
 
-  // Returns true if the current block has 1 : n, 1 : n, 1 : n, ect. pattern
+  // Returns true if the block has 1 : n, 1 : n, 1 : n, ect. pattern
   bool analyze_enc_block_pattern(uint32_t idx_block,
                                  const RangeArray &in_blocks,
                                  const VSPtrRangeArray &in_block_propa_ra);
@@ -100,11 +100,17 @@ class CFBDetector : public BlockModeDetector{
                              const std::vector<ByteTaintPropagate *> &in_byte_propa);
 
   // Returns true if the given byte has 1:1 pattern
+  // In the one to one test, we limit the size of range should be 1, that is,
+  // it only impacts 1 byte of current block.
   bool analyze_enc_byte_one_to_one(uint32_t idx_block_begin,
                                    uint32_t idx_byte,
                                    uint32_t block_begin_propa_addr,
                                    Range &to_one);
 
   uint32_t exclude_range_begin(const uint32_t l_begin, const uint32_t r_begin);
+  void set_output_begin(uint32_t idx_block,
+                        uint32_t idx_byte,
+                        const RangeArray in_blocks,
+                        const std::vector<ByteTaintPropagate *> &in_byte_propa);
 };
 #endif //XT_MODEDETECTOR_H
