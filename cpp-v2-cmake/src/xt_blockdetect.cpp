@@ -614,7 +614,13 @@ bool BlockDetect::init_block(RangeArray &common,
   }
 
   common.get_common_range_with_val(*a->get_taint_propagate() );
-  common.get_common_range_with_val(*b->get_taint_propagate() );
+  if(common.get_size() == 0) {
+    cout << "intersect common range: give bytes propagations are empty."
+         << endl;
+    return false;
+  } else {
+    common.get_common_range_with_val(*b->get_taint_propagate());
+  }
 
   return true;
 }
