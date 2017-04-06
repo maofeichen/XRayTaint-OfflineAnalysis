@@ -300,8 +300,12 @@ void BlockDetect::detect_block_sz_small_win(Blocks &blocks,
     }
 }
 
-bool BlockDetect::detect_mode_type(vector<ByteTaintPropagate *> &v_in_propagate) {
-  return detect_mode_type_with_val(v_in_propagate);
+bool BlockDetect::detect_mode_type(const RangeArray input_blocks,
+                                   const VSPtrRangeArray input_block_propa,
+                                   const vector<ByteTaintPropagate *> &v_in_propagate) {
+  bool is_det = detect_mode_type_with_val(input_blocks, input_block_propa,
+                                   v_in_propagate);
+  return is_det;
 }
 
 void BlockDetect::detect_mode_type_ori(vector<ByteTaintPropagate *> &v_in_propagate,
@@ -331,16 +335,19 @@ void BlockDetect::detect_mode_type_ori(vector<ByteTaintPropagate *> &v_in_propag
 
 }
 
-bool BlockDetect::detect_mode_type_with_val(vector<ByteTaintPropagate *> &v_in_propagate) {
-  if(in_blocks_.get_size() == 0) {
+bool BlockDetect::detect_mode_type_with_val(const RangeArray input_blocks,
+                                            const VSPtrRangeArray input_block_propa,
+                                            const vector<ByteTaintPropagate *> &v_in_propagate) {
+//  if(in_blocks_.get_size() == 0) {
+  if(input_blocks.get_size() == 0) {
     cout << "no blocks found..." << endl;
     return false;
-  } else if(in_blocks_.get_size() == 1) {
+  } else if(input_blocks.get_size() == 1) {
     cout << "only one block found..." << endl;
     return false;
   }
 
-  in_blocks_.disp_range_array();
+  input_blocks.disp_range_array();
   // We don't use singleton factory, buggy
   // DetectFactory &det_fac = DetectFactory::get_instance();
   // det_fac.count_num_detector();
@@ -350,7 +357,8 @@ bool BlockDetect::detect_mode_type_with_val(vector<ByteTaintPropagate *> &v_in_p
   // det_ecb.analyze_ecb_mode(v_in_propagate, get_in_blocks(), get_out_propa_ra());
 
   CFBDetector det_cfb;
-  return det_cfb.analyze_mode(in_blocks_, propa_out_ra_, v_in_propagate);
+  return det_cfb.analyze_mode(input_blocks, input_block_propa, v_in_propagate);
+//  return det_cfb.analyze_mode(in_blocks_, propa_out_ra_, v_in_propagate);
 }
 
 void BlockDetect::detect_block_size_with_val(

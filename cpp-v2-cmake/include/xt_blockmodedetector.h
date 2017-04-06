@@ -16,7 +16,7 @@ class BlockModeDetector{
 
   uint32_t type;
 
-  virtual bool analyze_mode(RangeArray &in_blocks,
+  virtual bool analyze_mode(const RangeArray &in_blocks,
                             const VSPtrRangeArray &in_block_propa_ra,
                             const std::vector<ByteTaintPropagate *> &in_byte_propa) = 0;
  protected:
@@ -36,7 +36,7 @@ class CFBDetector : public BlockModeDetector{
  public:
   CFBDetector();
 
-  bool analyze_mode(RangeArray &in_blocks,
+  bool analyze_mode(const RangeArray &in_blocks,
                     const VSPtrRangeArray &in_block_propa_ra,
                     const std::vector<ByteTaintPropagate *> &in_byte_propa);
  private:

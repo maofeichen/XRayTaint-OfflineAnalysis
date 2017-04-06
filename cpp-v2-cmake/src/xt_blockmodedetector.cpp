@@ -21,7 +21,7 @@ bool BlockModeDetector::valid_input(const RangeArray &in_blocks,
 }
 
 CFBDetector::CFBDetector() {}
-bool CFBDetector::analyze_mode(RangeArray &in_blocks,
+bool CFBDetector::analyze_mode(const RangeArray &in_blocks,
                                const VSPtrRangeArray &in_block_propa_ra,
                                const std::vector<ByteTaintPropagate *> &in_byte_propa)
 {
@@ -56,10 +56,10 @@ bool CFBDetector::analyze_mode(RangeArray &in_blocks,
   } else {
 
     is_enc = analyze_enc_block(0, in_blocks, in_block_propa_ra, in_byte_propa);
-    if(is_enc) {
-      type = TYPE_ENC;
-      analyze_enc(in_blocks, in_block_propa_ra, in_byte_propa);
-    }
+//    for (uint32_t i = 0; i < in_blocks.get_size(); i++) {
+//      in_blocks[i]->disp_range();
+//      cout << "block: " << i << " len: " << in_blocks[i]->get_len() << endl;
+//    }
     is_dec = analyze_dec_block(0, in_blocks, in_block_propa_ra, in_byte_propa);
     if(is_enc) {
       type = TYPE_ENC;
@@ -72,6 +72,13 @@ bool CFBDetector::analyze_mode(RangeArray &in_blocks,
   }
 //  analyze_enc(in_blocks, in_block_propa_ra, in_byte_propa);
 //  analyze_dec(in_blocks, in_block_propa_ra, in_byte_propa);
+
+  in_blocks.disp_range_array();
+
+  for (uint32_t i = 0; i < in_block_propa_ra.size(); i++) {
+    in_block_propa_ra[i]->disp_range_array();
+  }
+
 }
 
 bool CFBDetector::analyze_enc(const RangeArray &in_blocks,
@@ -185,8 +192,8 @@ bool CFBDetector::analyze_dec_block(uint32_t idx_block,
                                     const vector<ByteTaintPropagate *> &in_byte_propa)
 {
   if(idx_block == 0) {
-    set_output_begin(0, 0, in_blocks, in_byte_propa);
-    /*
+//    set_output_begin(0, 0, in_blocks, in_byte_propa);
+
     // if is first block, set the potentional output begin address
     in_byte_propa[0]->get_taint_propagate()->disp_range_array();
 
@@ -197,7 +204,6 @@ bool CFBDetector::analyze_dec_block(uint32_t idx_block,
         in_byte_propa[0]->get_taint_propagate()->at(0)->get_begin();
     output_.set_begin(out_begin_addr);
     output_.set_end(out_begin_addr);
-    */
   }
 
   uint32_t num_block = in_blocks.get_size();
@@ -500,24 +506,53 @@ bool CFBDetector::analyze_dec_block_pattern(uint32_t idx_block,
   // 1) to the current output begin address is block sz width, due to the
   // propagated range is to next output block
   // 2) its size should be larger than block sz
+  // 3) to distinguish with cfb enc, it and its next block, should have
+  // different propagated end
+
+  if(idx_block+1 >= in_block_propa_ra.size() ) {
+    cout << "cfb dec block pattern: given idx + 1 is invalid" << endl;
+    return false;
+  }
 
   in_block_propa_ra[idx_block]->disp_range_array();
 
   Range curr_propa_r(*in_block_propa_ra[idx_block]->at(0) );
+  Range next_propa_r(*in_block_propa_ra[idx_block+1]->at(0) );
+
+  if(curr_propa_r.get_len() == 0 || next_propa_r.get_len() == 0) {
+    cout << "cfb dec block pattern: given ranges are empty" << endl;
+    return false;
+  }
 
   curr_propa_r.disp_range();
+  next_propa_r.disp_range();
 
   uint32_t block_sz = in_blocks.at(idx_block)->get_len();
+
   uint32_t output_end = output_.get_begin();
   uint32_t output_len = output_.get_len();
   output_end += output_len;
-  if(curr_propa_r.get_begin() - output_end == block_sz &&
-      curr_propa_r.get_end() >= block_sz) {
+
+  bool is_offset_curr_b = (curr_propa_r.get_begin() - output_end == block_sz);
+  bool has_propa_whole_block = curr_propa_r.get_len() >= block_sz;
+  bool has_diff_end     = next_propa_r.get_end() != curr_propa_r.get_end();
+
+  if(is_offset_curr_b &&
+      has_propa_whole_block &&
+      has_diff_end) {
     return true;
   } else {
     cout << "cfb dec does not has block pattern" << endl;
     return false;
   }
+
+//  if(curr_propa_r.get_begin() - output_end == block_sz &&
+//      curr_propa_r.get_end() >= block_sz) {
+//    return true;
+//  } else {
+//    cout << "cfb dec does not has block pattern" << endl;
+//    return false;
+//  }
 }
 
 bool CFBDetector::analyze_enc_byte(uint32_t idx_block_begin,
@@ -600,9 +635,9 @@ uint32_t CFBDetector::exclude_range_begin(const uint32_t l_begin,
 }
 
 inline void CFBDetector::set_output_begin(uint32_t idx_block,
-                                   uint32_t idx_byte,
-                                   const RangeArray in_blocks,
-                                   const vector<ByteTaintPropagate *> &in_byte_propa)
+                                          uint32_t idx_byte,
+                                          const RangeArray in_blocks,
+                                          const vector<ByteTaintPropagate *> &in_byte_propa)
 {
   if(idx_block >= in_blocks.get_size() ) {
     cout << "cfb detector: set output begin: given block idx is invalid" << endl;

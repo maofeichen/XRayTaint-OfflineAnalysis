@@ -19,10 +19,10 @@ bool ModeDetect::is_padding(RangeArraySPtr last_block) {
   RangeArray last_out_block;
   last_out_block.add_range(*last_block->at(res_block_idx::idx_out_block) );
 
-  multimap<uint32_t,uint32_t> &byte_val_map =
+  const multimap<uint32_t,uint32_t> &byte_val_map =
       last_out_block.at(0)->get_byte_val_map();
 
-  multimap<uint32_t,uint32_t>::reverse_iterator rit =
+  multimap<uint32_t,uint32_t>::const_reverse_iterator rit =
       byte_val_map.rbegin();
 
   // last byte's val indicates number of paddings
@@ -843,11 +843,11 @@ bool ECBDetect::analyze_ecb_block(Range &block,
     cout << "addr: " << hex << addr << endl;
     uint32_t end_addr = addr + block_sz;
     for(; addr < end_addr; addr++ ) {
-      pair<multimap<uint32_t,uint32_t>::iterator,
-           multimap<uint32_t,uint32_t>::iterator> ret;
+      pair<multimap<uint32_t,uint32_t>::const_iterator,
+           multimap<uint32_t,uint32_t>::const_iterator> ret;
       ret = block_propa_ra->at(0)->get_byte_val_map().equal_range(addr);
 
-      for(multimap<uint32_t,uint32_t>::iterator it = ret.first;
+      for(multimap<uint32_t,uint32_t>::const_iterator it = ret.first;
           it != ret.second; ++it) {
         byte_val_map.insert(*it);
       }
@@ -915,11 +915,11 @@ bool ECBDetect::analyze_ecb_last_block(Range &block,
     cout << "addr: " << hex << addr << endl;
     uint32_t end_addr = addr + block_sz;
     for(; addr < end_addr; addr++ ) {
-      pair<multimap<uint32_t,uint32_t>::iterator,
-           multimap<uint32_t,uint32_t>::iterator> ret;
+      pair<multimap<uint32_t,uint32_t>::const_iterator,
+           multimap<uint32_t,uint32_t>::const_iterator> ret;
       ret = block_propa_ra->at(0)->get_byte_val_map().equal_range(addr);
 
-      for(multimap<uint32_t,uint32_t>::iterator it = ret.first;
+      for(multimap<uint32_t,uint32_t>::const_iterator it = ret.first;
           it != ret.second; ++it) {
         byte_val_map.insert(*it);
       }

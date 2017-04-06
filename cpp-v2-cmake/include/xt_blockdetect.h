@@ -39,7 +39,9 @@ class BlockDetect {
                                  unsigned int out_addr,
                                  unsigned int out_byte_sz);
 
-  bool detect_mode_type(std::vector<ByteTaintPropagate *> &v_in_propagate);
+  bool detect_mode_type(const RangeArray input_blocks,
+                        const VSPtrRangeArray input_block_propa,
+                        const std::vector<ByteTaintPropagate *> &v_in_propagate);
   void detect_mode_type_ori(std::vector<ByteTaintPropagate *> &v_in_propagate,
                             Blocks &blocks);
 
@@ -101,8 +103,9 @@ class BlockDetect {
                    uint32_t accumu_b_sz,
                    RangeArray &ra_common);
 
-  bool detect_mode_type_with_val(std::vector<ByteTaintPropagate *>
-  &v_in_propagate);
+  bool detect_mode_type_with_val(const RangeArray input_blocks,
+                                 const VSPtrRangeArray input_block_propa,
+                                 const std::vector<ByteTaintPropagate *> &v_in_propagate);
 
   // Removes ranges smaller than minimum range in the given range array
   void rm_minimum_range(RangeArray &ra,

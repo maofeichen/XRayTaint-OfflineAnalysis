@@ -524,15 +524,18 @@ bool Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
                              out.size / 8);
   block_detector.detect_block_size(input_blocks, input_block_propa,
                                    v_in_taint_propagate);
-  cout << "block detection result: " << endl;
-  input_blocks.disp_range_array();
-  cout << "blocks propagated ranges: " << endl;
-  for(uint32_t i = 0; i < input_block_propa.size(); i++) {
-    input_block_propa[i]->disp_range_array();
-  }
+//  cout << "block detection result: " << endl;
+//  input_blocks.disp_range_array();
+//  cout << "blocks propagated ranges: " << endl;
+//  for(uint32_t i = 0; i < input_block_propa.size(); i++) {
+//    input_block_propa[i]->disp_range_array();
+//  }
 
-
-  is_det = block_detector.detect_mode_type(v_in_taint_propagate);
+  CFBDetector det_cfb;
+  is_det = det_cfb.analyze_mode(input_blocks, input_block_propa,
+                                v_in_taint_propagate);
+//  is_det = block_detector.detect_mode_type(input_blocks, input_block_propa,
+//                                           v_in_taint_propagate);
 
   return is_det;
 

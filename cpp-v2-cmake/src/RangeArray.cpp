@@ -9,7 +9,7 @@ Range::Range() {
   end_addr_   = 0;
 }
 
-Range::Range(Range &r) {
+Range::Range(const Range &r) {
   begin_addr_ = r.get_begin();
   end_addr_   = r.get_end();
 
@@ -30,7 +30,7 @@ Range::Range(uint32_t begin_addr, uint32_t len, uint32_t val) {
 
 Range::Range(uint32_t begin_addr,
              uint32_t len,
-             multimap<uint32_t, uint32_t> &byte_val_map) {
+             const multimap<uint32_t, uint32_t> &byte_val_map) {
   begin_addr_ = begin_addr;
   end_addr_   = begin_addr + len;
   for(auto it = byte_val_map.begin(); it != byte_val_map.end(); ++it) {
@@ -94,13 +94,12 @@ bool Range::is_identical_range(Range &r) {
   }
 }
 
-bool Range::is_identical_byte_val_map(multimap<uint32_t,
-                                               uint32_t> &byte_val_map) {
+bool Range::is_identical_byte_val_map(const multimap<uint32_t, uint32_t> &byte_val_map) {
   if(byte_val_map.empty() ) {
     return false;
   }
 
-  for(multimap<uint32_t,uint32_t>::iterator it = byte_val_map.begin();
+  for(multimap<uint32_t,uint32_t>::const_iterator it = byte_val_map.begin();
       it != byte_val_map.end(); ++it) {
     uint32_t addr = it->first;  // addr is key
     uint32_t val  = it->second;
@@ -306,7 +305,7 @@ bool RangeArray::del_range(unsigned int begin_addr, unsigned int len)
 }
 
 // Displays all current ranges in the range array
-void RangeArray::disp_range_array()
+void RangeArray::disp_range_array() const
 {
     Range *range;
     for(int i = 0; i < array_used_; i++){
@@ -562,6 +561,10 @@ void RangeArray::remove_range(int pos)
 void RangeArray::reset()
 {
   cout << "num used array: " << array_used_ << endl;
+  for(int i = 0; i < array_used_; i++) {
+    ref_rray_[i]->disp_range();
+  }
+
   for (int i = 0; i < array_used_; i++) {
     delete ref_rray_[i];
   }
@@ -576,13 +579,14 @@ multimap<uint32_t, uint32_t> RangeArray::get_byte_val_map(Range &r,
       r.get_end() < range_len) {
     cout << "err: given range exceeds range of r" << endl;
   } else {
-    multimap<uint32_t, uint32_t> &temp_map = r.get_byte_val_map();
+//    const multimap<uint32_t, uint32_t> &temp_map = r.get_byte_val_map();
     for(uint32_t i = range_begin; i < range_len; i++){
-      pair<multimap<uint32_t, uint32_t>::iterator,
-           multimap<uint32_t, uint32_t>::iterator > ret;
-      ret = temp_map.equal_range(i);
+      pair<multimap<uint32_t, uint32_t>::const_iterator,
+           multimap<uint32_t, uint32_t>::const_iterator > ret;
+      ret = r.get_byte_val_map().equal_range(i);
+//      ret = temp_map.equal_range(i);
 
-      for(multimap<uint32_t,uint32_t>::iterator it = ret.first;
+      for(multimap<uint32_t,uint32_t>::const_iterator it = ret.first;
           it != ret.second; ++it) {
         byte_val_map.insert(*it);
       }
