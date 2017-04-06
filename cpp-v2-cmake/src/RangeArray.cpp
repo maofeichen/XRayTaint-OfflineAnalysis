@@ -559,11 +559,13 @@ void RangeArray::remove_range(int pos)
     remove_ranges(pos, pos);
 }
 
-void RangeArray::reset() {
-    for(int i = 0; i < array_used_; i++) {
-        delete ref_rray_[i];
-    }
-    array_used_ = 0;
+void RangeArray::reset()
+{
+  cout << "num used array: " << array_used_ << endl;
+  for (int i = 0; i < array_used_; i++) {
+    delete ref_rray_[i];
+  }
+  array_used_ = 0;
 }
 
 multimap<uint32_t, uint32_t> RangeArray::get_byte_val_map(Range &r,

@@ -33,11 +33,11 @@ bool CFBDetector::analyze_mode(RangeArray &in_blocks,
 //    in_block_propa_ra[i]->disp_range_array();
 //  }
 
-  in_blocks.disp_range_array();
-  for(uint32_t i = 0; i < in_blocks.get_size(); i++) {
-    in_blocks[i]->disp_range();
-    cout << "block: " << i << " len: " << in_blocks[i]->get_len() << endl;
-  }
+//  in_blocks.disp_range_array();
+//  for(uint32_t i = 0; i < in_blocks.get_size(); i++) {
+//    in_blocks[i]->disp_range();
+//    cout << "block: " << i << " len: " << in_blocks[i]->get_len() << endl;
+//  }
 
   // enc pattern:
   //    1:1,1:n,1:n,etc.
@@ -55,7 +55,11 @@ bool CFBDetector::analyze_mode(RangeArray &in_blocks,
     type = TYPE_UNDEF;
   } else {
 
-//    is_enc = analyze_enc_block(0, in_blocks, in_block_propa_ra, in_byte_propa);
+    is_enc = analyze_enc_block(0, in_blocks, in_block_propa_ra, in_byte_propa);
+    if(is_enc) {
+      type = TYPE_ENC;
+      analyze_enc(in_blocks, in_block_propa_ra, in_byte_propa);
+    }
     is_dec = analyze_dec_block(0, in_blocks, in_block_propa_ra, in_byte_propa);
     if(is_enc) {
       type = TYPE_ENC;
