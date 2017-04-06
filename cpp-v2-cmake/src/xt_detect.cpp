@@ -73,7 +73,7 @@ void Detect::detect_cipher() {
               cout << "out: addr: " << hex << out_buf.beginAddress
                    << " byte: " << dec << out_buf.size / 8 << endl;
               bool is_det = false;
-              is_det = detect_cipher_in_out(in_buf, out_buf, propagate);
+//              is_det = detect_cipher_in_out(in_buf, out_buf, propagate);
               if(is_det) {
                 cout << "successfully detects cipher" << endl;
               }
@@ -87,7 +87,7 @@ void Detect::detect_cipher() {
 //                cout << "number of source index in the input buffer: "
 //                     << dec << in_buf.vNodeIndex.size() << endl;
 //
-//                detect_cipher_in_out(in_buf, out_buf, propagate);
+                detect_cipher_in_out(in_buf, out_buf, propagate);
 
 //                if (num_source == 24) {
 //                  vector<unsigned long>::const_iterator it_n_idx =
@@ -535,7 +535,7 @@ bool Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
 
   bool is_det = false;
   CFBDetector det_cfb;
-  CBCDetector det_cbc;
+  CBCDetector det_cbc(out.beginAddress, out.size / 8);
   is_det = det_cfb.analyze_mode(input_blocks, input_block_propa,
                                 v_in_taint_propagate);
   is_det = det_cbc.analyze_mode(input_blocks, input_block_propa,
