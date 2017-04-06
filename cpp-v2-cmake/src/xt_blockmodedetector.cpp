@@ -130,11 +130,18 @@ bool CFBDetector::analyze_dec(const RangeArray &in_blocks,
     if(is_det) {
       cout << "detect block: " << i << endl;
       uint32_t block_sz = in_blocks[i]->get_len();
+
       uint32_t end      = output_.get_end();
       end += block_sz;
       output_.set_end(end);
+
+      uint32_t input_end = input_.get_end();
+      input_end += block_sz;
+      input_.set_end(input_end);
     }
   }
+  input_.disp_range();
+  output_.disp_range();
 }
 
 
@@ -170,14 +177,14 @@ bool CFBDetector::analyze_enc_block(uint32_t idx_block,
   bool is_det = false;
 
   if(is_last) {
-    is_det = analyze_enc_last_block(idx_block, in_blocks, in_block_propa_ra,
-                                    in_byte_propa);
+    is_det = enc_last_block(idx_block, in_blocks, in_block_propa_ra,
+                            in_byte_propa);
   } else if(is_last_sec) {
-    is_det = analyze_enc_last_sec_block(idx_block, in_blocks,
-                                        in_block_propa_ra, in_byte_propa);
+    is_det = enc_last_sec_block(idx_block, in_blocks,
+                                in_block_propa_ra, in_byte_propa);
   } else {
-    is_det = analyze_enc_reg_block(idx_block, in_blocks, in_block_propa_ra,
-                                   in_byte_propa);
+    is_det = enc_reg_block(idx_block, in_blocks, in_block_propa_ra,
+                           in_byte_propa);
   }
 
   if(!is_det) {
@@ -204,6 +211,9 @@ bool CFBDetector::analyze_dec_block(uint32_t idx_block,
         in_byte_propa[0]->get_taint_propagate()->at(0)->get_begin();
     output_.set_begin(out_begin_addr);
     output_.set_end(out_begin_addr);
+
+    input_.set_begin(0);
+    input_.set_end(0);
   }
 
   uint32_t num_block = in_blocks.get_size();
@@ -212,31 +222,31 @@ bool CFBDetector::analyze_dec_block(uint32_t idx_block,
   bool is_det = false;
 
   if(is_last) {
-    is_det = analyze_dec_last_block(idx_block, in_blocks, in_block_propa_ra,
-                                    in_byte_propa);
+    is_det = dec_last_block(idx_block, in_blocks, in_block_propa_ra,
+                            in_byte_propa);
   } else if(is_last_sec) {
-    is_det = analyze_dec_reg_block(idx_block, in_blocks, in_block_propa_ra,
-                                   in_byte_propa);
+    is_det = dec_reg_block(idx_block, in_blocks, in_block_propa_ra,
+                           in_byte_propa);
   } else {
-    is_det = analyze_dec_reg_block(idx_block, in_blocks, in_block_propa_ra,
-                                   in_byte_propa);
+    is_det = dec_reg_block(idx_block, in_blocks, in_block_propa_ra,
+                           in_byte_propa);
   }
 
   return is_det;
 }
 
-bool CFBDetector::analyze_enc_reg_block(uint32_t idx_block,
-                                        const RangeArray &in_blocks,
-                                        const VSPtrRangeArray &in_block_propa_ra,
-                                        const vector<ByteTaintPropagate *> &in_byte_propa)
+bool CFBDetector::enc_reg_block(uint32_t idx_block,
+                                const RangeArray &in_blocks,
+                                const VSPtrRangeArray &in_block_propa_ra,
+                                const vector<ByteTaintPropagate *> &in_byte_propa)
 {
   for(uint32_t i = 0; i < in_blocks.get_size(); i++) {
     cout << "block: " << i << " len: " << in_blocks[i]->get_len() << endl;
   }
 
   bool has_block_pattern = false;
-  has_block_pattern = analyze_enc_block_pattern(idx_block, in_blocks,
-                                                in_block_propa_ra);
+  has_block_pattern = enc_block_pattern(idx_block, in_blocks,
+                                        in_block_propa_ra);
 
   if(has_block_pattern) {
     uint32_t block_sz = in_blocks.at(idx_block)->get_len();
@@ -274,10 +284,10 @@ bool CFBDetector::analyze_enc_reg_block(uint32_t idx_block,
   }
 }
 
-bool CFBDetector::analyze_enc_last_sec_block(uint32_t idx_block,
-                                             const RangeArray &in_blocks,
-                                             const VSPtrRangeArray &in_block_propa_ra,
-                                             const vector<ByteTaintPropagate *> &in_byte_propa)
+bool CFBDetector::enc_last_sec_block(uint32_t idx_block,
+                                     const RangeArray &in_blocks,
+                                     const VSPtrRangeArray &in_block_propa_ra,
+                                     const vector<ByteTaintPropagate *> &in_byte_propa)
 {
   // Last sec block is the last block to have a common propagated range. Its
   // correctness is garanteen by its previous block.
@@ -315,10 +325,10 @@ bool CFBDetector::analyze_enc_last_sec_block(uint32_t idx_block,
   return true;
 }
 
-bool CFBDetector::analyze_enc_last_block(uint32_t idx_block,
-                                         const RangeArray &in_blocks,
-                                         const VSPtrRangeArray &in_block_propa_ra,
-                                         const std::vector<ByteTaintPropagate *> &in_byte_propa)
+bool CFBDetector::enc_last_block(uint32_t idx_block,
+                                 const RangeArray &in_blocks,
+                                 const VSPtrRangeArray &in_block_propa_ra,
+                                 const std::vector<ByteTaintPropagate *> &in_byte_propa)
 {
   // Last block does not has a common range, it only has 1:1 pattern
   uint32_t prev_block_sz  = in_blocks.at(idx_block-1)->get_len();
@@ -350,14 +360,14 @@ bool CFBDetector::analyze_enc_last_block(uint32_t idx_block,
   return true;
 }
 
-bool CFBDetector::analyze_dec_reg_block(uint32_t idx_block,
-                                        const RangeArray &in_blocks,
-                                        const VSPtrRangeArray &in_block_propa_ra,
-                                        const vector<ByteTaintPropagate *> &in_byte_propa)
+bool CFBDetector::dec_reg_block(uint32_t idx_block,
+                                const RangeArray &in_blocks,
+                                const VSPtrRangeArray &in_block_propa_ra,
+                                const vector<ByteTaintPropagate *> &in_byte_propa)
 {
   bool has_block_pattern = false;
-  has_block_pattern = analyze_dec_block_pattern(idx_block, in_blocks,
-                                                in_block_propa_ra);
+  has_block_pattern = dec_block_pattern(idx_block, in_blocks,
+                                        in_block_propa_ra);
 
   if(has_block_pattern) {
     uint32_t block_sz = in_blocks.at(idx_block)->get_len();
@@ -400,10 +410,10 @@ bool CFBDetector::analyze_dec_reg_block(uint32_t idx_block,
   }
 }
 
-bool CFBDetector::analyze_dec_last_block(uint32_t idx_block,
-                                         const RangeArray &in_blocks,
-                                         const VSPtrRangeArray &in_block_propa_ra,
-                                         const vector<ByteTaintPropagate *> &in_byte_propa)
+bool CFBDetector::dec_last_block(uint32_t idx_block,
+                                 const RangeArray &in_blocks,
+                                 const VSPtrRangeArray &in_block_propa_ra,
+                                 const vector<ByteTaintPropagate *> &in_byte_propa)
 {
   // Last block does not has a common range, it only has 1:1 pattern
   uint32_t prev_block_sz    = in_blocks.at(idx_block-1)->get_len();
@@ -434,9 +444,9 @@ bool CFBDetector::analyze_dec_last_block(uint32_t idx_block,
   return true;
 }
 
-bool CFBDetector::analyze_enc_block_pattern(uint32_t idx_block,
-                                            const RangeArray &in_blocks,
-                                            const VSPtrRangeArray &in_block_propa_ra)
+bool CFBDetector::enc_block_pattern(uint32_t idx_block,
+                                    const RangeArray &in_blocks,
+                                    const VSPtrRangeArray &in_block_propa_ra)
 {
   if(idx_block >= in_block_propa_ra.size() ||
       idx_block+1 >= in_block_propa_ra.size() ) {
@@ -498,9 +508,9 @@ bool CFBDetector::analyze_enc_block_pattern(uint32_t idx_block,
   }
 }
 
-bool CFBDetector::analyze_dec_block_pattern(uint32_t idx_block,
-                                            const RangeArray &in_blocks,
-                                            const VSPtrRangeArray &in_block_propa_ra)
+bool CFBDetector::dec_block_pattern(uint32_t idx_block,
+                                    const RangeArray &in_blocks,
+                                    const VSPtrRangeArray &in_block_propa_ra)
 {
   // If a block has 1 : n pattern, it indicates:
   // 1) to the current output begin address is block sz width, due to the
@@ -563,9 +573,9 @@ bool CFBDetector::analyze_enc_byte(uint32_t idx_block_begin,
   bool has_one_to_one = false;
   Range to_one(*in_byte_propa[idx_byte]->get_taint_propagate()->at(0) );
 
-  has_one_to_one = analyze_enc_byte_one_to_one(idx_block_begin, idx_byte,
-                                               block_begin_propa_addr,
-                                               to_one);
+  has_one_to_one = enc_byte_one_to_one(idx_block_begin, idx_byte,
+                                       block_begin_propa_addr,
+                                       to_one);
 
   if(has_one_to_one) {
     return true;
@@ -601,10 +611,10 @@ bool CFBDetector::analyze_enc_last_byte(uint32_t idx_block_begin,
   }
 }
 
-bool CFBDetector::analyze_enc_byte_one_to_one(uint32_t idx_block_begin,
-                                              uint32_t idx_byte,
-                                              uint32_t block_begin_propa_addr,
-                                              Range &to_one)
+bool CFBDetector::enc_byte_one_to_one(uint32_t idx_block_begin,
+                                      uint32_t idx_byte,
+                                      uint32_t block_begin_propa_addr,
+                                      Range &to_one)
 {
   if(to_one.get_len() != 1) {
     cout << "cfb enc byte 1:1 pattern: err given range is not 1 byte" << endl;

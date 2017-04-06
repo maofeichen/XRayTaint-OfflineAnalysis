@@ -1,6 +1,7 @@
 #include "xt_aval_in_out.h"
 #include "xt_blockdetect.h"
 #include "xt_blockmodedetector.h"
+#include "xt_cbcdetector.h"
 #include "xt_ByteTaintPropagate.h"
 #include "xt_detect.h"
 #include "xt_flag.h"
@@ -72,21 +73,21 @@ void Detect::detect_cipher() {
               cout << "out: addr: " << hex << out_buf.beginAddress
                    << " byte: " << dec << out_buf.size / 8 << endl;
               bool is_det = false;
-              is_det = detect_cipher_in_out(in_buf, out_buf, propagate);
+//              is_det = detect_cipher_in_out(in_buf, out_buf, propagate);
               if(is_det) {
                 cout << "successfully detects cipher" << endl;
               }
 
-              if (in_buf.beginAddress == 0x804b0a0 &&
+              if (in_buf.beginAddress == 0x804a080 &&
                   in_buf.size == 92 * 8 &&
-                  out_buf.beginAddress == 0x804b880 &&
-                  out_buf.size == 92 * 8) {
+                  out_buf.beginAddress == 0x804a860 &&
+                  out_buf.size == 96 * 8) {
 
 //                int num_source = in_buf.vNodeIndex.size();
 //                cout << "number of source index in the input buffer: "
 //                     << dec << in_buf.vNodeIndex.size() << endl;
 //
-//                detect_cipher_in_out(in_buf, out_buf, propagate);
+                detect_cipher_in_out(in_buf, out_buf, propagate);
 
 //                if (num_source == 24) {
 //                  vector<unsigned long>::const_iterator it_n_idx =
@@ -489,6 +490,7 @@ bool Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
 
   vector<vector<propagate_byte_> > v_in_propagated_byte;
   v_in_propagated_byte = gen_in_propagate_byte(in, propagate);
+
   //    cout << "numbef of bytes in in buffer: " << dec << in.size / 8 << endl;
   //    cout << "number of vector of propagte bytes: " << dec
   //         << v_in_propagated_byte.size() << endl;
@@ -500,6 +502,7 @@ bool Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
 
   vector<ByteTaintPropagate *> v_in_taint_propagate;
   gen_in_range_array(in, v_in_propagated_byte, v_in_taint_propagate);
+
 //  for (int i = 0; i < v_in_taint_propagate.size(); i++) {
 //    cout << "taint src: " << hex << v_in_taint_propagate[i]->get_taint_src()
 //         << endl;
@@ -515,7 +518,6 @@ bool Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
 //    }
 //  }
 
-  bool is_det = false;
   RangeArray input_blocks;
   VSPtrRangeArray input_block_propa;
   BlockDetect block_detector(in.beginAddress,
@@ -531,8 +533,12 @@ bool Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
 //    input_block_propa[i]->disp_range_array();
 //  }
 
+  bool is_det = false;
   CFBDetector det_cfb;
+  CBCDetector det_cbc;
   is_det = det_cfb.analyze_mode(input_blocks, input_block_propa,
+                                v_in_taint_propagate);
+  is_det = det_cbc.analyze_mode(input_blocks, input_block_propa,
                                 v_in_taint_propagate);
 //  is_det = block_detector.detect_mode_type(input_blocks, input_block_propa,
 //                                           v_in_taint_propagate);

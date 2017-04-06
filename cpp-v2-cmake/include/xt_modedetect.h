@@ -1,4 +1,5 @@
 // Referenced Cipher Xray's class: ModeDetector
+// Currently not used, replaced by xt_blockmodedetector.h
 
 #ifndef XT_MODEDETECT_H_
 #define XT_MODEDETECT_H_

@@ -1,6 +1,6 @@
 // Referenced Cipher Xray's class: ModeDetector
-#ifndef XT_MODEDETECTOR_H
-#define XT_MODEDETECTOR_H
+#ifndef XT_BLOCKMODEDETECTOR_H
+#define XT_BLOCKMODEDETECTOR_H
 
 #include "xt_ByteTaintPropagate.h"
 #include "RangeArray.h"
@@ -14,7 +14,7 @@ class BlockModeDetector{
  public:
   BlockModeDetector() {};
 
-  uint32_t type;
+  uint8_t type;
 
   virtual bool analyze_mode(const RangeArray &in_blocks,
                             const VSPtrRangeArray &in_block_propa_ra,
@@ -58,36 +58,36 @@ class CFBDetector : public BlockModeDetector{
                          const VSPtrRangeArray &in_block_propa_ra,
                          const std::vector<ByteTaintPropagate *> &in_byte_propa);
 
-  bool analyze_enc_reg_block(uint32_t idx_block,
-                             const RangeArray &in_blocks,
-                             const VSPtrRangeArray &in_block_propa_ra,
-                             const std::vector<ByteTaintPropagate *> &in_byte_propa);
-  bool analyze_enc_last_sec_block(uint32_t idx_block,
-                                  const RangeArray &in_blocks,
-                                  const VSPtrRangeArray &in_block_propa_ra,
-                                  const std::vector<ByteTaintPropagate *> &in_byte_propa);
-  bool analyze_enc_last_block(uint32_t idx_block,
-                              const RangeArray &in_blocks,
-                              const VSPtrRangeArray &in_block_propa_ra,
-                              const std::vector<ByteTaintPropagate *> &in_byte_propa);
+  bool enc_reg_block(uint32_t idx_block,
+                     const RangeArray &in_blocks,
+                     const VSPtrRangeArray &in_block_propa_ra,
+                     const std::vector<ByteTaintPropagate *> &in_byte_propa);
+  bool enc_last_sec_block(uint32_t idx_block,
+                          const RangeArray &in_blocks,
+                          const VSPtrRangeArray &in_block_propa_ra,
+                          const std::vector<ByteTaintPropagate *> &in_byte_propa);
+  bool enc_last_block(uint32_t idx_block,
+                      const RangeArray &in_blocks,
+                      const VSPtrRangeArray &in_block_propa_ra,
+                      const std::vector<ByteTaintPropagate *> &in_byte_propa);
 
-  bool analyze_dec_reg_block(uint32_t idx_block,
-                             const RangeArray &in_blocks,
-                             const VSPtrRangeArray &in_block_propa_ra,
-                             const std::vector<ByteTaintPropagate *> &in_byte_propa);
-  bool analyze_dec_last_block(uint32_t idx_block,
-                              const RangeArray &in_blocks,
-                              const VSPtrRangeArray &in_block_propa_ra,
-                              const std::vector<ByteTaintPropagate *> &in_byte_propa);
+  bool dec_reg_block(uint32_t idx_block,
+                     const RangeArray &in_blocks,
+                     const VSPtrRangeArray &in_block_propa_ra,
+                     const std::vector<ByteTaintPropagate *> &in_byte_propa);
+  bool dec_last_block(uint32_t idx_block,
+                      const RangeArray &in_blocks,
+                      const VSPtrRangeArray &in_block_propa_ra,
+                      const std::vector<ByteTaintPropagate *> &in_byte_propa);
 
   // Returns true if the block has 1 : n, 1 : n, 1 : n, ect. pattern
-  bool analyze_enc_block_pattern(uint32_t idx_block,
-                                 const RangeArray &in_blocks,
-                                 const VSPtrRangeArray &in_block_propa_ra);
+  bool enc_block_pattern(uint32_t idx_block,
+                         const RangeArray &in_blocks,
+                         const VSPtrRangeArray &in_block_propa_ra);
   // Returns true if the current block has 1 : n pattern
-  bool analyze_dec_block_pattern(uint32_t idx_block,
-                                 const RangeArray &in_blocks,
-                                 const VSPtrRangeArray &in_block_propa_ra);
+  bool dec_block_pattern(uint32_t idx_block,
+                         const RangeArray &in_blocks,
+                         const VSPtrRangeArray &in_block_propa_ra);
 
   bool analyze_enc_byte(uint32_t idx_block_begin,
                         uint32_t idx_byte,
@@ -102,10 +102,10 @@ class CFBDetector : public BlockModeDetector{
   // Returns true if the given byte has 1:1 pattern
   // In the one to one test, we limit the size of range should be 1, that is,
   // it only impacts 1 byte of current block.
-  bool analyze_enc_byte_one_to_one(uint32_t idx_block_begin,
-                                   uint32_t idx_byte,
-                                   uint32_t block_begin_propa_addr,
-                                   Range &to_one);
+  bool enc_byte_one_to_one(uint32_t idx_block_begin,
+                           uint32_t idx_byte,
+                           uint32_t block_begin_propa_addr,
+                           Range &to_one);
 
   uint32_t exclude_range_begin(const uint32_t l_begin, const uint32_t r_begin);
   inline void set_output_begin(uint32_t idx_block,
