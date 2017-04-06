@@ -21,9 +21,12 @@ BlockDetect::BlockDetect(uint32_t in_begin_addr,
   out_len_       = out_len;
 }
 
-void BlockDetect::detect_block_size(vector<ByteTaintPropagate *> &buf_taint_propagate) {
+void BlockDetect::detect_block_size(RangeArray &input_blocks,
+                                    VSPtrRangeArray &input_block_propa,
+                                    vector<ByteTaintPropagate *> &buf_taint_propagate) {
 //  detect_block_size_with_val(buf_taint_propagate);
-  detect_block_size_handling_last_block(buf_taint_propagate);
+  detect_block_size_handling_last_block(input_blocks, input_block_propa,
+                                        buf_taint_propagate);
 }
 
 void BlockDetect::detect_block_size_ori(Blocks &blocks,
@@ -482,8 +485,9 @@ void BlockDetect::detect_block_size_with_val(
   save_block_with_val(b_begin_byte, accumu_b_sz, last_common);
 }
 
-void BlockDetect::detect_block_size_handling_last_block(
-    vector<ByteTaintPropagate *> &buf_taint_propagate)
+void BlockDetect::detect_block_size_handling_last_block(RangeArray &input_blocks,
+                                                        VSPtrRangeArray &input_block_propa,
+                                                        vector<ByteTaintPropagate *> &buf_taint_propagate)
 {
   uint32_t b_begin_byte = 0;
   uint32_t b_end_byte = in_len_;
@@ -530,7 +534,9 @@ void BlockDetect::detect_block_size_handling_last_block(
         bool is_ext = extend_block(common, i, buf_taint_propagate);
 
         if(!is_ext) {
-          save_block_with_val(b_begin_byte, accumu_b_sz, prev_common);
+          store_block(input_blocks, input_block_propa, b_begin_byte,
+                      accumu_b_sz, prev_common);
+//          save_block_with_val(b_begin_byte, accumu_b_sz, prev_common);
 
           b_begin_byte = i;
           buf_sz -= accumu_b_sz;
@@ -540,7 +546,9 @@ void BlockDetect::detect_block_size_handling_last_block(
           // extend the current byte to current common range successfully,
           // needs to test if the block ends
           if (is_block_end(common, prev_common, accumu_b_sz)) {
-            save_block_with_val(b_begin_byte, accumu_b_sz, prev_common);
+            store_block(input_blocks, input_block_propa, b_begin_byte,
+                      accumu_b_sz, prev_common);
+//            save_block_with_val(b_begin_byte, accumu_b_sz, prev_common);
 
             b_begin_byte = i;
             buf_sz -= accumu_b_sz;
@@ -556,17 +564,22 @@ void BlockDetect::detect_block_size_handling_last_block(
     }
 
     // update block size if any
-    if(in_blocks_.get_size() > 0) {
-      uint32_t num_block = in_blocks_.get_size();
-      block_sz = in_blocks_.at(num_block - 1)->get_len();
+    if(input_blocks.get_size() > 0) {
+      uint32_t num_block = input_blocks.get_size();
+      block_sz = input_blocks.at(num_block-1)->get_len();
     }
+//    if(in_blocks_.get_size() > 0) {
+//      uint32_t num_block = in_blocks_.get_size();
+//      block_sz = in_blocks_.at(num_block - 1)->get_len();
+//    }
 
 //    last_common = prev_common;
   } // end while
 
 
   // save the last block if any
-  in_blocks_.add_range(b_begin_byte, buf_sz);
+  input_blocks.add_range(b_begin_byte, buf_sz);
+//  in_blocks_.add_range(b_begin_byte, buf_sz);
 //  save_block_with_val(b_begin_byte, accumu_b_sz, last_common);
 }
 
@@ -699,6 +712,36 @@ bool BlockDetect::save_block_with_val(uint32_t b_begin_idx,
     for(uint32_t i=0; i < propa_out_ra_.size(); i++) {
       propa_out_ra_[i]->disp_range_array();
       propa_out_ra_[i]->disp_byte_val_map_array();
+    }
+
+    return true;
+  }
+}
+
+bool BlockDetect::store_block(RangeArray &input_blocks,
+                              VSPtrRangeArray &input_block_propa,
+                              uint32_t b_begin_idx,
+                              uint32_t accumu_b_sz,
+                              RangeArray &ra_common)
+{
+   if(accumu_b_sz < MIN_BLOCK_SZ) {
+    return false;
+  } else {
+    input_blocks.add_range(b_begin_idx, accumu_b_sz);
+    input_blocks.disp_range_array();
+
+    RangeArray *propa_ra = new RangeArray();
+    for(uint32_t i = 0; i < ra_common.get_size(); i++) {
+      propa_ra->add_range(*ra_common[i]);
+    }
+    input_block_propa.push_back(RangeArraySPtr(propa_ra) );
+
+    propa_ra->disp_range_array();
+    propa_ra->disp_byte_val_map_array();
+
+    for(uint32_t i=0; i < input_block_propa.size(); i++) {
+      input_block_propa[i]->disp_range_array();
+      input_block_propa[i]->disp_byte_val_map_array();
     }
 
     return true;

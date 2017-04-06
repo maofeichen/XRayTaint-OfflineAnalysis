@@ -4,6 +4,7 @@
 #define XT_BLOCKDETECT_H_
 
 #include "xt_ByteTaintPropagate.h"
+#include "xt_blockmodedetector.h"
 #include "xt_modedetect.h"
 
 #include <vector>
@@ -18,7 +19,9 @@ class BlockDetect {
               uint32_t out_len);
   ~BlockDetect() {};
 
-  void detect_block_size(std::vector<ByteTaintPropagate *> &buf_taint_propagate);
+  void detect_block_size(RangeArray &input_blocks,
+                         VSPtrRangeArray &input_block_propa,
+                         std::vector<ByteTaintPropagate *> &buf_taint_propagate);
   void detect_block_size_ori(Blocks &blocks,
                              std::vector<ByteTaintPropagate *> &buf_taint_propagate,
                              unsigned int in_byte_sz,
@@ -66,7 +69,9 @@ class BlockDetect {
   // Detects blocks same as detect_block_size_with_val(...)
   // The diff is, for potential last block, we assume it is the last
   // We let the analyze function to determine if it is truely the last block
-  void detect_block_size_handling_last_block(std::vector<ByteTaintPropagate *> &buf_taint_propagate);
+  void detect_block_size_handling_last_block(RangeArray &input_blocks,
+                                             VSPtrRangeArray &input_block_propa,
+                                             std::vector<ByteTaintPropagate *> &buf_taint_propagate);
   // Returns the intersected propagated range (stores in common), given byte
   // a and byte b.
   bool init_block(RangeArray &common,
@@ -90,6 +95,11 @@ class BlockDetect {
   bool save_block_with_val(uint32_t b_begin_idx,
                            uint32_t accumu_b_sz,
                            RangeArray &ra_common);
+  bool store_block(RangeArray &input_blocks,
+                   VSPtrRangeArray &input_block_propa,
+                   uint32_t b_begin_idx,
+                   uint32_t accumu_b_sz,
+                   RangeArray &ra_common);
 
   bool detect_mode_type_with_val(std::vector<ByteTaintPropagate *>
   &v_in_propagate);
