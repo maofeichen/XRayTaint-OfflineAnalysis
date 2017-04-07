@@ -206,9 +206,12 @@ bool CBCDetector::analyze_dec(const RangeArray &in_blocks,
 
   bool is_dtct = false;
   for (int i = 0; i < in_blocks.get_size(); i++) {
-    bool is_last = (i == in_blocks.get_size()-1);
+    bool is_last     = (i == in_blocks.get_size()-1);
+    bool is_last_sec = (i == in_blocks.get_size()-2);
     if(is_last) {
-
+      is_dtct = dec_last_block(i, in_blocks, in_block_prpgt, in_byte_propa);
+    } else if(is_last_sec) {
+      is_dtct = dec_block(i, in_blocks, in_block_prpgt, in_byte_propa);
     } else {
       is_dtct = dec_block(i, in_blocks, in_block_prpgt, in_byte_propa);
     }
@@ -264,10 +267,34 @@ bool CBCDetector::dec_block(uint32_t idx_block,
   has_block_pattern = dec_block_pattern(idx_block, in_blocks, in_block_propa_ra);
 
   if(has_block_pattern) {
+    uint32_t block_sz = in_blocks[idx_block]->get_len();
+    uint32_t i_begin  = idx_block * block_sz;
+    uint32_t i_end    = i_begin + block_sz;
+
+    bool is_dtct = false;
+    for(uint32_t i = i_begin; i < i_end; i++) {
+      is_dtct = dec_byte(i, idx_block, in_blocks, in_block_propa_ra, in_byte_propa);
+
+      if(!is_dtct) {
+        return false;
+      }
+    }
+
     return true;
   } else {
     return false;
   }
+}
+
+bool CBCDetector::dec_last_block(uint32_t idx_block,
+                                 const RangeArray &in_blocks,
+                                 const VSPtrRangeArray &in_block_propa_ra,
+                                 const std::vector<ByteTaintPropagate *> &in_byte_propa)
+{
+  // last block only has 1:n block pattern, does not has 1:1 pattern
+  bool has_block_pattern = false;
+  has_block_pattern = dec_block_pattern(idx_block, in_blocks, in_block_propa_ra);
+  return has_block_pattern;
 }
 
 bool CBCDetector::dec_block_pattern(uint32_t idx_block,
@@ -305,4 +332,55 @@ bool CBCDetector::dec_block_pattern(uint32_t idx_block,
     cout << "cbc dec block pattern: given block does not has pattern" << endl;
     return false;
   }
+}
+
+bool CBCDetector::dec_byte(uint32_t idx_byte,
+                           uint32_t idx_block,
+                           const RangeArray &in_blocks,
+                           const VSPtrRangeArray &in_block_propa_ra,
+                           const vector<ByteTaintPropagate *> &in_byte_propa)
+{
+  if(idx_byte >= in_byte_propa.size() ) {
+    cout << "cbc dec byte: given byte idx is invalid" << endl;
+    return false;
+  }
+
+  if(idx_block+1 >= in_block_propa_ra.size() ) {
+    cout << "cbc dec byte: given block idx is invalid" << endl;
+    return false;
+  }
+
+  ByteTaintPropagate *byte_prpgt = in_byte_propa[idx_byte];
+  if(byte_prpgt->get_taint_propagate()->get_size() == 0) {
+    cout << "cbc dec byte: given byte propagation is empty" << endl;
+    return false;
+  }
+
+  RangeArray common(output_begin_, output_sz_);
+  common.get_common_range_with_val(*byte_prpgt->get_taint_propagate() );
+  common.disp_range_array();
+
+  if(common.get_size() == 0) {
+    cout << "cbc dec byte: given byte propagation is empty" << endl;
+    return false;
+  }
+
+  uint32_t block_sz    = in_blocks[idx_block]->get_len();
+  uint32_t byte_offset = idx_byte % block_sz;
+  uint32_t next_block_begin = in_block_propa_ra[idx_block+1]->at(0)->get_begin();
+  for(uint32_t i = 0; i < common.get_size(); i++) {
+    uint32_t curr_byte_prpgt = common[i]->get_begin();
+    for(uint32_t j = 0; j < common[i]->get_len(); j++) {
+
+      if(curr_byte_prpgt >= next_block_begin &&
+          (curr_byte_prpgt - next_block_begin) == byte_offset) {
+        return true;
+      }
+
+      curr_byte_prpgt++;
+    }
+  }
+
+  cout << "cbc dec byte: given does not has the pattern." << endl;
+  return false;
 }

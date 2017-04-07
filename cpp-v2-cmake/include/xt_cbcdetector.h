@@ -45,7 +45,7 @@ class CBCDetector : public BlockModeDetector{
                  const RangeArray &in_blocks,
                  const VSPtrRangeArray &in_block_propa_ra,
                  const std::vector<ByteTaintPropagate *> &in_byte_propa);
-
+  // Returns true if last block has 1:1
   bool dec_last_block(uint32_t idx_block,
                       const RangeArray &in_blocks,
                       const VSPtrRangeArray &in_block_propa_ra,
@@ -55,6 +55,13 @@ class CBCDetector : public BlockModeDetector{
   bool dec_block_pattern(uint32_t idx_block,
                          const RangeArray &in_blocks,
                          const VSPtrRangeArray &in_block_propa_ra);
+  // Returns true if has 1:1 to next block propagated range
+  bool dec_byte(uint32_t idx_byte,
+                uint32_t idx_block,
+                const RangeArray &in_blocks,
+                const VSPtrRangeArray &in_block_propa_ra,
+                const std::vector<ByteTaintPropagate *> &in_byte_propa);
+
 };
 
 #endif //XT_CBCDETECTOR_H
