@@ -31,7 +31,7 @@ void Detect::detect_cipher() {
   // Store which IN and OUT buffer had been searched already
   vector<pair_inout_> v_buf_in_out;
 
-  vector<t_AliveFunctionCall>::iterator it_in_func = v_func_cont_buf_.end() - 3;
+  vector<t_AliveFunctionCall>::iterator it_in_func = v_func_cont_buf_.end() - 4;
   // vector<t_AliveFunctionCall>::iterator it_in_func = v_func_cont_buf_.begin() + 3;
 
   // Iterates each function call

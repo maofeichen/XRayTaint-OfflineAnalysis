@@ -515,6 +515,10 @@ void BlockDetect::detect_block_size_handling_last_block(RangeArray &input_blocks
 
     uint32_t i = b_begin_byte;
     for (; i < b_end_byte; i++) {
+      if(i == 34) {
+        cout << "i is 34" << endl;
+      }
+
       common.disp_range_array();
       prev_common.disp_range_array();
 
@@ -672,14 +676,32 @@ bool BlockDetect::is_block_end(RangeArray &common,
     // return false;
   }
 
+  prev_common.disp_range_array();
+  common.disp_range_array();
+
   // Determines if 1st range of prev_common and common are identical,
   // to determine if it same block
-  // This methond holds due to...
+  // Only compared the begin due to it happens in bf test:
+  // Prev:
+  // begin addr: 804c080 len: 9 bytes
+  // begin addr: 804c0a8 len: 8 bytes
+  // Common:
+  // begin addr: 804c080 len: 8 bytes
+  // begin addr: 804c0a8 len: 8 bytes
+  // This is valid
+  if(prev_common[0]->get_begin() == common[0]->get_begin() ) {
+    return false;
+  } else {
+    return true;
+  }
+
+  /*
   if(prev_common[0]->is_identical_range(*common[0]) ) {
     return false;
   } else {
     return true;
   }
+  */
 }
 
 void BlockDetect::rm_minimum_range(RangeArray &ra, unsigned int minimum_range)
