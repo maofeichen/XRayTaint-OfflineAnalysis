@@ -55,6 +55,9 @@ class CBCDetector : public BlockModeDetector{
   bool dec_block_pattern(uint32_t idx_block,
                          const RangeArray &in_blocks,
                          const VSPtrRangeArray &in_block_propa_ra);
+  bool dec_last_block_pattern(uint32_t idx_block,
+                         const RangeArray &in_blocks,
+                         const VSPtrRangeArray &in_block_propa_ra);
   // Returns true if has 1:1 to next block propagated range
   bool dec_byte(uint32_t idx_byte,
                 uint32_t idx_block,

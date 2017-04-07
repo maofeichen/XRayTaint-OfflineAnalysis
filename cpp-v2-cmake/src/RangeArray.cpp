@@ -56,7 +56,7 @@ void Range::disp_byte_val_map() {
   }
 }
 
-void Range::disp_range()
+void Range::disp_range() const
 {
     cout << "begin addr: " << hex << begin_addr_
             << " len: " << dec << end_addr_ - begin_addr_ << endl;

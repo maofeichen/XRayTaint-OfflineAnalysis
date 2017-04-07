@@ -31,7 +31,7 @@ void Detect::detect_cipher() {
   // Store which IN and OUT buffer had been searched already
   vector<pair_inout_> v_buf_in_out;
 
-  vector<t_AliveFunctionCall>::iterator it_in_func = v_func_cont_buf_.end() - 4;
+  vector<t_AliveFunctionCall>::iterator it_in_func = v_func_cont_buf_.end() - 3;
   // vector<t_AliveFunctionCall>::iterator it_in_func = v_func_cont_buf_.begin() + 3;
 
   // Iterates each function call
@@ -73,7 +73,7 @@ void Detect::detect_cipher() {
               cout << "out: addr: " << hex << out_buf.beginAddress
                    << " byte: " << dec << out_buf.size / 8 << endl;
               bool is_det = false;
-//              is_det = detect_cipher_in_out(in_buf, out_buf, propagate);
+              is_det = detect_cipher_in_out(in_buf, out_buf, propagate);
               if(is_det) {
                 cout << "successfully detects cipher" << endl;
               }
@@ -87,7 +87,7 @@ void Detect::detect_cipher() {
 //                cout << "number of source index in the input buffer: "
 //                     << dec << in_buf.vNodeIndex.size() << endl;
 //
-                detect_cipher_in_out(in_buf, out_buf, propagate);
+//                detect_cipher_in_out(in_buf, out_buf, propagate);
 
 //                if (num_source == 24) {
 //                  vector<unsigned long>::const_iterator it_n_idx =
@@ -538,8 +538,31 @@ bool Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
   CBCDetector det_cbc(out.beginAddress, out.size / 8);
   is_det = det_cfb.analyze_mode(input_blocks, input_block_propa,
                                 v_in_taint_propagate);
-  is_det = det_cbc.analyze_mode(input_blocks, input_block_propa,
-                                v_in_taint_propagate);
+  if(det_cfb.get_type() == BlockModeDetector::TYPE_ENC) {
+    cout << "cfb enc detected: " << endl;
+    det_cfb.get_input().disp_range();
+    det_cfb.get_output().disp_range();
+  } else if(det_cfb.get_type() == BlockModeDetector::TYPE_DEC) {
+    cout << "cfb dec detected: " << endl;
+    det_cfb.get_input().disp_range();
+    det_cfb.get_output().disp_range();
+  } else {
+    cout << "no cfb detected" << endl;
+  }
+
+  is_det = det_cbc.analyze_mode(input_blocks, input_block_propa,v_in_taint_propagate);
+  if(det_cbc.get_type() == BlockModeDetector::TYPE_ENC) {
+    cout << "cbc enc detected: " << endl;
+    det_cbc.get_input().disp_range();
+    det_cbc.get_output().disp_range();
+  } else if(det_cbc.get_type() == BlockModeDetector::TYPE_DEC) {
+    cout << "cbc dec detected: " << endl;
+    det_cbc.get_input().disp_range();
+    det_cbc.get_output().disp_range();
+  } else {
+    cout << "no cbc detected" << endl;
+  }
+
 //  is_det = block_detector.detect_mode_type(input_blocks, input_block_propa,
 //                                           v_in_taint_propagate);
 

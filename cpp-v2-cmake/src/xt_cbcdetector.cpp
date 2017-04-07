@@ -30,8 +30,40 @@ bool CBCDetector::analyze_mode(const RangeArray &in_blocks,
     in_block_propa_ra[i]->disp_range_array();
   }
 
-  analyze_enc(in_blocks, in_block_propa_ra, in_byte_propa);
-  analyze_dec(in_blocks, in_block_propa_ra, in_byte_propa);
+  bool is_enc = false;
+  bool is_dec = false;
+
+  is_enc = analyze_enc(in_blocks, in_block_propa_ra, in_byte_propa);
+  if(is_enc) {
+    type = TYPE_ENC;
+    return is_enc;
+  }
+
+  is_dec = analyze_dec(in_blocks, in_block_propa_ra, in_byte_propa);
+  if(is_dec) {
+    type = TYPE_DEC;
+    return is_dec;
+  }
+
+  return false;
+
+  is_enc = enc_block(0, in_blocks, in_block_propa_ra, in_byte_propa) &&
+           enc_block(1, in_blocks, in_block_propa_ra, in_byte_propa);
+  is_dec = dec_block(0, in_blocks, in_block_propa_ra, in_byte_propa) &&
+           dec_block(1, in_blocks, in_block_propa_ra, in_byte_propa);
+
+  bool is_det;
+  if(is_enc) {
+    is_det = analyze_enc(in_blocks, in_block_propa_ra, in_byte_propa);
+    if(is_det) {
+      type = TYPE_ENC;
+    }
+  } else if(is_dec) {
+    is_det = analyze_dec(in_blocks, in_block_propa_ra, in_byte_propa);
+    if(is_det) {
+      type = TYPE_DEC;
+    }
+  }
 }
 
 bool CBCDetector::analyze_enc(const RangeArray &in_blocks,
@@ -56,7 +88,8 @@ bool CBCDetector::analyze_enc(const RangeArray &in_blocks,
     in_block_prpgt[i]->disp_range_array();
   }
 
-  bool is_dtct = false;
+  bool is_dtct       = false;
+  uint32_t num_block = 0;
   for (int i = 0; i < in_blocks.get_size(); i++) {
     bool is_last = (i == in_blocks.get_size()-1);
     if(is_last) {
@@ -78,6 +111,8 @@ bool CBCDetector::analyze_enc(const RangeArray &in_blocks,
       uint32_t block_sz  = in_blocks[i]->get_len();
       input_end += block_sz;
       input_.set_end(input_end);
+
+      num_block++;
     }
   }
 
@@ -85,6 +120,14 @@ bool CBCDetector::analyze_enc(const RangeArray &in_blocks,
     // we have detected blocks
     output_.set_begin(in_block_prpgt[0]->at(0)->get_begin() );
     output_.set_end(in_block_prpgt[0]->at(0)->get_end() );
+  }
+
+  uint32_t block_sz = in_blocks[0]->get_len();
+  if(in_block_propa_ra[0]->at(0)->get_len() == block_sz * num_block) {
+    // the first block propagated range must be len of total detected block sz
+    is_dtct = true;
+  } else {
+    is_dtct = false;
   }
 
   input_.disp_range();
@@ -264,7 +307,8 @@ bool CBCDetector::dec_block(uint32_t idx_block,
   }
 
   bool has_block_pattern = false;
-  has_block_pattern = dec_block_pattern(idx_block, in_blocks, in_block_propa_ra);
+//  has_block_pattern = dec_block_pattern(idx_block, in_blocks, in_block_propa_ra);
+  has_block_pattern = dec_last_block_pattern(idx_block, in_blocks, in_block_propa_ra);
 
   if(has_block_pattern) {
     uint32_t block_sz = in_blocks[idx_block]->get_len();
@@ -293,13 +337,60 @@ bool CBCDetector::dec_last_block(uint32_t idx_block,
 {
   // last block only has 1:n block pattern, does not has 1:1 pattern
   bool has_block_pattern = false;
-  has_block_pattern = dec_block_pattern(idx_block, in_blocks, in_block_propa_ra);
+  has_block_pattern = dec_last_block_pattern(idx_block, in_blocks, in_block_propa_ra);
   return has_block_pattern;
 }
 
 bool CBCDetector::dec_block_pattern(uint32_t idx_block,
                                     const RangeArray &in_blocks,
                                     const VSPtrRangeArray &in_block_propa_ra)
+{
+  // cbc dec 1:n pattern to current block:
+  // 1) the propagated begin address should begin with current block
+  // 2) should propagated larger than blcok size
+  // 3) to distinguish with enc, its range end and its next block's propagate
+  // range end will be different
+  if(idx_block+1 >= in_block_propa_ra.size() ) {
+    cout << "cbc dec block pattern: given idx block is invalid" << endl;
+    return false;
+  }
+
+  if(in_block_propa_ra[idx_block]->get_size() == 0 ||
+      in_block_propa_ra[idx_block+1]->get_size() == 0) {
+    cout << "cbc dec block pattern: given block propagated range is empty" << endl;
+    return false;
+  }
+
+  Range curr_prpgt(*in_block_propa_ra[idx_block]->at(0) );
+  Range next_prpgt(*in_block_propa_ra[idx_block+1]->at(0) );
+
+  curr_prpgt.disp_range();
+  next_prpgt.disp_range();
+
+  bool is_same_begin           = false;
+  bool has_block_sz            = false;
+  bool has_different_range_end = false;
+
+  is_same_begin = (output_.get_end() == curr_prpgt.get_begin() );
+
+  uint32_t block_sz = in_blocks[idx_block]->get_len();
+  has_block_sz = (curr_prpgt.get_len() >= block_sz);
+
+  has_different_range_end = (curr_prpgt.get_end() != next_prpgt.get_end() );
+
+  if(is_same_begin &&
+      has_block_sz &&
+      has_different_range_end) {
+    return true;
+  } else {
+    cout << "cbc dec block pattern: given block does not has pattern" << endl;
+    return false;
+  }
+}
+
+bool CBCDetector::dec_last_block_pattern(uint32_t idx_block,
+                                         const RangeArray &in_blocks,
+                                         const VSPtrRangeArray &in_block_propa_ra)
 {
   // cbc dec 1:n pattern to current block:
   // 1) the propagated begin address should begin with current block

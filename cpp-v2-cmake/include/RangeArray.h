@@ -37,7 +37,7 @@ class Range {
 
   void add_byte_val(uint32_t byte_addr, uint32_t val);
   void disp_byte_val_map();
-  void disp_range();
+  void disp_range() const ;
   bool has_range(unsigned int begin_addr, unsigned int len);
   bool is_continuous_range(Range &r);
   bool is_identical_range(Range &r);

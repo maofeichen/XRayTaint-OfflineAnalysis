@@ -14,15 +14,20 @@ class BlockModeDetector{
  public:
   BlockModeDetector() {};
 
-  uint8_t type;
+  static uint8_t TYPE_UNDEF;
+  static uint8_t TYPE_ENC;
+  static uint8_t TYPE_DEC;
+
+  uint8_t get_type () { return  type; }
+  const Range &get_input() { return input_; }
+  const Range &get_output() { return output_; }
 
   virtual bool analyze_mode(const RangeArray &in_blocks,
                             const VSPtrRangeArray &in_block_propa_ra,
                             const std::vector<ByteTaintPropagate *> &in_byte_propa) = 0;
  protected:
-  static uint8_t TYPE_UNDEF;
-  static uint8_t TYPE_ENC;
-  static uint8_t TYPE_DEC;
+
+  uint8_t type;
 
   Range input_;
   Range output_;
