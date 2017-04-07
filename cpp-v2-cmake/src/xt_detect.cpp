@@ -78,9 +78,9 @@ void Detect::detect_cipher() {
                 cout << "successfully detects cipher" << endl;
               }
 
-              if (in_buf.beginAddress == 0x804a080 &&
-                  in_buf.size == 92 * 8 &&
-                  out_buf.beginAddress == 0x804a860 &&
+              if (in_buf.beginAddress == 0x804a860 &&
+                  in_buf.size == 96 * 8 &&
+                  out_buf.beginAddress == 0x804b040 &&
                   out_buf.size == 96 * 8) {
 
 //                int num_source = in_buf.vNodeIndex.size();
