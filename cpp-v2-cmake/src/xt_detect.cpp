@@ -31,7 +31,7 @@ void Detect::detect_cipher() {
   // Store which IN and OUT buffer had been searched already
   vector<pair_inout_> v_buf_in_out;
 
-  vector<t_AliveFunctionCall>::iterator it_in_func = v_func_cont_buf_.end() - 4;
+  vector<t_AliveFunctionCall>::iterator it_in_func = v_func_cont_buf_.end() - 2;
   // vector<t_AliveFunctionCall>::iterator it_in_func = v_func_cont_buf_.begin() + 3;
 
   // Iterates each function call
@@ -66,28 +66,28 @@ void Detect::detect_cipher() {
             if (is_dupl_buf_inout(buf_in_out, v_buf_in_out)) {
               cout << "In and Out buffers had been searched, skip..." << endl;
             } else {
-              v_buf_in_out.push_back(buf_in_out);
+//              v_buf_in_out.push_back(buf_in_out);
 
               cout << "in: addr: " << hex << in_buf.beginAddress
                    << " byte: " << dec << in_buf.size / 8 << endl;
               cout << "out: addr: " << hex << out_buf.beginAddress
                    << " byte: " << dec << out_buf.size / 8 << endl;
               bool is_det = false;
-              is_det = detect_cipher_in_out(in_buf, out_buf, propagate);
+//              is_det = detect_cipher_in_out(in_buf, out_buf, propagate);
               if(is_det) {
                 cout << "successfully detects cipher" << endl;
               }
 
-              if (in_buf.beginAddress == 0x804a860 &&
+              if (in_buf.beginAddress == 0x804b8a0 &&
                   in_buf.size == 96 * 8 &&
-                  out_buf.beginAddress == 0x804b040 &&
+                  out_buf.beginAddress == 0x804c080 &&
                   out_buf.size == 96 * 8) {
 
 //                int num_source = in_buf.vNodeIndex.size();
 //                cout << "number of source index in the input buffer: "
 //                     << dec << in_buf.vNodeIndex.size() << endl;
 //
-//                detect_cipher_in_out(in_buf, out_buf, propagate);
+                detect_cipher_in_out(in_buf, out_buf, propagate);
 
 //                if (num_source == 24) {
 //                  vector<unsigned long>::const_iterator it_n_idx =
@@ -226,6 +226,13 @@ vector< vector<Detect::propagate_byte_> >
 Detect::gen_in_propagate_byte(t_AliveContinueBuffer &in, Propagate &propagate)
 {
     vector< vector<propagate_byte_> > in_vec_propagate_byte;
+
+    for(int i = 0; i < in.vNodeIndex.size(); i++) {
+      uint32_t idx = in.vNodeIndex[i];
+      XTNode n = get_mem_node(idx);
+      cout << "node addr: " << hex << n.getIntAddr() << " size: " << dec
+           << n.getByteSize() << endl;
+    }
 
     unsigned int byte_pos    = 0;
     unsigned long begin_addr = in.beginAddress;
@@ -491,9 +498,9 @@ bool Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
   vector<vector<propagate_byte_> > v_in_propagated_byte;
   v_in_propagated_byte = gen_in_propagate_byte(in, propagate);
 
-  //    cout << "numbef of bytes in in buffer: " << dec << in.size / 8 << endl;
-  //    cout << "number of vector of propagte bytes: " << dec
-  //         << v_in_propagated_byte.size() << endl;
+  cout << "numbef of bytes in in buffer: " << dec << in.size / 8 << endl;
+  cout << "number of vector of propagte bytes: " << dec
+       << v_in_propagated_byte.size() << endl;
   if ((in.size / 8) != v_in_propagated_byte.size()) {
     cout << "err: num of bytes of input, and num of propagated bytes is "
         "not matched" << endl;

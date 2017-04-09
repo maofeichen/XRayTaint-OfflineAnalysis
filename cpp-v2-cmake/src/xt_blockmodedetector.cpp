@@ -62,13 +62,19 @@ bool CFBDetector::analyze_mode(const RangeArray &in_blocks,
 //    }
     is_dec = analyze_dec_block(0, in_blocks, in_block_propa_ra, in_byte_propa);
     if(is_enc) {
-      type = TYPE_ENC;
-      analyze_enc(in_blocks, in_block_propa_ra, in_byte_propa);
+      is_enc = analyze_enc(in_blocks, in_block_propa_ra, in_byte_propa);
+      if(is_enc) {
+        type = TYPE_ENC;
+        return is_enc;
+      }
     } else if(is_dec) {
-      type = TYPE_DEC;
-      analyze_dec(in_blocks, in_block_propa_ra, in_byte_propa);
+      is_dec = analyze_dec(in_blocks, in_block_propa_ra, in_byte_propa);
+      if(is_dec) {
+        type = TYPE_DEC;
+        return is_dec;
+      }
     }
-
+    return false;
   }
 //  analyze_enc(in_blocks, in_block_propa_ra, in_byte_propa);
 //  analyze_dec(in_blocks, in_block_propa_ra, in_byte_propa);
@@ -90,6 +96,7 @@ bool CFBDetector::analyze_enc(const RangeArray &in_blocks,
     cout << "block: " << i << " len: " << in_blocks[i]->get_len() << endl;
   }
 
+  uint32_t num_block = 0;
   for(uint32_t i = 0; i < in_blocks.get_size(); i++) {
     bool is_det;
     is_det = analyze_enc_block(i, in_blocks, in_block_propa_ra, in_byte_propa);
@@ -109,10 +116,27 @@ bool CFBDetector::analyze_enc(const RangeArray &in_blocks,
       uint32_t output_end = output_.get_end();
       output_end += block_sz;
       output_.set_end(output_end);
+
+      num_block++;
     }
   }
+
+  bool is_dtct = false;
+  if (input_.get_len() > 0) {
+    uint32_t block_sz = in_blocks[0]->get_len();
+    if (in_block_propa_ra[0]->at(0)->get_len() == block_sz * (num_block - 1)) {
+      // the first block propagated range must be len of total detected block sz
+      // except the first one
+      is_dtct = true;
+    } else {
+      is_dtct = false;
+    }
+  }
+
   input_.disp_range();
   output_.disp_range();
+
+  return is_dtct;
 }
 
 bool CFBDetector::analyze_dec(const RangeArray &in_blocks,
@@ -124,6 +148,10 @@ bool CFBDetector::analyze_dec(const RangeArray &in_blocks,
   }
 
   for(uint32_t i = 0; i < in_blocks.get_size(); i++) {
+    if(i == 4) {
+      cout << "5th block" << endl;
+    }
+
     bool is_det;
     is_det = analyze_dec_block(i, in_blocks, in_block_propa_ra, in_byte_propa);
 
@@ -225,8 +253,10 @@ bool CFBDetector::analyze_dec_block(uint32_t idx_block,
     is_det = dec_last_block(idx_block, in_blocks, in_block_propa_ra,
                             in_byte_propa);
   } else if(is_last_sec) {
-    is_det = dec_reg_block(idx_block, in_blocks, in_block_propa_ra,
-                           in_byte_propa);
+//    is_det = dec_reg_block(idx_block, in_blocks, in_block_propa_ra,
+//                           in_byte_propa);
+    is_det = dec_last_sec_block(idx_block, in_blocks, in_block_propa_ra,
+                                in_byte_propa);
   } else {
     is_det = dec_reg_block(idx_block, in_blocks, in_block_propa_ra,
                            in_byte_propa);
@@ -410,6 +440,40 @@ bool CFBDetector::dec_reg_block(uint32_t idx_block,
   }
 }
 
+bool CFBDetector::dec_last_sec_block(uint32_t idx_block,
+                                     const RangeArray &in_blocks,
+                                     const VSPtrRangeArray &in_block_propa_ra,
+                                     const std::vector<ByteTaintPropagate *> &in_byte_propa)
+{
+  // Last sec block has a common range that there is no compare
+  uint32_t prev_block_sz    = in_blocks.at(idx_block-1)->get_len();
+  uint32_t curr_block_sz    = in_blocks.at(idx_block)->get_len();
+  uint32_t idx_b_begin = idx_block * prev_block_sz;
+  uint32_t idx_b_end   = idx_b_begin + curr_block_sz;
+
+  uint32_t b_begin_propa_addr =
+      in_byte_propa[idx_b_begin]->get_taint_propagate()->at(0)->get_begin();
+
+  uint32_t i = idx_b_begin;
+  for(; i < idx_b_end; i++) {
+    cout << "byte idx: " << i << endl;
+    in_byte_propa[i]->get_taint_propagate()->disp_range_array();
+
+    bool is_byte_det = false;
+//    is_byte_det = analyze_enc_byte(idx_b_begin, i, b_begin_propa_addr,
+//                                       in_byte_propa);
+    is_byte_det = analyze_enc_last_byte(idx_b_begin, i, b_begin_propa_addr,
+                                       in_byte_propa);
+
+    if (!is_byte_det) {
+      cout << "cfb dec last block: does not fit pattern" << endl;
+      return false;
+    }
+  }
+
+  return true;
+}
+
 bool CFBDetector::dec_last_block(uint32_t idx_block,
                                  const RangeArray &in_blocks,
                                  const VSPtrRangeArray &in_block_propa_ra,
@@ -545,11 +609,11 @@ bool CFBDetector::dec_block_pattern(uint32_t idx_block,
 
   bool is_offset_curr_b = (curr_propa_r.get_begin() - output_end == block_sz);
   bool has_propa_whole_block = curr_propa_r.get_len() >= block_sz;
-  bool has_diff_end     = next_propa_r.get_end() != curr_propa_r.get_end();
+  // bool has_diff_end     = next_propa_r.get_end() != curr_propa_r.get_end();
 
   if(is_offset_curr_b &&
-      has_propa_whole_block &&
-      has_diff_end) {
+      has_propa_whole_block /* &&
+      has_diff_end */) {
     return true;
   } else {
     cout << "cfb dec does not has block pattern" << endl;

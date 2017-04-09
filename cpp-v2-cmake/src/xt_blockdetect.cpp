@@ -515,8 +515,8 @@ void BlockDetect::detect_block_size_handling_last_block(RangeArray &input_blocks
 
     uint32_t i = b_begin_byte;
     for (; i < b_end_byte; i++) {
-      if(i == 34) {
-        cout << "i is 34" << endl;
+      if(i == 16) {
+        cout << "i is 16" << endl;
       }
 
       common.disp_range_array();
@@ -689,7 +689,8 @@ bool BlockDetect::is_block_end(RangeArray &common,
   // begin addr: 804c080 len: 8 bytes
   // begin addr: 804c0a8 len: 8 bytes
   // This is valid
-  if(prev_common[0]->get_begin() == common[0]->get_begin() ) {
+  if(prev_common[0]->get_begin() == common[0]->get_begin() &&
+      common[0]->get_len() >= 8) {
     return false;
   } else {
     return true;

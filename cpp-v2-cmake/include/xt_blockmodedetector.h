@@ -80,6 +80,10 @@ class CFBDetector : public BlockModeDetector{
                      const RangeArray &in_blocks,
                      const VSPtrRangeArray &in_block_propa_ra,
                      const std::vector<ByteTaintPropagate *> &in_byte_propa);
+  bool dec_last_sec_block(uint32_t idx_block,
+                     const RangeArray &in_blocks,
+                     const VSPtrRangeArray &in_block_propa_ra,
+                     const std::vector<ByteTaintPropagate *> &in_byte_propa);
   bool dec_last_block(uint32_t idx_block,
                       const RangeArray &in_blocks,
                       const VSPtrRangeArray &in_block_propa_ra,
