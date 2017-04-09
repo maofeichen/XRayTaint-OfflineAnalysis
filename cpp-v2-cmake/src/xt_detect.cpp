@@ -78,9 +78,9 @@ void Detect::detect_cipher() {
                 cout << "successfully detects cipher" << endl;
               }
 
-              if (in_buf.beginAddress == 0x804b0c0 &&
-                  in_buf.size == 92 * 8 &&
-                  out_buf.beginAddress == 0x804b8a0 &&
+              if (in_buf.beginAddress == 0x804c860 &&
+                  in_buf.size == 96 * 8 &&
+                  out_buf.beginAddress == 0x804d040 &&
                   out_buf.size == 96 * 8) {
 
 //                int num_source = in_buf.vNodeIndex.size();
@@ -607,23 +607,24 @@ bool Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
   // Aval_In_Out aval_in_out(in, out);
 
   vector<vector<propagate_byte_> > v_in_propagated_byte;
-  vector<vector<propagate_byte_> > v_in_propagated_byte_test;
-  v_in_propagated_byte_test = gen_in_propagate_byte(in, propagate);
+//  vector<vector<propagate_byte_> > v_in_propagated_byte_test;
+
+//  v_in_propagated_byte_test = gen_in_propagate_byte(in, propagate);
   v_in_propagated_byte = gen_in_prpgt_byte(in, propagate);
 
-  if(v_in_propagated_byte.size() == v_in_propagated_byte_test.size() ) {
-    for(int i = 0; i < v_in_propagated_byte.size(); i++) {
-      if(v_in_propagated_byte[i].size() == v_in_propagated_byte_test[i].size() ) {
-        for(int j = 0; j < v_in_propagated_byte[i].size(); j++) {
-          cout << "addr: " << hex <<  v_in_propagated_byte[i][j].addr
-               << " val: " << v_in_propagated_byte[i][j].val << endl;
-
-          cout << "test addr: " << hex << v_in_propagated_byte_test[i][j].addr
-               << " val: " << v_in_propagated_byte_test[i][j].val << endl;
-        }
-      }
-    }
-  }
+//  if(v_in_propagated_byte.size() == v_in_propagated_byte_test.size() ) {
+//    for(int i = 0; i < v_in_propagated_byte.size(); i++) {
+//      if(v_in_propagated_byte[i].size() == v_in_propagated_byte_test[i].size() ) {
+//        for(int j = 0; j < v_in_propagated_byte[i].size(); j++) {
+//          cout << "addr: " << hex <<  v_in_propagated_byte[i][j].addr
+//               << " val: " << v_in_propagated_byte[i][j].val << endl;
+//
+//          cout << "test addr: " << hex << v_in_propagated_byte_test[i][j].addr
+//               << " val: " << v_in_propagated_byte_test[i][j].val << endl;
+//        }
+//      }
+//    }
+//  }
 
   cout << "numbef of bytes in in buffer: " << dec << in.size / 8 << endl;
   cout << "number of vector of propagte bytes: " << dec
@@ -654,10 +655,8 @@ bool Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
 
   RangeArray input_blocks;
   VSPtrRangeArray input_block_propa;
-  BlockDetect block_detector(in.beginAddress,
-                             in.size / 8,
-                             out.beginAddress,
-                             out.size / 8);
+  BlockDetect block_detector(in.beginAddress, in.size / 8,
+                             out.beginAddress, out.size / 8);
   block_detector.detect_block_size(input_blocks, input_block_propa,
                                    v_in_taint_propagate);
 //  cout << "block detection result: " << endl;
