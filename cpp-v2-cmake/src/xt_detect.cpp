@@ -290,6 +290,17 @@ Detect::gen_in_propagate_byte(t_AliveContinueBuffer &in, Propagate &propagate)
     return in_vec_propagate_byte;
 }
 
+std::vector<std::vector<Detect::propagate_byte_> > Detect::gen_in_prpgt_byte(
+    t_AliveContinueBuffer &in,
+    Propagate &propagate)
+{
+  vector<Detect::Multi_Taint_Source_> v_taint_src;
+  v_taint_src = gen_taint_source(in);
+
+  
+
+}
+
 void Detect::gen_range_array_per_byte(vector<Detect::propagate_byte_> v_propagate_byte,
                                       RangeArray *range_array)
 {
@@ -438,6 +449,61 @@ void Detect::gen_in_range_array(t_AliveContinueBuffer &in,
 //  }
 }
 
+vector<Detect::Multi_Taint_Source_> Detect::gen_taint_source(const t_AliveContinueBuffer &in)
+{
+  vector<Detect::Multi_Taint_Source_> v_taint_src;
+
+  uint32_t begin_addr = in.beginAddress;
+  uint32_t buf_sz     = in.size / 8;
+
+  for(uint32_t byte_idx = 0; byte_idx < buf_sz; byte_idx++) {
+    uint32_t addr = begin_addr + byte_idx;
+    Multi_Taint_Source_ multi_taint_src;
+    multi_taint_src.addr = addr;
+
+    for(int node_idx = 0; node_idx < in.vNodeIndex.size(); node_idx++) {
+      XTNode node = get_mem_node(in.vNodeIndex[node_idx]);
+      uint32_t node_begin = node.getIntAddr();
+      uint32_t node_sz    = node.getByteSize();
+
+      if(node_begin > addr) {
+        // if begin address is already larger, then it is impossible that the
+        // addr will be in this node range
+        break;
+      }
+
+      if (node_begin <= addr) {
+        if (node_begin + node_sz - 1 >= addr) {
+          // addr is in this node range
+          uint8_t pos = compute_byte_pos(addr, node);
+          Taint_Source_ taint_source_;
+          taint_source_.node_idx = in.vNodeIndex[node_idx];
+          taint_source_.pos = pos;
+
+          multi_taint_src.v_multi_src.push_back(taint_source_);
+        } else {
+          continue;
+        }
+      }
+    }
+
+    v_taint_src.push_back(multi_taint_src);
+  }
+
+  for(int i = 0; i < v_taint_src.size(); i++) {
+    cout << "source addr: " << hex << v_taint_src[i].addr << endl;
+    for(int j = 0; j < v_taint_src[i].v_multi_src.size(); j++) {
+      uint32_t node_idx = v_taint_src[i].v_multi_src[j].node_idx;
+      uint8_t pos = v_taint_src[i].v_multi_src[j].pos;
+
+      XTNode node = get_mem_node(node_idx);
+      cout << "src node addr: " << hex << node.getIntAddr()
+           << " size: " << dec << node.getByteSize()
+           << " pos: " <<  dec << unsigned(pos) << endl;
+    }
+  }
+  return v_taint_src;
+}
 
 XTNode Detect::get_mem_node(unsigned long index)
 {
@@ -490,13 +556,30 @@ Detect::init_taint_source(XTNode &node, std::vector<Record> &log_rec)
     return src;
 }
 
+uint8_t Detect::compute_byte_pos(uint32_t addr, XTNode &node)
+{
+  uint8_t pos = 0;
+  uint32_t node_begin = node.getIntAddr();
+  uint8_t node_sz     = node.getByteSize();
+
+  for(int i = 0; i < node_sz; i++) {
+    if(addr == node_begin + i) {
+      pos = i;
+      break;
+    }
+  }
+
+  return pos;
+}
+
 bool Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
                                   t_AliveContinueBuffer &out,
                                   Propagate &propagate) {
   // Aval_In_Out aval_in_out(in, out);
 
   vector<vector<propagate_byte_> > v_in_propagated_byte;
-  v_in_propagated_byte = gen_in_propagate_byte(in, propagate);
+//  v_in_propagated_byte = gen_in_propagate_byte(in, propagate);
+  v_in_propagated_byte = gen_in_prpgt_byte(in, propagate);
 
   cout << "numbef of bytes in in buffer: " << dec << in.size / 8 << endl;
   cout << "number of vector of propagte bytes: " << dec

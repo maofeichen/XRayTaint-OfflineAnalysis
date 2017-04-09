@@ -38,6 +38,16 @@ class Detect {
     t_AliveContinueBuffer out_;
   };
 
+  struct Taint_Source_ {
+    uint32_t node_idx;
+    u_int8_t pos; // Indicates which byte is the taint source
+  };
+
+  struct Multi_Taint_Source_ {
+    uint32_t addr = 0;
+    std::vector<Detect::Taint_Source_> v_multi_src;
+  };
+
   // Due to there might be multiple same taint sources (same addr, different val),
   // computes the interval to next different taint source
   inline unsigned long comp_multi_src_interval(std::vector<unsigned long> &v_node_idx,
@@ -68,9 +78,13 @@ class Detect {
   // get the memory node (load or store) given the index in the log
   XTNode get_mem_node(unsigned long index);
 
+  // !not used
   // Generates propagate bytes for all bytes of in buffer
   std::vector<std::vector<Detect::propagate_byte_> >
   gen_in_propagate_byte(t_AliveContinueBuffer &in, Propagate &propagate);
+
+  std::vector<std::vector<Detect::propagate_byte_> >
+  gen_in_prpgt_byte(t_AliveContinueBuffer &in, Propagate &propagate);
 
   // Generates range array for 1 byte taint source
   void gen_range_array_per_byte(std::vector<Detect::propagate_byte_> v_propagate_byte,
@@ -81,10 +95,16 @@ class Detect {
   void gen_in_range_array(t_AliveContinueBuffer &in,
                           std::vector<std::vector<Detect::propagate_byte_> > &in_vec_propagate_byte,
                           std::vector<ByteTaintPropagate *> &in_taint_propagate);
+  // There might be multiple sources for a byte, so group multi sources if
+  // any, for further propagation search
+  std::vector<Detect::Multi_Taint_Source_> gen_taint_source(const t_AliveContinueBuffer &in);
+
 
   // Given a node in log, convert it to NodePropagate format as taint source
   // for taint propagation search
   NodePropagate init_taint_source(XTNode &node, std::vector<Record> &log_rec);
+
+  uint8_t compute_byte_pos(uint32_t addr, XTNode &node);
 
   // Detects cipher between a potential input and output buffers
   bool detect_cipher_in_out(t_AliveContinueBuffer &in,
