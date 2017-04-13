@@ -258,8 +258,7 @@ vector<string> XT_PreProcess::clean_nonempty_function_mark(vector<string> &v)
     return v_new;
 }
 
-vector<string> XT_PreProcess::clean_nonempyt_func_mark_fast(
-    vector<string> &v_s_log) {
+vector<string> XT_PreProcess::clean_nonempyt_func_mark_fast(vector<string> &v_s_log) {
   cout << "cleaning invalid funcion mark..." << endl;
   vector<string> v;
 

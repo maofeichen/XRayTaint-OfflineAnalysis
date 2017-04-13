@@ -24,7 +24,7 @@ vector<string> XT_Util::split(const char *s, char c)
     return v;
 }
 
-bool XT_Util::is_pair_function_mark(string &s_call, string &s_ret)
+bool XT_Util::is_pair_function_mark(const string &s_call, const string &s_ret)
 {
     vector<string> v_call, v_ret;
     int sz;

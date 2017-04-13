@@ -16,6 +16,8 @@ class XT_Liveness {
   XT_Liveness(std::vector<std::string> &s_vAliveBuffer);
 
   static std::vector<std::string> analyze_alive_buffer(std::vector<std::string> &xtLog);
+  // Optimize version O(n)
+  static std::vector<std::string> analyze_alive_buf_fast(std::vector<std::string> &v_log);
   static std::vector<t_AliveFunctionCall> merge_continue_buffer(std::vector<std::string> &);
   static std::vector<t_AliveFunctionCall> filter_continue_buffer(std::vector<
       t_AliveFunctionCall> &);

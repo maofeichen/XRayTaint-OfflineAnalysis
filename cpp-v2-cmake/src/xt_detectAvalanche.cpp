@@ -76,7 +76,8 @@ void XT_DetectAvalanche::detect_avalanche(string logPath, bool is_dump) {
   XT_Liveness xt_liveness;
   vector<string> v_s_alive_buf;
 
-  v_s_alive_buf = XT_Liveness::analyze_alive_buffer(v_s_log);
+  v_s_alive_buf = XT_Liveness::analyze_alive_buf_fast(v_s_log);
+  // v_s_alive_buf = XT_Liveness::analyze_alive_buffer(v_s_log);
   // v_s_alive_buf =  xt_liveness.insert_load_buffer(v_s_alive_buf, v_s_log);
   if (is_dump) {
     xt_file.write(
@@ -114,8 +115,8 @@ void XT_DetectAvalanche::detect_avalanche(string logPath, bool is_dump) {
   //    }
 
   // Detects after liveness analysis
-  Detect det(v_alive_func, o_log, log_rec);
-  det.detect_cipher();
+//  Detect det(v_alive_func, o_log, log_rec);
+//  det.detect_cipher();
 }
 
 string XT_DetectAvalanche::get_time() {

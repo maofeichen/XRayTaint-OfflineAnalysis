@@ -88,8 +88,106 @@ vector<string> XT_Liveness::analyze_alive_buffer(vector<string> &xtLog)
             }
         }
     }
-
+    cout << "num records after analyzing function call: " << alive_buffer.size() << endl;
     return alive_buffer;
+}
+
+vector<string> XT_Liveness::analyze_alive_buf_fast(vector<string> &v_log)
+{
+  cout << "Analyzing alive buffers..." << endl;
+
+  vector<string> v_alive_buf;
+
+  vector< vector<string>::const_iterator > call_stack;
+
+  uint32_t num_func = 0;
+  for(auto it_rec = v_log.begin(); it_rec != v_log.end(); ++it_rec) {
+    string flag  = it_rec->substr(0,2);
+    bool is_mark = XT_Util::is_mark(flag);
+
+    if(is_mark) {
+      if(XT_Util::equal_mark(flag, flag::XT_CALL_INSN) ||
+          XT_Util::equal_mark(flag, flag::XT_CALL_INSN_FF2) ) {
+        call_stack.push_back(it_rec);
+      } else if(XT_Util::equal_mark(flag, flag::XT_RET_INSN_SEC) &&
+                !call_stack.empty() ) {
+        for(auto it_call = call_stack.rbegin(); it_call != call_stack.rend();
+            ++it_call) {
+          vector<string>::const_iterator it_last_call = *it_call;
+          vector<string>::const_iterator it_ret_sec = it_rec;
+          vector<string>::const_iterator it_ret = it_rec - 1;
+
+          if (XT_Util::is_pair_function_mark(*it_last_call, *it_ret)) {
+            vector<string> v_call = XT_Util::split(it_last_call->c_str(), '\t');
+            vector<string> v_ret = XT_Util::split(it_ret->c_str(), '\t');
+
+            assert(v_call.size() == v_ret.size() );
+            string s_call_idx = v_call[3];
+            string s_ret_idx  = v_ret[3];
+            uint32_t call_idx = stoul(s_call_idx, nullptr, 10);
+            uint32_t ret_idx  = stoul(s_ret_idx, nullptr, 10);
+
+//            cout << "call: " << v_log[call_idx] << endl;
+//            cout << "ret: " << v_log[ret_idx] << endl;
+
+            vector<string>::const_iterator it_pair_c = v_log.begin() + call_idx;
+            vector<string>::const_iterator it_pair_r = v_log.begin() + ret_idx + 2;
+            vector<string> v_func_call(it_pair_c, it_pair_r);
+//            for (auto it = v_func_call.begin(); it != v_func_call.end(); ++it) {
+//              cout << "rec in pair func call: " << *it << endl;
+//            }
+
+            vector<string> tmp =
+                XT_Liveness::analyze_alive_buffer_per_function(v_func_call);
+            if (tmp.size() > 4) {
+              // indicates func call has valid buffers
+              for (auto it = tmp.begin(); it != tmp.end(); ++it) {
+                v_alive_buf.push_back(*it);
+              }
+            }
+
+            num_func++;
+            cout << "Analyzing " << num_func << " function call..." << endl;
+            break;
+          }
+        }
+
+
+//        vector<string>::const_iterator it_call = call_stack.back();
+//        vector<string>::const_iterator it_ret_sec = it_rec;
+//        vector<string>::const_iterator it_ret = it_rec - 1;
+//
+//        vector<string> v_call = XT_Util::split(it_call->c_str(), '\t');
+//        vector<string> v_ret  = XT_Util::split(it_ret->c_str(), '\t');
+//
+//        assert(v_call.size() == v_ret.size() );
+//        string c_esp = v_call[1];
+//        string r_esp = v_ret[1];
+//
+//        if(c_esp.compare(r_esp) == 0) {
+//          // esp matches, indicating paired call ret mark
+//          vector<string> v_func_call(it_call, it_ret_sec+1);
+////          for(auto it = v_func_call.begin(); it != v_func_call.end(); ++it) {
+////            cout << "rec in pair func call: " << *it << endl;
+////          }
+//
+//          vector<string> tmp = XT_Liveness::analyze_alive_buffer_per_function(v_func_call);
+//          if(tmp.size() > 4) {
+//            // indicates func call has valid buffers
+//            for(auto it = tmp.begin(); it != tmp.end(); ++it) {
+//              v_alive_buf.push_back(*it);
+//            }
+//          }
+//
+//          call_stack.pop_back();
+//          num_func++;
+//          cout << "Analyzing " << num_func << " function call..." << endl;
+//        }
+      }
+    }
+  }
+  cout << "num records after analyzing function call: " << v_alive_buf.size() << endl;
+  return v_alive_buf;
 }
 
 // !!! IGNORE
