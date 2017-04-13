@@ -88,7 +88,8 @@ void XT_DetectAvalanche::detect_avalanche(string logPath, bool is_dump) {
   // Create continuous buffers in each function call
   vector<t_AliveFunctionCall> v_alive_func;
   XT_Liveness func_live(v_s_alive_buf);
-  v_alive_func = func_live.create_function_call_buffer(o_log);
+  v_alive_func = func_live.create_func_call_buf_fast(o_log);
+//  v_alive_func = func_live.create_function_call_buffer(o_log);
 
   func_live.propagate_alive_buffer(v_alive_func);
   v_alive_func = func_live.filter_kernel_buffer(v_alive_func);

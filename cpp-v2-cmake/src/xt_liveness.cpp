@@ -567,43 +567,86 @@ vector<XT_FunctionCall> XT_Liveness::getAliveFunctionCall()
 // Create continuous buffers for each function call
 vector<t_AliveFunctionCall> XT_Liveness::create_function_call_buffer(XTLog &xtLog)
 {
-    vector<t_AliveFunctionCall> vAliveFunction;
-    t_AliveFunctionCall aAliveFunction;
+  vector<t_AliveFunctionCall> vAliveFunction;
+  t_AliveFunctionCall aAliveFunction;
 
-    vector<string>::iterator itCall;
-    vector<string>::iterator itRet;
+  vector<string>::iterator itCall;
+  vector<string>::iterator itRet;
 
-    std::cout << "Creating continue buffer for function calls..." << endl;
+  std::cout << "Creating continue buffer for function calls..." << endl;
 
-    unsigned int numFunction = 1;
-    vector<string>::iterator it = m_s_vAliveBuffer.begin();
-    for(; it != m_s_vAliveBuffer.end(); ++it){
-        if(XT_Util::equal_mark(*it, flag::XT_CALL_INSN) || 
-           XT_Util::equal_mark(*it, flag::XT_CALL_INSN_FF2) ){
-            itCall = it;
+  unsigned int numFunction = 1;
+  vector<string>::iterator it = m_s_vAliveBuffer.begin();
+  for (; it != m_s_vAliveBuffer.end(); ++it) {
+    if (XT_Util::equal_mark(*it, flag::XT_CALL_INSN) ||
+        XT_Util::equal_mark(*it, flag::XT_CALL_INSN_FF2)) {
+      itCall = it;
 
-            for(itRet = itCall + 1; itRet != m_s_vAliveBuffer.end(); ++itRet){
-                // find matched ret marks
-                if(XT_Util::equal_mark(*itRet, flag::XT_RET_INSN_SEC) ){
-                    vector<string> s_aFunctionCallBuffer(itCall, itRet + 1);
-                    XT_FunctionCall aFunctionCallBuffer(s_aFunctionCallBuffer, xtLog);
+      for (itRet = itCall + 1; itRet != m_s_vAliveBuffer.end(); ++itRet) {
+        // find matched ret marks
+        if (XT_Util::equal_mark(*itRet, flag::XT_RET_INSN_SEC)) {
+          vector<string> s_aFunctionCallBuffer(itCall, itRet + 1);
+          XT_FunctionCall aFunctionCallBuffer(s_aFunctionCallBuffer, xtLog);
 
-                    aAliveFunction = aFunctionCallBuffer.merge_continuous_buffer();
-                    vAliveFunction.push_back(aAliveFunction);
+          aAliveFunction = aFunctionCallBuffer.merge_continuous_buffer();
+          vAliveFunction.push_back(aAliveFunction);
 
-                    // Not used! 
-                    // m_vAliveFunctionCall.push_back(aFunctionCallBuffer);
+          // Not used!
+          // m_vAliveFunctionCall.push_back(aFunctionCallBuffer);
 
-                    cout << "Liveness Analysis: Num of function call had been scanned: " << numFunction << endl;
-                    numFunction++;
-                    break; 
-                }
-            }
+          cout << "Liveness Analysis: Num of function call had been scanned: "
+               << numFunction << endl;
+          numFunction++;
+          break;
         }
+      }
     }
-    cout << "Liveness Analysis: total number of function calls: " << numFunction << endl;
+  }
+  cout << "Liveness Analysis: total number of function calls: " << numFunction
+       << endl;
 
-    return vAliveFunction;
+  return vAliveFunction;
+}
+
+vector<t_AliveFunctionCall> XT_Liveness::create_func_call_buf_fast(XTLog &xt_log)
+{
+  std::cout << "Creating continue buffer for function calls..." << endl;
+
+  vector<t_AliveFunctionCall> v_alive_func;
+
+  vector< vector<string>::const_iterator > call_stack;
+
+  uint32_t num_func = 0;
+  for(auto it_rec = m_s_vAliveBuffer.begin(); it_rec != m_s_vAliveBuffer.end(); ++it_rec) {
+    if(XT_Util::equal_mark(*it_rec, flag::XT_CALL_INSN) ||
+        XT_Util::equal_mark(*it_rec, flag::XT_CALL_INSN_FF2) ) {
+      call_stack.push_back(it_rec);
+    } else if(XT_Util::equal_mark(*it_rec, flag::XT_RET_INSN_SEC) &&
+        !call_stack.empty() ) {
+      vector<string>::const_iterator it_call = call_stack.back();
+      vector<string>::const_iterator it_ret  = it_rec - 1;
+
+      assert(XT_Util::is_pair_function_mark(*it_call, *it_ret) );
+
+      vector<string> s_a_func_buf(it_call, it_ret+2);
+//      for(auto it = s_a_func_buf.begin(); it != s_a_func_buf.end(); ++it) {
+//        cout << "rec in func call: " << *it << endl;
+//      }
+      t_AliveFunctionCall a_alive_func =
+          XT_FunctionCall::merge_continuous_buf(s_a_func_buf, xt_log);
+      v_alive_func.push_back(a_alive_func);
+//      XT_FunctionCall a_func_buf(s_a_func_buf, xt_log);
+//      t_AliveFunctionCall a_alive_func = a_func_buf.merge_continuous_buffer();
+//      v_alive_func.push_back(a_alive_func);
+
+      num_func++;
+      cout << "liveness analysis: num of function call had been scanned: " <<
+           num_func << endl;
+      call_stack.pop_back();
+    }
+  }
+
+  return v_alive_func;
 }
 
 // Filter out buffer size smaller than 8 bytes

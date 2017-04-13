@@ -31,6 +31,7 @@ class XT_Liveness {
 
   std::vector<XT_FunctionCall> getAliveFunctionCall();
   vector<t_AliveFunctionCall> create_function_call_buffer(XTLog &xtLog);
+  vector<t_AliveFunctionCall> create_func_call_buf_fast(XTLog &xt_log);
   void filter_small_continuous_buffer();
   std::vector<t_AliveFunctionCall> filter_kernel_buffer(std::vector<
       t_AliveFunctionCall> &vAliveFunction);
