@@ -1,7 +1,7 @@
 #include "boost/program_options.hpp"
 
 //#include "xt_detector.h"
-//#include "xt_util.h"
+#include "xt_util.h"
 
 using namespace boost;
 namespace po = boost::program_options;
@@ -31,10 +31,10 @@ int main(int argc, char *argv[]) {
     string fp = vm["input-file"].as< string >();
     cout << "input log: " << fp << endl;
 
-//    vector<string> v_fp = XT_Util::split(fp.c_str(), '/');
-//    string log_name = v_fp.back();
-//    log_name = log_name.substr(0, log_name.size() - 4);
-//    cout << "log name: " << log_name << endl;
+    vector<string> v_fp = util::split(fp.c_str(), '/');
+    string log_name = v_fp.back();
+    log_name = log_name.substr(0, log_name.size() - 4);
+    cout << "log name: " << log_name << endl;
 
     bool is_dump = vm["dump-result"].as< bool >();
     cout << "is dump result: " << is_dump << endl;
