@@ -10,16 +10,16 @@ DIR_OBJ = ./build/
 
 DET_OBJ = $(DIR_OBJ)main.o $(DIR_OBJ)util.o
 
-all: detector
+all: $(DIR_BIN)detector
 
-detector : $(DET_OBJ) 
-	$(CC) -o $(DIR_BIN)detector  $(DET_OBJ) $(LFLAG) -lboost_program_options
+$(DIR_BIN)detector : $(DET_OBJ) 
+	$(CC) -o $@  $^ $(LFLAG) -lboost_program_options
 	
 $(DIR_OBJ)main.o : $(DIR_SRC)main.cpp
-	$(CC) -c $(DIR_SRC)main.cpp $(CFLAG) -o $(DIR_OBJ)main.o
+	$(CC) -c $^ $(CFLAG) -o $@
 
 $(DIR_OBJ)util.o : $(DIR_SRC)xt_util.cpp
-	$(CC) $(INC) -c $(DIR_SRC)xt_util.cpp $(CFLAG) -o $(DIR_OBJ)util.o
+	$(CC) $(INC) -c $^ $(CFLAG) -o $@
 	
 .PHONY : clean
 clean :
