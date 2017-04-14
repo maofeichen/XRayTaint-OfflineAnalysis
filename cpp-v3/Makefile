@@ -8,15 +8,15 @@ DIR_SRC = ./src/
 DIR_INC = ./include/
 DIR_OBJ = ./build/
 
-DET_OBJ = $(DIR_OBJ)main.o $(DIR_OBJ)util.o
+DET_OBJ = $(DIR_OBJ)main.o $(DIR_OBJ)xt_util.o
 
 all: $(DIR_BIN)detector
 
 $(DIR_BIN)detector : $(DET_OBJ) 
 	$(CC) -o $@  $^ $(LFLAG) -lboost_program_options
 
-$(DIR_OBJ)%.o : $(DIR_SRC)%.c
-	$(CC) -c $< $(CFLAG) -o $@
+$(DET_OBJ): $(DIR_OBJ)%.o : $(DIR_SRC)%.cpp
+	$(CC) $(INC) -c $< $(CFLAG) -o $@
 	
 #$(DIR_OBJ)main.o : $(DIR_SRC)main.cpp
 #	$(CC) -c $^ $(CFLAG) -o $@
