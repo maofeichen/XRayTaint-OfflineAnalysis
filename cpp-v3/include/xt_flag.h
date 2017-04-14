@@ -3,7 +3,8 @@
 
 #include <string>
 
-namespace xt_flag {
+namespace flag 
+{
 const std::string XT_SIZE_BEGIN          = "20";
 const std::string XT_SIZE_END            = "24";
 
@@ -19,17 +20,17 @@ const std::string XT_RET_INSN            = "18";
 const std::string XT_RET_INSN_SEC        = "19";
 
 const std::string TCG_QEMU_LD            = "52";
-const std::string TCG_QEMU_LD_POINTER	= "56";
+const std::string TCG_QEMU_LD_POINTER	   = "56";
 const std::string TCG_QEMU_ST            = "5a";
-const std::string TCG_QEMU_ST_POINTER	= "5e";
+const std::string TCG_QEMU_ST_POINTER	   = "5e";
 
-const int NUM_TCG_LD			= 0x52;
+const int NUM_TCG_LD			    = 0x52;
 const int NUM_TCG_LD_POINTER	= 0x56;
-const int NUM_TCG_ST			= 0x5a;
+const int NUM_TCG_ST			    = 0x5a;
 const int NUM_TCG_ST_POINTER	= 0x5e;
 
-const int NUM_TCG_LD_MIN		= 0x52;
-const int NUM_TCG_ST_MAX		= 0x61;
+const int NUM_TCG_LD_MIN		  = 0x52;
+const int NUM_TCG_ST_MAX		  = 0x61;
 
 const std::string TCG_ADD            = "3b";
 const std::string TCG_XOR            = "47";

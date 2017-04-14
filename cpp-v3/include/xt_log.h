@@ -22,7 +22,7 @@ class Log{
   std::vector<Record> v_rec_;
 
   inline uint8_t decode_byte_sz(uint8_t sz_encode);
-  inline xt_flag::Mem_Type get_mem_type(uint32_t flag);
+  inline flag::Mem_Type get_mem_type(uint32_t flag);
   inline bool is_in_mem_range(uint32_t flag);
   inline void update_mem_node(Node node,
                               std::string flag_update,

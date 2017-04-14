@@ -18,8 +18,8 @@ vector<string> PreProcess::clean_unuse_insn_mark(vector<string> &v_s_log) {
     string flag = it->substr(0,2);
     string flag_next = it_next->substr(0,2);
 
-    if(XT_Util::equal_mark(flag, xt_flag::XT_INSN_ADDR) &&
-        XT_Util::equal_mark(flag_next, xt_flag::XT_INSN_ADDR) ) {
+    if(XT_Util::equal_mark(flag, flag::XT_INSN_ADDR) &&
+        XT_Util::equal_mark(flag_next, flag::XT_INSN_ADDR) ) {
       continue;
     }
 
@@ -35,7 +35,7 @@ vector<string> PreProcess::clean_empty_func_mark(vector<string> &v_s_log) {
 
   for(auto it = v_s_log.begin(); it != v_s_log.end(); ++it) {
     string flag = it->substr(0,2);
-    if(XT_Util::equal_mark(flag, xt_flag::XT_RET_INSN_SEC) ) {
+    if(XT_Util::equal_mark(flag, flag::XT_RET_INSN_SEC) ) {
       string ret = v.back();
 
       if(v.size() < 3) {
@@ -45,8 +45,8 @@ vector<string> PreProcess::clean_empty_func_mark(vector<string> &v_s_log) {
       // if empty function mark, then last third record should be call mark
       string call = v[v.size() - 3];
       string call_flag = call.substr(0,2);
-      if(XT_Util::equal_mark(call_flag, xt_flag::XT_CALL_INSN) ||
-          XT_Util::equal_mark(call_flag, xt_flag::XT_CALL_INSN_FF2) ) {
+      if(XT_Util::equal_mark(call_flag, flag::XT_CALL_INSN) ||
+          XT_Util::equal_mark(call_flag, flag::XT_CALL_INSN_FF2) ) {
 
         // if call and ret esp values are same
         vector<string> v_call = XT_Util::split(call.c_str(), '\t');
@@ -85,12 +85,12 @@ vector<string> PreProcess::clean_invalid_func_mark(vector<string>
     bool is_mark = XT_Util::is_mark(flag);
 
     if(is_mark) {
-      if(XT_Util::equal_mark(flag, xt_flag::XT_CALL_INSN) ||
-          XT_Util::equal_mark(flag, xt_flag::XT_CALL_INSN_FF2) ) {
+      if(XT_Util::equal_mark(flag, flag::XT_CALL_INSN) ||
+          XT_Util::equal_mark(flag, flag::XT_CALL_INSN_FF2) ) {
 
         call_stack.push_back(*it);
         has_valid_rec = false;
-      } else if(XT_Util::equal_mark(flag, xt_flag::XT_RET_INSN_SEC) &&
+      } else if(XT_Util::equal_mark(flag, flag::XT_RET_INSN_SEC) &&
           !call_stack.empty() ) {
         string last_call = call_stack.back();
         it_curr_ret  = it - 1;

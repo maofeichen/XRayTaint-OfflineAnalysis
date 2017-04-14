@@ -54,27 +54,27 @@ uint8_t Log::decode_byte_sz(uint8_t sz_encode) {
   }
 }
 
-xt_flag::Mem_Type Log::get_mem_type(uint32_t flag) {
-  xt_flag::Mem_Type mt;
+flag::Mem_Type Log::get_mem_type(uint32_t flag) {
+  flag::Mem_Type mt;
 
-  if(flag > xt_flag::NUM_TCG_ST_POINTER) {
-     mt = xt_flag::M_STORE_PTR;
-  } else if(flag > xt_flag::NUM_TCG_ST) {
-     mt = xt_flag::M_STORE;
-  } else if(flag > xt_flag::NUM_TCG_LD_POINTER) {
-     mt = xt_flag::M_LOAD_PTR;
-  } else if(flag > xt_flag::NUM_TCG_LD) {
-     mt = xt_flag::M_LOAD;
+  if(flag > flag::NUM_TCG_ST_POINTER) {
+     mt = flag::M_STORE_PTR;
+  } else if(flag > flag::NUM_TCG_ST) {
+     mt = flag::M_STORE;
+  } else if(flag > flag::NUM_TCG_LD_POINTER) {
+     mt = flag::M_LOAD_PTR;
+  } else if(flag > flag::NUM_TCG_LD) {
+     mt = flag::M_LOAD;
   } else {
-    mt = xt_flag::M_UNKNOW;
+    mt = flag::M_UNKNOW;
   }
 
   return mt;
 }
 
 bool Log::is_in_mem_range(uint32_t flag) {
-  if(flag >= xt_flag::NUM_TCG_LD_MIN &&
-      flag <= xt_flag::NUM_TCG_ST_MAX ) {
+  if(flag >= flag::NUM_TCG_LD_MIN &&
+      flag <= flag::NUM_TCG_ST_MAX ) {
     return true;
   } else {
     return false;
@@ -98,22 +98,22 @@ void Log::update_mem_node(Node node, std::string flag_update, uint8_t sz_byte) {
 
 void Log::analyze_mem_record(uint32_t flag,
                              vector<Record>::iterator it_rec) {
-  xt_flag::Mem_Type mt = get_mem_type(flag);
+  flag::Mem_Type mt = get_mem_type(flag);
 
   switch (mt) {
-    case xt_flag::M_STORE_PTR:
+    case flag::M_STORE_PTR:
       update_store_ptr(it_rec, flag);
       break;
-    case xt_flag::M_STORE:
+    case flag::M_STORE:
       update_store(it_rec, flag);
       break;
-    case xt_flag::M_LOAD_PTR:
+    case flag::M_LOAD_PTR:
       update_load_ptr(it_rec, flag);
       break;
-    case xt_flag::M_LOAD:
+    case flag::M_LOAD:
       update_load(it_rec, flag);
       break;
-    case xt_flag::M_UNKNOW:
+    case flag::M_UNKNOW:
       cout << "error: analyze mem record: unknown mem type" << endl;
       break;
   }
@@ -127,11 +127,11 @@ void Log::update_store_ptr(std::vector<Record>::iterator it_rec,
 void Log::update_store(std::vector<Record>::iterator it_rec, uint32_t flag) {
   it_rec->print_record();
 
-  string flag_update  = xt_flag::TCG_QEMU_ST;
+  string flag_update  = flag::TCG_QEMU_ST;
   it_rec->get_src_node().set_flag(flag_update);
   it_rec->get_dst_node().set_flag(flag_update);
 
-  uint8_t sz_encode   = flag - xt_flag::NUM_TCG_ST;
+  uint8_t sz_encode   = flag - flag::NUM_TCG_ST;
   uint8_t byte_sz     = decode_byte_sz(sz_encode);
   if(byte_sz != 0) {
 
