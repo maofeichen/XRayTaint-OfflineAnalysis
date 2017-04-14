@@ -14,12 +14,15 @@ all: $(DIR_BIN)detector
 
 $(DIR_BIN)detector : $(DET_OBJ) 
 	$(CC) -o $@  $^ $(LFLAG) -lboost_program_options
-	
-$(DIR_OBJ)main.o : $(DIR_SRC)main.cpp
-	$(CC) -c $^ $(CFLAG) -o $@
 
-$(DIR_OBJ)util.o : $(DIR_SRC)xt_util.cpp
-	$(CC) $(INC) -c $^ $(CFLAG) -o $@
+$(DIR_OBJ)%.o : $(DIR_SRC)%.c
+	$(CC) -c $< $(CFLAG) -o $@
+	
+#$(DIR_OBJ)main.o : $(DIR_SRC)main.cpp
+#	$(CC) -c $^ $(CFLAG) -o $@
+#
+#$(DIR_OBJ)util.o : $(DIR_SRC)xt_util.cpp
+#	$(CC) $(INC) -c $^ $(CFLAG) -o $@
 	
 .PHONY : clean
 clean :
