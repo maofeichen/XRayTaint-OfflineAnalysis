@@ -1,6 +1,7 @@
 CXX 	  = g++-4.9
 CXXFLAG   = -g -std=c++11
-LFLAG     = -g -std=c++11
+LD		  = g++-4.9
+LFLAG     = 
 INC	  	  = -Iinclude
 
 DIR_BIN	= ./bin/
@@ -8,14 +9,18 @@ DIR_SRC = ./src/
 DIR_INC = ./include/
 DIR_OBJ = ./build/
 
-DET_OBJ = $(DIR_OBJ)main.o $(DIR_OBJ)xt_util.o
+DET_OBJ = $(DIR_OBJ)main.o \
+		  $(DIR_OBJ)xt_util.o $(DIR_OBJ)xt_detector.o \
+		  $(DIR_OBJ)xt_file.o $(DIR_OBJ)xt_preprocess.o
 
 all: $(DIR_BIN)detector
 
-$(DIR_BIN)detector : $(DET_OBJ) 
-	$(CXX) -o $@  $^ $(LFLAG) -lboost_program_options
+$(DIR_BIN)detector : $(DET_OBJ)
+	@echo "Linking: "$@ 
+	$(LD) -o $@  $^ $(LFLAG) -lboost_program_options
 
 $(DET_OBJ): $(DIR_OBJ)%.o : $(DIR_SRC)%.cpp
+	@echo "Compiling: "$<
 	$(CXX) $(INC) -c $< $(CXXFLAG) -MMD -MP -o $@
 
 -include $(DIR_OBJ)%.d	

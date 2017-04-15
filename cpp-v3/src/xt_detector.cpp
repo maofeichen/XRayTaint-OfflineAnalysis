@@ -1,6 +1,6 @@
 #include "xt_file.h"
 #include "xt_detector.h"
-#include "xt_log.h"
+//#include "xt_log.h"
 #include "xt_preprocess.h"
 
 #include <iostream>
@@ -16,31 +16,22 @@ void Detector::detect() {
   string curr_time = get_time();
   curr_time        = '-' + curr_time;
 
+  vector<string> s_log;
   xt_file::File file(fn_);
-  vector<string> v_s_log = file.read();
-  cout << "init log entries: " << v_s_log.size() << endl;
+  file.read(s_log);
+  cout << "init log entries: " << s_log.size() << endl;
 
-  PreProcess pre_pro;
-  v_s_log = pre_pro.clean_unuse_insn_mark(v_s_log);
-  cout << "log entries after cleaning insn mark: " << v_s_log.size() << endl;
-
-  v_s_log = pre_pro.clean_empty_func_mark(v_s_log);
-  cout << "log entries after cleaning empty function mark: " << v_s_log.size()
-       << endl;
-
-  v_s_log = pre_pro.clean_invalid_func_mark(v_s_log);
-  cout << "log entries after cleaning invalid function mark: " << v_s_log.size()
-       << endl;
-
+  s_log = preprcss::preprocess(s_log);
   if(dump_) {
-    string path = xt_file::res_path + fn_ + xt_file::preprocess + curr_time +
-        xt_file::ext;
-    file.write_str_log(path, v_s_log);
+    string path = xt_file::res_path \
+                  + fn_ + xt_file::preprocess \
+                  + curr_time + xt_file::ext;
+    file.write_str_log(path, s_log);
   }
-
-  Log log(v_s_log);
-  // log.print_log();
-  log.analyze_mem_record();
+//
+//  Log log(v_s_log);
+//  // log.print_log();
+//  log.analyze_mem_record();
 }
 
 string Detector::get_time() {

@@ -1,6 +1,6 @@
 #include "boost/program_options.hpp"
 
-//#include "xt_detector.h"
+#include "xt_detector.h"
 #include "xt_util.h"
 
 using namespace boost;
@@ -39,8 +39,8 @@ int main(int argc, char *argv[]) {
     bool is_dump = vm["dump-result"].as< bool >();
     cout << "is dump result: " << is_dump << endl;
 
-//    Detector detector(log_name, is_dump);
-//    detector.detect();
+    Detector det(log_name, is_dump);
+    det.detect();
   }
 
   return 0;

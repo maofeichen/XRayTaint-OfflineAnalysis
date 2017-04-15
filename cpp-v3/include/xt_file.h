@@ -11,7 +11,7 @@ namespace xt_file {
   const std::string res_path  =
       "/home/xtaint/Workplace/XRayTaint-OfflineAnalysis/test_result/";
 
-  const std::string preprocess    = "-preprocess";
+  const std::string preprocess    = "-preprcss";
   const std::string add_mem_sz    = "-add_mem_sz";
   const std::string add_index     = "-add_index";
   const std::string alive_buf     = "-alive_buf";
@@ -23,9 +23,10 @@ namespace xt_file {
 class xt_file::File{
  public:
   File(std::string fn);
-  std::vector<std::string> read();
+  void read(std::vector<std::string> &s_log);
 
-  void write_str_log(std::string path, std::vector<std::string> &v_s_log);
+  void write_str_log(const std::string path,
+                     const std::vector<std::string> &v_s_log);
  private:
   std::string fn_;
 };
