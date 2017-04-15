@@ -8,7 +8,7 @@ class Record{
  public:
   Record(uint32_t index);
 
-  bool init_record(std::string s_rec);
+  bool init_record(const std::string &s_rec);
   bool is_makr();
 
   void     set_index(uint32_t index);

@@ -7,7 +7,10 @@
 class Node{
  public:
   Node();
-  Node(uint32_t index, bool is_mark, std::string flag, std::string addr,
+  Node(uint32_t index,
+       bool is_mark,
+       std::string flag,
+       std::string addr,
        std::string val);
 
   bool        is_mark();

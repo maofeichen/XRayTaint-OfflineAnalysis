@@ -2,14 +2,15 @@
 #define XT_LOG_H
 
 #include <cstdint>
-#include "xt_flag.h"
 #include <string>
 #include <vector>
+
+#include "xt_flag.h"
 #include "xt_record.h"
 
 class Log{
  public:
-  Log(std::vector<std::string> &v_s_log);
+  Log(const std::vector<std::string> &v_s_log);
 
   // If a mem rec (load/store), analyze its addr, sz, reset flag
   void analyze_mem_record();
@@ -34,7 +35,7 @@ class Log{
   void update_load_ptr(std::vector<Record>::iterator it_rec, uint32_t flag);
   void update_load(std::vector<Record>::iterator it_rec, uint32_t flag);
 
-  void init_log(std::vector<std::string> &v_s_log);
+  void init_log(const std::vector<std::string> &v_s_log);
 };
 
 #endif //XT_LOG_H

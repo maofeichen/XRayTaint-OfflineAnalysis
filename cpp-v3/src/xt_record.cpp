@@ -9,16 +9,16 @@ Record::Record(uint32_t index) {
   index_ = index;
 }
 
-bool Record::init_record(std::string s_rec) {
+bool Record::init_record(const std::string &s_rec) {
   if(s_rec.empty() ) {
     cout << "init record... : given string is empty" << endl;
     return false;
   }
 
-  vector<string> v_s_rec = XT_Util::split(s_rec.c_str(), '\t');
+  vector<string> v_s_rec = util::split(s_rec.c_str(), '\t');
 
   string flag = v_s_rec[0];
-  is_mark_ = XT_Util::is_mark(flag);
+  is_mark_ = util::is_mark(flag);
 
   if(is_mark_) {
     // src_.print_node();

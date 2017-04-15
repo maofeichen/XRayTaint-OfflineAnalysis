@@ -1,6 +1,6 @@
 #include "xt_file.h"
 #include "xt_detector.h"
-//#include "xt_log.h"
+#include "xt_log.h"
 #include "xt_preprocess.h"
 
 #include <iostream>
@@ -28,9 +28,9 @@ void Detector::detect() {
                   + curr_time + xt_file::ext;
     file.write_str_log(path, s_log);
   }
-//
-//  Log log(v_s_log);
-//  // log.print_log();
+
+  Log log(s_log);
+  log.print_log();
 //  log.analyze_mem_record();
 }
 

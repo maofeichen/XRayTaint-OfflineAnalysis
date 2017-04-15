@@ -6,7 +6,7 @@
 
 using namespace std;
 
-Log::Log(vector<string> &v_s_log) {
+Log::Log(const vector<string> &v_s_log) {
   init_log(v_s_log);
 }
 
@@ -149,7 +149,7 @@ void Log::update_load(std::vector<Record>::iterator it_rec, uint32_t flag) {
   it_rec->print_record();
 }
 
-void Log::init_log(vector<string> &v_s_log) {
+void Log::init_log(const vector<string> &v_s_log) {
   cout << "init log..." << endl;
 
   if(v_s_log.empty() ) {
