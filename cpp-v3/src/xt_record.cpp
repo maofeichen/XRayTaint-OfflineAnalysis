@@ -9,6 +9,24 @@ Record::Record(uint32_t index) {
   index_ = index;
 }
 
+Record::Record(const Record &rhs) {
+  index_    = rhs.get_index();
+  is_mark_  = rhs.is_makr();
+  mt_       = rhs.get_mem_type();
+  src_      = rhs.get_const_src_node();
+  dst_      = rhs.get_const_dst_node();
+}
+
+Record&
+Record::operator=(const Record &rhs) {
+  index_    = rhs.get_index();
+  is_mark_  = rhs.is_makr();
+  mt_       = rhs.get_mem_type();
+  src_      = rhs.get_const_src_node();
+  dst_      = rhs.get_const_dst_node();
+  return *this;
+}
+
 bool Record::init_record(const std::string &s_rec) {
   if(s_rec.empty() ) {
     cout << "init record... : given string is empty" << endl;
@@ -24,7 +42,7 @@ bool Record::init_record(const std::string &s_rec) {
     // src_.print_node();
     string addr = v_s_rec[1];
     string val  = v_s_rec[2];
-    src_        = Node(index_, is_mark_, flag, addr, val);
+    src_        = Node(index_, is_mark_, false, flag, addr, val);
     // src_.print_node();
   } else {
     //    cout << "non mark record" << endl;
@@ -34,25 +52,25 @@ bool Record::init_record(const std::string &s_rec) {
 
     string src_addr = v_s_rec[1];
     string src_val  = v_s_rec[2];
-    src_            = Node(index_, is_mark_, flag, src_addr, src_val);
+    src_            = Node(index_, is_mark_, false, flag, src_addr, src_val);
 
     string dst_addr = v_s_rec[4];
     string dst_val  = v_s_rec[5];
-    dst_            = Node(index_, is_mark_, flag, dst_addr, dst_val);
+    dst_            = Node(index_, is_mark_, false, flag, dst_addr, dst_val);
   }
 
   return true;
 }
 
-bool Record::is_makr() { return is_mark_; }
+bool Record::is_makr() const { return is_mark_; }
 
 void Record::set_index(uint32_t index) { index_ = index; }
 
-uint32_t Record::get_index() { return index_; }
+uint32_t Record::get_index() const { return index_; }
 
-Node Record::get_src_node() { return  src_; }
+Node &Record::get_src_node() { return src_; }
 
-Node Record::get_dst_node() { return dst_; }
+Node &Record::get_dst_node() { return dst_; }
 
 void Record::print_record() {
   cout << "src: ";

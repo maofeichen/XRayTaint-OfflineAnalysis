@@ -23,13 +23,14 @@ class Log{
   std::vector<Record> v_rec_;
 
   inline uint8_t decode_byte_sz(uint8_t sz_encode);
-  inline flag::Mem_Type get_mem_type(uint32_t flag);
-  inline bool is_in_mem_range(uint32_t flag);
+  inline flag::Mem_Type get_mem_type(const uint32_t flag);
+  inline bool is_in_mem_range(const uint32_t flag);
   inline void update_mem_node(Node node,
                               std::string flag_update,
                               uint8_t sz_byte);
 
-  void analyze_mem_record(uint32_t flag, std::vector<Record>::iterator it_rec);
+  void analyze_mem_record(const uint32_t flag,
+                          std::vector<Record>::iterator it_rec);
   void update_store_ptr(std::vector<Record>::iterator it_rec, uint32_t flag);
   void update_store(std::vector<Record>::iterator it_rec, uint32_t flag);
   void update_load_ptr(std::vector<Record>::iterator it_rec, uint32_t flag);

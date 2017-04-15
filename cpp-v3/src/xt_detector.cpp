@@ -30,8 +30,8 @@ void Detector::detect() {
   }
 
   Log log(s_log);
-  log.print_log();
-//  log.analyze_mem_record();
+  // log.print_log();
+  log.analyze_mem_record();
 }
 
 string Detector::get_time() {

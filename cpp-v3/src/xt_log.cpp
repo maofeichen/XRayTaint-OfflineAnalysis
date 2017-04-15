@@ -3,6 +3,7 @@
 #include "xt_log.h"
 
 #include <iostream>
+#include <stdexcept>
 
 using namespace std;
 
@@ -54,7 +55,7 @@ uint8_t Log::decode_byte_sz(uint8_t sz_encode) {
   }
 }
 
-flag::Mem_Type Log::get_mem_type(uint32_t flag) {
+flag::Mem_Type Log::get_mem_type(const uint32_t flag) {
   flag::Mem_Type mt;
 
   if(flag > flag::NUM_TCG_ST_POINTER) {
@@ -72,7 +73,7 @@ flag::Mem_Type Log::get_mem_type(uint32_t flag) {
   return mt;
 }
 
-bool Log::is_in_mem_range(uint32_t flag) {
+bool Log::is_in_mem_range(const uint32_t flag) {
   if(flag >= flag::NUM_TCG_LD_MIN &&
       flag <= flag::NUM_TCG_ST_MAX ) {
     return true;
@@ -96,7 +97,7 @@ void Log::update_mem_node(Node node, std::string flag_update, uint8_t sz_byte) {
   node.print_mem_node();
 }
 
-void Log::analyze_mem_record(uint32_t flag,
+void Log::analyze_mem_record(const uint32_t flag,
                              vector<Record>::iterator it_rec) {
   flag::Mem_Type mt = get_mem_type(flag);
 
@@ -127,17 +128,28 @@ void Log::update_store_ptr(std::vector<Record>::iterator it_rec,
 void Log::update_store(std::vector<Record>::iterator it_rec, uint32_t flag) {
   it_rec->print_record();
 
+  it_rec->set_mem_type(flag::M_STORE);
+  it_rec->get_dst_node().set_mem_flag(true);
+
   string flag_update  = flag::TCG_QEMU_ST;
   it_rec->get_src_node().set_flag(flag_update);
   it_rec->get_dst_node().set_flag(flag_update);
 
+  string addr    = it_rec->get_dst_node().get_addr();
+  uint32_t iaddr = stoul(addr, nullptr, 16);
+
   uint8_t sz_encode   = flag - flag::NUM_TCG_ST;
   uint8_t byte_sz     = decode_byte_sz(sz_encode);
   if(byte_sz != 0) {
+    it_rec->get_dst_node().set_sz_byte(byte_sz);
 
   } else {
-    cout << "update store: error byte sz" << endl;
+//    cout << "update store: error byte sz" << endl;
+    throw runtime_error("update store: error byte sz.");
   }
+
+  cout << "After updating store: " << endl;
+  it_rec->get_dst_node().print_mem_node();
 }
 
 void Log::update_load_ptr(std::vector<Record>::iterator it_rec,
