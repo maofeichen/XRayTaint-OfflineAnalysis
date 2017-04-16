@@ -15,6 +15,7 @@ class Node{
        std::string addr,
        std::string val);
   Node& operator=(const Node &rhs);
+  bool  operator<(const Node& rhs);
 
   bool        is_mark() const;
   bool        is_mem() const { return is_mem_; }

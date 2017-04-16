@@ -14,6 +14,7 @@ class Record{
 
   bool init_record(const std::string &s_rec);
   bool is_makr() const;
+  bool is_mem_type(const flag::Mem_Type mt);
 
   void     set_index(uint32_t index);
   uint32_t get_index() const;

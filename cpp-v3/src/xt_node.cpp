@@ -43,6 +43,13 @@ Node::operator=(const Node &rhs) {
   return *this;
 }
 
+bool
+Node::operator<(const Node& rhs)
+{
+  return int_addr_ < rhs.get_int_addr();
+}
+
+
 bool Node::is_mark() const { return  is_mark_; }
 
 uint32_t Node::get_index() const { return index_; }

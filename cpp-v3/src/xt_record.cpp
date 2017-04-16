@@ -64,6 +64,13 @@ bool Record::init_record(const std::string &s_rec) {
 
 bool Record::is_makr() const { return is_mark_; }
 
+bool Record::is_mem_type(const flag::Mem_Type mt)
+{
+  if(mt_ == mt) {return true; }
+  else { return false; }
+}
+
+
 void Record::set_index(uint32_t index) { index_ = index; }
 
 uint32_t Record::get_index() const { return index_; }

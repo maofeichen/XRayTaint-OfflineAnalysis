@@ -144,6 +144,7 @@ xt_file::File::write_alive_func(const string& curr_t,
   ofstream fp(path.c_str() );
   if(fp.is_open() ) {
     for(auto it_func = alive_func.begin(); it_func != alive_func.end(); ++it_func) {
+      fp << "---------- ----------" << endl;
       fp << it_func->begin()->get_const_src_node().get_flag() << '\t' \
          << it_func->begin()->get_const_src_node().get_addr() << '\t' \
          << it_func->begin()->get_const_src_node().get_val()  << '\t' \
