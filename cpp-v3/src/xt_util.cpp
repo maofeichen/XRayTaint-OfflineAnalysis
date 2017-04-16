@@ -31,6 +31,15 @@ bool is_mark(const std::string &flag)
   }
 }
 
+bool is_pair_func(const Node& call, const Node& ret)
+{
+  // for call and ret mark, second field is esp value
+  string esp_c = call.get_addr();
+  string esp_r = ret.get_addr();
+  if(esp_c.compare(esp_r) == 0) { return true; }
+  else { return false; }
+}
+
 std::vector<std::string> split(const char *s, const char c)
 {
   vector<string> v;

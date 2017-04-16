@@ -34,8 +34,8 @@ class Node{
   void        set_mem_flag(bool is_mem) { is_mem_ = is_mem; }
   bool        get_mem_flag() const { return is_mem_; }
 
-  void print_mem_node();
-  void print_node();
+  void print_mem_node() const;
+  void print_node() const;
 
  private:
   bool is_mark_     = false;

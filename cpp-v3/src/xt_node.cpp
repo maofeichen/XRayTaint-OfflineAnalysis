@@ -67,13 +67,13 @@ uint32_t Node::get_sz_bit() const { return sz_bit_; }
 
 uint32_t Node::get_sz_byte() const { return  sz_bit_ / 8; }
 
-void Node::print_mem_node() {
+void Node::print_mem_node() const {
   cout << "index: " << dec << index_ << " flag: " << flag_ << " addr in str: "
        << addr_ << " addr in hex: " << hex << int_addr_ << " val: " << val_
        << " size in byte: " << get_sz_byte() << endl;
 }
 
-void Node::print_node() {
+void Node::print_node() const {
   cout << "index: " << dec << index_ << " is mark: " << is_mark_ << " flag: "
       << flag_ << " addr: " << addr_ << " val: " << val_ << endl;
 }

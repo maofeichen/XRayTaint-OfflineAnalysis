@@ -25,7 +25,7 @@ class Record{
   void           set_mem_type(flag::Mem_Type mt) { mt_ = mt; };
   flag::Mem_Type get_mem_type() const { return mt_; }
 
-  void print_record();
+  void print_record() const;
 
  private:
   bool is_mark_      = false;

@@ -24,16 +24,16 @@ const std::string TCG_QEMU_LD_POINTER	   = "56";
 const std::string TCG_QEMU_ST            = "5a";
 const std::string TCG_QEMU_ST_POINTER	   = "5e";
 
-const int NUM_TCG_LD			    = 0x52;
-const int NUM_TCG_LD_POINTER	= 0x56;
-const int NUM_TCG_ST			    = 0x5a;
-const int NUM_TCG_ST_POINTER	= 0x5e;
+const int NUM_TCG_LD			               = 0x52;
+const int NUM_TCG_LD_POINTER	           = 0x56;
+const int NUM_TCG_ST			               = 0x5a;
+const int NUM_TCG_ST_POINTER	           = 0x5e;
 
-const int NUM_TCG_LD_MIN		  = 0x52;
-const int NUM_TCG_ST_MAX		  = 0x61;
+const int NUM_TCG_LD_MIN		             = 0x52;
+const int NUM_TCG_ST_MAX		             = 0x61;
 
-const std::string TCG_ADD            = "3b";
-const std::string TCG_XOR            = "47";
+const std::string TCG_ADD                = "3b";
+const std::string TCG_XOR                = "47";
 
 const int G_TEMP_UNKNOWN        = 0xfff0;
 const int G_TEMP_ENV            = 0xfff1;

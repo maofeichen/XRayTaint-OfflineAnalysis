@@ -72,7 +72,16 @@ Node &Record::get_src_node() { return src_; }
 
 Node &Record::get_dst_node() { return dst_; }
 
-void Record::print_record() {
+void Record::print_record() const {
+  cout << "----------- -----------" << endl;
+  switch(mt_) {
+    case flag::M_LOAD:      cout << "mem load"     << endl; break;
+    case flag::M_LOAD_PTR:  cout << "mem load ptr" << endl; break;
+    case flag::M_STORE:     cout << "mem store"    << endl; break;
+    case flag::M_STORE_PTR: cout << "mem store ptr" << endl; break;
+    default: break;
+  }
+
   cout << "src: ";
   if(src_.is_mem() ) {
     src_.print_mem_node();
