@@ -124,3 +124,70 @@ void xt_file::File::write_log_idx(const string path,
   }
 
 }
+
+void
+xt_file::File::write_alive_func(const string& curr_t,
+                                const std::vector< std::vector<Record> >& alive_func) const
+{
+  if(alive_func.empty() ) {
+    cout << "write log: alive buf is empty." << endl;
+    return;
+  }
+
+  string path = xt_file::res_path
+                + fn_
+                + xt_file::alive_buf
+                + curr_t
+                + xt_file::ext;
+
+  cout << "write log to: " << path << endl;
+  ofstream fp(path.c_str() );
+  if(fp.is_open() ) {
+    for(auto it_func = alive_func.begin(); it_func != alive_func.end(); ++it_func) {
+      fp << it_func->begin()->get_const_src_node().get_flag() << '\t' \
+         << it_func->begin()->get_const_src_node().get_addr() << '\t' \
+         << it_func->begin()->get_const_src_node().get_val()  << '\t' \
+         << dec << it_func->begin()->get_index() << endl;
+
+      fp << (it_func->begin()+1)->get_const_src_node().get_flag() << '\t' \
+         << (it_func->begin()+1)->get_const_src_node().get_addr() << '\t' \
+         << (it_func->begin()+1)->get_const_src_node().get_val()  << '\t' \
+         << dec << (it_func->begin()+1)->get_index() << endl;
+
+      for(auto it_rec = it_func->begin()+2; it_rec != it_func->end()-2; ++it_rec) {
+        if(it_rec->get_mem_type() == flag::M_LOAD) {
+          fp << it_rec->get_const_src_node().get_flag() << '\t'\
+             << it_rec->get_const_src_node().get_addr() << '\t'\
+             << it_rec->get_const_src_node().get_val()  << '\t'\
+             << it_rec->get_const_dst_node().get_flag() << '\t'\
+             << it_rec->get_const_dst_node().get_addr() << '\t'\
+             << it_rec->get_const_dst_node().get_val()  << '\t'\
+             << dec << it_rec->get_const_src_node().get_sz_bit() << '\t'\
+             << dec << it_rec->get_index() << endl;
+        }else if(it_rec->get_mem_type() == flag::M_STORE) {
+          fp << it_rec->get_const_src_node().get_flag() << '\t'\
+             << it_rec->get_const_src_node().get_addr() << '\t'\
+             << it_rec->get_const_src_node().get_val()  << '\t'\
+             << it_rec->get_const_dst_node().get_flag() << '\t'\
+             << it_rec->get_const_dst_node().get_addr() << '\t'\
+             << it_rec->get_const_dst_node().get_val()  << '\t'\
+             << dec << it_rec->get_const_dst_node().get_sz_bit() << '\t'\
+             << dec << it_rec->get_index() << endl;
+        }
+      }
+
+      fp << (it_func->end()-2)->get_const_src_node().get_flag() << '\t'
+         << (it_func->end()-2)->get_const_src_node().get_addr() << '\t'
+         << (it_func->end()-2)->get_const_src_node().get_val() << '\t'
+         << dec << (it_func->end()-2)->get_index() << endl;
+
+      fp << (it_func->end()-1)->get_const_src_node().get_flag() << '\t'
+         << (it_func->end()-1)->get_const_src_node().get_addr() << '\t'
+         << (it_func->end()-1)->get_const_src_node().get_val() << '\t'
+         << dec << (it_func->end()-1)->get_index() << endl;
+    }
+    fp.close();
+  } else {
+     cout << "error: write log - can't open file." << endl;
+  }
+}

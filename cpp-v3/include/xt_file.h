@@ -32,6 +32,8 @@ class xt_file::File{
                      const Log &log);
   void write_log_idx(const std::string path,
                      const Log &log);
+  void write_alive_func(const std::string& curr_t,
+                        const std::vector< std::vector<Record> >& alive_func) const;
  private:
   std::string fn_;
 };

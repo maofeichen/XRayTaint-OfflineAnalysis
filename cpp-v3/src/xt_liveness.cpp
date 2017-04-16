@@ -9,54 +9,20 @@
 
 using namespace std;
 
-void Liveness::analyze_liveness(const Log& log)
+void
+Liveness::analyze_liveness(bool is_dump,
+                           const string curr_t,
+                           const xt_file::File& file,
+                           const Log& log)
 {
   cout << "analyzing liveness..." << endl;
-  vector<Record> call_stack;
-  uint32_t num_func = 0;
+  vector< vector<Record> > alive_func;
 
-  for(auto it_rec = log.get_log().begin(); it_rec != log.get_log().end(); ++it_rec) {
-    if(it_rec->is_makr() ) {
-      string flag = it_rec->get_const_src_node().get_flag();
+  analyze_alive_buf(log, alive_func);
+  cout << "num alive function calls: " << alive_func.size() << endl;
+  file.write_alive_func(curr_t, alive_func);
 
-      if(util::equal_mark(flag, flag::XT_CALL_INSN)
-         || util::equal_mark(flag, flag::XT_CALL_INSN_FF2) ) {
-        call_stack.push_back(*it_rec);
-      } else if (util::equal_mark(flag, flag::XT_RET_INSN_SEC)
-                 && !call_stack.empty() ) {
-        // searches call stack reversely
-        for(auto it_call = call_stack.rbegin(); it_call != call_stack.rend(); ++it_call) {
-          if(util::is_pair_func(it_call->get_const_src_node(),
-                                (it_rec-1)->get_const_src_node() ) ) {
-            // if pair function call
-            it_call->get_const_src_node().print_node();
-            (it_rec-1)->get_const_src_node().print_node();
-
-            uint32_t c_idx = it_call->get_index();
-            uint32_t r_idx = it_rec->get_index();
-
-            vector<Record>::const_iterator it_pair_c = log.get_log().begin() + c_idx;
-            vector<Record>::const_iterator it_pair_r = log.get_log().begin() + r_idx + 1;
-            vector<Record> pair_func(it_pair_c, it_pair_r);
-
-            vector<Record> pair_func_res = analyze_liveness_per_func(pair_func);
-            if(pair_func_res.size() > 4) {
-              // has valid buffers
-              cout << "pair function res size: " << pair_func_res.size() << endl;
-              for(auto it = pair_func_res.begin(); it != pair_func_res.end(); ++it) {
-                it->print_record();
-              }
-            }
-
-            num_func++;
-            cout << "analyzing " << num_func << " pair function call..." << endl;
-            // erase the call in the stack?
-            break;
-          }
-        } // end fow
-      } // end else if
-    } else {}
-  }
+  merge_continuous_buf(alive_func);
 }
 
 bool Liveness::is_buf_alive(const uint32_t esp, const uint32_t addr)
@@ -80,7 +46,59 @@ bool Liveness::is_heap_alive()
   return true;
 }
 
-vector<Record> Liveness::analyze_liveness_per_func(const vector<Record>& pair_func)
+void Liveness::analyze_alive_buf(const Log& log,
+                                 vector< vector<Record> >& alive_func)
+{
+  cout << "analyzing alive buffers..." << endl;
+  vector<Record> call_stack;
+  uint32_t num_func = 0;
+
+  for(auto it_rec = log.get_log().begin(); it_rec != log.get_log().end(); ++it_rec) {
+    if(it_rec->is_makr() ) {
+      string flag = it_rec->get_const_src_node().get_flag();
+
+      if(util::equal_mark(flag, flag::XT_CALL_INSN)
+         || util::equal_mark(flag, flag::XT_CALL_INSN_FF2) ) {
+        call_stack.push_back(*it_rec);
+      } else if (util::equal_mark(flag, flag::XT_RET_INSN_SEC)
+                 && !call_stack.empty() ) {
+        // searches call stack reversely
+        for(auto it_call = call_stack.rbegin(); it_call != call_stack.rend(); ++it_call) {
+          if(util::is_pair_func(it_call->get_const_src_node(),
+                                (it_rec-1)->get_const_src_node() ) ) {
+            // if pair function call
+//            it_call->get_const_src_node().print_node();
+//            (it_rec-1)->get_const_src_node().print_node();
+
+            uint32_t c_idx = it_call->get_index();
+            uint32_t r_idx = it_rec->get_index();
+
+            vector<Record>::const_iterator it_pair_c = log.get_log().begin() + c_idx;
+            vector<Record>::const_iterator it_pair_r = log.get_log().begin() + r_idx + 1;
+            vector<Record> pair_func(it_pair_c, it_pair_r);
+
+            vector<Record> pair_func_res = analyze_alive_buf_per_func(pair_func);
+            if(pair_func_res.size() > 4) {
+              // has valid buffers
+//              cout << "pair function res size: " << pair_func_res.size() << endl;
+//              for(auto it = pair_func_res.begin(); it != pair_func_res.end(); ++it) {
+//                it->print_record();
+//              }
+              alive_func.push_back(pair_func_res);
+            }
+
+            num_func++;
+            cout << "analyzing " << num_func << " pair function call..." << endl;
+            // erase the call in the stack?
+            break;
+          }
+        } // end fow
+      } // end else if
+    } else {}
+  }
+}
+
+vector<Record> Liveness::analyze_alive_buf_per_func(const vector<Record>& pair_func)
 {
 //  cout << "pair function call size: " << pair_func.size() << endl;
 //  for (auto it = pair_func.begin(); it != pair_func.end(); ++it) {
@@ -128,4 +146,10 @@ vector<Record> Liveness::analyze_liveness_per_func(const vector<Record>& pair_fu
 //  }
 
   return v;
+}
+
+void
+Liveness::merge_continuous_buf(std::vector< std::vector<Record> >& alive_func)
+{
+
 }

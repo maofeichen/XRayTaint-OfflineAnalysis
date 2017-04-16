@@ -45,7 +45,7 @@ void Detector::detect() {
   }
 
   Liveness live;
-  live.analyze_liveness(log);
+  live.analyze_liveness(dump_, curr_time, file, log);
 }
 
 string Detector::get_time() {
