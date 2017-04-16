@@ -1,6 +1,7 @@
 #ifndef XT_FILE_H
 #define XT_FILE_H
 
+#include "xt_log.h"
 #include <string>
 #include <vector>
 
@@ -27,6 +28,10 @@ class xt_file::File{
 
   void write_str_log(const std::string path,
                      const std::vector<std::string> &v_s_log);
+  void write_log_mem(const std::string path,
+                     const Log &log);
+  void write_log_idx(const std::string path,
+                     const Log &log);
  private:
   std::string fn_;
 };

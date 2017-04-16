@@ -1,5 +1,5 @@
 CXX 	  = g++-4.9
-CXXFLAG   = -g -std=c++11
+CXXFLAG   = -O0 -Wall -g -std=c++11
 LD		  = g++-4.9
 LFLAG     = 
 INC	  	  = -Iinclude

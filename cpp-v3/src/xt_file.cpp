@@ -50,3 +50,77 @@ void xt_file::File::write_str_log(const string path,
     cout << "error: write log - can't open file" << endl;
   }
 }
+
+void xt_file::File::write_log_mem(const string path,
+                                  const Log &log)
+{
+  if(log.get_size() == 0) {
+    cout << "write log: log is empty" << endl;
+    return;
+  }
+
+  cout << "write log to: " << path << endl;
+  ofstream fp(path.c_str() );
+  if(fp.is_open() ) {
+    for (auto it = log.get_log().begin(); it != log.get_log().end(); ++it) {
+      if (it->is_makr()) {
+        fp << it->get_const_src_node().get_flag() << '\t'\
+           << it->get_const_src_node().get_addr() << '\t'\
+           << it->get_const_src_node().get_val()  << '\t' << '\n';
+      } else {
+        fp << it->get_const_src_node().get_flag() << '\t'\
+           << it->get_const_src_node().get_addr() << '\t'\
+           << it->get_const_src_node().get_val()  << '\t';
+
+        fp << it->get_const_dst_node().get_flag() << '\t'\
+           << it->get_const_dst_node().get_addr() << '\t'\
+           << it->get_const_dst_node().get_val()  << '\t';
+        if (it->get_const_dst_node().is_mem()) {
+          fp << it->get_const_dst_node().get_sz_bit() << '\t' << '\n';
+        } else if(it->get_const_src_node().is_mem() ) {
+          fp << it->get_const_src_node().get_sz_bit() << '\t' << '\n';
+        } else {
+          fp << '\n';
+        }
+      }
+    }
+    fp.close();
+  } else {
+    cout << "error: write log - can't open file." << endl;
+  }
+}
+
+void xt_file::File::write_log_idx(const string path,
+                                  const Log &log)
+{
+  if(log.get_size() == 0) {
+    cout << "write log: log is empty" << endl;
+    return;
+  }
+
+  cout << "write log to: " << path << endl;
+  ofstream fp(path.c_str() );
+  if(fp.is_open() ) {
+    for (auto it = log.get_log().begin(); it != log.get_log().end(); ++it) {
+      if (it->is_makr()) {
+        fp << it->get_const_src_node().get_flag() << '\t'\
+           << it->get_const_src_node().get_addr() << '\t'\
+           << it->get_const_src_node().get_val()  << '\t'\
+           << dec << it->get_index() << '\n';
+      } else {
+        fp << it->get_const_src_node().get_flag() << '\t'\
+           << it->get_const_src_node().get_addr() << '\t'\
+           << it->get_const_src_node().get_val()  << '\t';
+
+        fp << it->get_const_dst_node().get_flag() << '\t'\
+           << it->get_const_dst_node().get_addr() << '\t'\
+           << it->get_const_dst_node().get_val()  << '\t'\
+           << dec << it->get_index() << '\n';
+      }
+    }
+    fp.close();
+  } else {
+    cout << "error: write log - can't open file." << endl;
+  }
+
+}

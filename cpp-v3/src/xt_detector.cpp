@@ -31,7 +31,16 @@ void Detector::detect() {
 
   Log log(s_log);
   // log.print_log();
-  log.analyze_mem_record();
+  if(dump_) {
+    string path = xt_file::res_path \
+                  + fn_ + xt_file::add_mem_sz \
+                  + curr_time + xt_file::ext;
+    file.write_log_mem(path, log);
+  }
+  string path = xt_file::res_path \
+                + fn_ + xt_file::add_index \
+                + curr_time + xt_file::ext;
+  file.write_log_idx(path, log);
 }
 
 string Detector::get_time() {

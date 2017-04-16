@@ -74,6 +74,6 @@ void Node::print_mem_node() {
 }
 
 void Node::print_node() {
-  cout << "index: " << index_ << " is mark: " << is_mark_ << " flag: " <<
-       flag_ << " addr: " << addr_ << " val: " << val_ << endl;
+  cout << "index: " << dec << index_ << " is mark: " << is_mark_ << " flag: "
+      << flag_ << " addr: " << addr_ << " val: " << val_ << endl;
 }

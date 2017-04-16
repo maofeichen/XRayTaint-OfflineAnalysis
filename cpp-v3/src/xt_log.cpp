@@ -9,9 +9,11 @@ using namespace std;
 
 Log::Log(const vector<string> &v_s_log) {
   init_log(v_s_log);
+  analyze_mem_record();
 }
 
 void Log::analyze_mem_record() {
+  cout << "analyzing mem record..." << endl;
   if(v_rec_.empty() ) {
     cout << "error: analyze mem record: log is empty" << endl;
     return;
@@ -122,11 +124,20 @@ void Log::analyze_mem_record(const uint32_t flag,
 
 void Log::update_store_ptr(std::vector<Record>::iterator it_rec,
                            uint32_t flag) {
-  it_rec->print_record();
+//  it_rec->print_record();
+  it_rec->set_mem_type(flag::M_STORE_PTR);
+
+  string flag_update = flag::TCG_QEMU_ST_POINTER;
+  it_rec->get_src_node().set_flag(flag_update);
+  it_rec->get_dst_node().set_flag(flag_update);
+
+  uint8_t sz_encode   = flag - flag::NUM_TCG_ST_POINTER;
+  uint8_t byte_sz     = decode_byte_sz(sz_encode);
+  // No need to update byte sz for pointer
 }
 
 void Log::update_store(std::vector<Record>::iterator it_rec, uint32_t flag) {
-  it_rec->print_record();
+//  it_rec->print_record();
 
   it_rec->set_mem_type(flag::M_STORE);
   it_rec->get_dst_node().set_mem_flag(true);
@@ -137,6 +148,7 @@ void Log::update_store(std::vector<Record>::iterator it_rec, uint32_t flag) {
 
   string addr    = it_rec->get_dst_node().get_addr();
   uint32_t iaddr = stoul(addr, nullptr, 16);
+  it_rec->get_dst_node().set_int_addr(iaddr);
 
   uint8_t sz_encode   = flag - flag::NUM_TCG_ST;
   uint8_t byte_sz     = decode_byte_sz(sz_encode);
@@ -148,17 +160,47 @@ void Log::update_store(std::vector<Record>::iterator it_rec, uint32_t flag) {
     throw runtime_error("update store: error byte sz.");
   }
 
-  cout << "After updating store: " << endl;
-  it_rec->get_dst_node().print_mem_node();
+//  cout << "After updating store: " << endl;
+//  it_rec->print_record();
 }
 
 void Log::update_load_ptr(std::vector<Record>::iterator it_rec,
                           uint32_t flag) {
-  it_rec->print_record();
+//  it_rec->print_record();
+  it_rec->set_mem_type(flag::M_LOAD_PTR);
+
+  string flag_update = flag::TCG_QEMU_LD_POINTER;
+  it_rec->get_src_node().set_flag(flag_update);
+  it_rec->get_dst_node().set_flag(flag_update);
+  // No need to update sz
 }
 
 void Log::update_load(std::vector<Record>::iterator it_rec, uint32_t flag) {
-  it_rec->print_record();
+//  it_rec->print_record();
+
+  it_rec->set_mem_type(flag::M_LOAD);
+  it_rec->get_src_node().set_mem_flag(true);
+
+  string flag_update  = flag::TCG_QEMU_LD;
+  it_rec->get_src_node().set_flag(flag_update);
+  it_rec->get_dst_node().set_flag(flag_update);
+
+  string addr    = it_rec->get_src_node().get_addr();
+  uint32_t iaddr = stoul(addr, nullptr, 16);
+  it_rec->get_src_node().set_int_addr(iaddr);
+
+  uint8_t sz_encode   = flag - flag::NUM_TCG_LD;
+  uint8_t byte_sz     = decode_byte_sz(sz_encode);
+  if(byte_sz != 0) {
+    it_rec->get_src_node().set_sz_byte(byte_sz);
+
+  } else {
+//    cout << "update store: error byte sz" << endl;
+    throw runtime_error("update load: error byte sz.");
+  }
+
+//  cout << "After updating load: " << endl;
+//  it_rec->print_record();
 }
 
 void Log::init_log(const vector<string> &v_s_log) {

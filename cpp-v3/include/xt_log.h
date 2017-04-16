@@ -15,8 +15,9 @@ class Log{
   // If a mem rec (load/store), analyze its addr, sz, reset flag
   void analyze_mem_record();
   Record get_record(uint32_t index);
+  const std::vector<Record>& get_log() const { return v_rec_; }
   uint32_t find_record(std::string s_rec);
-  uint32_t get_size();
+  uint32_t get_size() const { return v_rec_.size(); };
 
   void print_log();
  private:

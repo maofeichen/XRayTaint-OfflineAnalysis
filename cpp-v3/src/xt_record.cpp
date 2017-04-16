@@ -74,7 +74,15 @@ Node &Record::get_dst_node() { return dst_; }
 
 void Record::print_record() {
   cout << "src: ";
-  src_.print_node();
+  if(src_.is_mem() ) {
+    src_.print_mem_node();
+  }else {
+    src_.print_node();
+  }
   cout << "dst: ";
-  dst_.print_node();
+  if(dst_.is_mem() ) {
+    dst_.print_mem_node();
+  } else {
+    dst_.print_node();
+  }
 }
