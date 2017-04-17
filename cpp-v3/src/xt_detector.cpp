@@ -48,6 +48,8 @@ void Detector::detect() {
   vector<Alive_Func_> v_liveness_res;
   Liveness live;
   live.analyze_liveness(dump_, curr_time, file, log, v_liveness_res);
+  file.write_cont_buf(curr_time, v_liveness_res);
+  // propagate alive buffer?
 }
 
 string Detector::get_time() {

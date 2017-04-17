@@ -13,10 +13,7 @@ public:
                         const xt_file::File& file,
                         const Log& log,
                         std::vector<Alive_Func_>& v_liveness_res);
-  const std::vector<Alive_Func_>& get_liveness_res() { return v_liveness_res_; }
 private:
-  std::vector<Alive_Func_> v_liveness_res_;
-
   bool is_buf_alive(const uint32_t esp, const uint32_t addr);
   bool is_stack_alive(const uint32_t esp, const uint32_t addr);
   bool is_heap_alive();
@@ -28,7 +25,8 @@ private:
   analyze_alive_buf_per_func(const std::vector<Record>& pair_func);
 
   void
-  merge_continuous_buf(const std::vector< std::vector<Record> >& all_alive_func);
+  merge_continuous_buf(const std::vector< std::vector<Record> >& all_alive_func,
+                       std::vector<Alive_Func_>& v_liveness_res);
   void
   merge_continuous_buf_per_func(Alive_Func_& alive_func_res,
                                 const std::vector<Record>& alive_func);
@@ -40,10 +38,10 @@ private:
                         const std::vector<Node>& alive_node);
 
   // filters out buffers that size is < 8 bytes
-  void filter_invalid_cont_buf();
-  void filter_kernel_buf();
+  void filter_invalid_cont_buf(std::vector<Alive_Func_>& v_liveness_res);
+  void filter_kernel_buf(std::vector<Alive_Func_>& v_liveness_res);
 
-  void print_liveness();
+  void print_liveness(std::vector<Alive_Func_>& v_liveness_res);
   void print_func(const Alive_Func_& alive_func_res);
   void print_func_mark(const Alive_Func_& alive_func_res);
   void print_cont_buf(const Cont_Buf_& cont_buf);

@@ -197,5 +197,42 @@ void
 xt_file::File::write_cont_buf(const std::string& curr_t,
                               const std::vector<Alive_Func_>& v_liveness_res)
 {
+  if(v_liveness_res.empty() ) {
+    cout << "write continuous buffer: given liveness analysis is empty." << endl;
+    return;
+  }
 
+  string path = xt_file::res_path
+                + fn_
+                + xt_file::continue_buf
+                + curr_t
+                + xt_file::ext;
+  cout << "write continuous buffers to: " << path << endl;
+  ofstream fp(path.c_str() );
+  if(fp.is_open() ) {
+    for(auto it_func = v_liveness_res.begin(); it_func != v_liveness_res.end(); ++it_func) {
+      fp << "Function Call: " << endl;
+      fp << it_func->fir_c_mark.get_flag() << '\t'
+         << it_func->fir_c_mark.get_addr() << '\t'
+         << it_func->fir_c_mark.get_val()  <<  endl;
+      fp << it_func->sec_c_mark.get_flag() << '\t'
+         << it_func->sec_c_mark.get_addr() << '\t'
+         << it_func->sec_c_mark.get_val()  <<  endl;
+
+      for(auto it_buf = it_func->v_cont_buf.begin();
+          it_buf != it_func->v_cont_buf.end(); ++it_buf) {
+        fp << "Begin_Addr: " << hex << it_buf->begin_addr << endl;
+        fp << "Size: "       << dec << it_buf->byte_sz << " bytes" << endl;
+      }
+
+      fp << it_func->fir_r_mark.get_flag() << '\t'
+         << it_func->fir_r_mark.get_addr() << '\t'
+         << it_func->fir_r_mark.get_val()  <<  endl;
+      fp << it_func->sec_r_mark.get_flag() << '\t'
+         << it_func->sec_r_mark.get_addr() << '\t'
+         << it_func->sec_r_mark.get_val()  <<  endl;
+    }
+  } else {
+    cout << "error: write log - can't open file." << endl;
+  }
 }

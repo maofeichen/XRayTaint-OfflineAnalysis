@@ -28,11 +28,11 @@ Liveness::analyze_liveness(bool is_dump,
     file.write_alive_func(curr_t, alive_func);
   }
 
-  merge_continuous_buf(alive_func);
-//  print_liveness();
+  merge_continuous_buf(alive_func, v_liveness_res);
 
-  filter_invalid_cont_buf();
-  filter_kernel_buf();
+  filter_invalid_cont_buf(v_liveness_res);
+  filter_kernel_buf(v_liveness_res);
+//  print_liveness(v_liveness_res);
 }
 
 bool Liveness::is_buf_alive(const uint32_t esp, const uint32_t addr)
@@ -159,13 +159,14 @@ vector<Record> Liveness::analyze_alive_buf_per_func(const vector<Record>& pair_f
 }
 
 void
-Liveness::merge_continuous_buf(const vector< vector<Record> >& all_alive_func)
+Liveness::merge_continuous_buf(const vector< vector<Record> >& all_alive_func,
+                               vector<Alive_Func_>& v_liveness_res)
 {
   for(auto it_func = all_alive_func.begin(); it_func != all_alive_func.end(); ++it_func) {
     Alive_Func_ alive_func_res;
     merge_continuous_buf_per_func(alive_func_res, *it_func);
 //    print_liveness_func(alive_func_res);
-    v_liveness_res_.push_back(alive_func_res);
+    v_liveness_res.push_back(alive_func_res);
   }
 
 }
@@ -286,10 +287,10 @@ Liveness::create_continuous_buf(Alive_Func_& alive_func_res,
 }
 
 void
-Liveness::filter_invalid_cont_buf()
+Liveness::filter_invalid_cont_buf(vector<Alive_Func_>& v_liveness_res)
 {
   cout << "filter invalid continuous buffers." << endl;
-  for(auto it_func = v_liveness_res_.begin(); it_func != v_liveness_res_.end(); ++it_func) {
+  for(auto it_func = v_liveness_res.begin(); it_func != v_liveness_res.end(); ++it_func) {
 //    print_func_mark(*it_func);
 
     for(auto it_buf = it_func->v_cont_buf.begin(); it_buf != it_func->v_cont_buf.end(); ) {
@@ -304,20 +305,20 @@ Liveness::filter_invalid_cont_buf()
     }
   }
 
-  for(auto it_func = v_liveness_res_.begin(); it_func != v_liveness_res_.end(); ) {
+  for(auto it_func = v_liveness_res.begin(); it_func != v_liveness_res.end(); ) {
     // removes empty alive buffer function call if any
     if(it_func->v_cont_buf.empty() ) {
-      v_liveness_res_.erase(it_func);
+      v_liveness_res.erase(it_func);
     } else {
       ++it_func;
     }
   }
 }
 
-void Liveness::filter_kernel_buf()
+void Liveness::filter_kernel_buf(vector<Alive_Func_>& v_liveness_res)
 {
   cout << "filter kernel continuous buffer." << endl;
-  for(auto it_func = v_liveness_res_.begin(); it_func != v_liveness_res_.end(); ++it_func) {
+  for(auto it_func = v_liveness_res.begin(); it_func != v_liveness_res.end(); ++it_func) {
     for(auto it_buf = it_func->v_cont_buf.begin(); it_buf != it_func->v_cont_buf.end(); ) {
       if(it_buf->begin_addr >= xt_const::KERNEL_BEGIN_ADDR) {
         it_func->v_cont_buf.erase(it_buf);
@@ -328,10 +329,10 @@ void Liveness::filter_kernel_buf()
   }
 
 
-  for(auto it_func = v_liveness_res_.begin(); it_func != v_liveness_res_.end(); ) {
+  for(auto it_func = v_liveness_res.begin(); it_func != v_liveness_res.end(); ) {
     // removes empty alive buffer function call if any
     if(it_func->v_cont_buf.empty() ) {
-      v_liveness_res_.erase(it_func);
+      v_liveness_res.erase(it_func);
     } else {
       ++it_func;
     }
@@ -339,11 +340,11 @@ void Liveness::filter_kernel_buf()
 }
 
 
-void Liveness::print_liveness()
+void Liveness::print_liveness(vector<Alive_Func_>& v_liveness_res)
 {
   cout << "liveness analysis result: " << endl;
-  cout << "num function call: " << v_liveness_res_.size() << endl;
-  for(auto it = v_liveness_res_.begin(); it != v_liveness_res_.end(); ++it) {
+  cout << "num function call: " << v_liveness_res.size() << endl;
+  for(auto it = v_liveness_res.begin(); it != v_liveness_res.end(); ++it) {
     cout << "---------- ---------- ---------- ---------- " << endl;
     print_func(*it);
   }
