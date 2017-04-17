@@ -192,3 +192,10 @@ xt_file::File::write_alive_func(const string& curr_t,
      cout << "error: write log - can't open file." << endl;
   }
 }
+
+void
+xt_file::File::write_cont_buf(const std::string& curr_t,
+                              const std::vector<Alive_Func_>& v_liveness_res)
+{
+
+}

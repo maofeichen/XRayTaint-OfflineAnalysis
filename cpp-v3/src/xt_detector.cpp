@@ -1,4 +1,5 @@
 #include "xt_file.h"
+#include "xt_data.h"
 #include "xt_detector.h"
 #include "xt_log.h"
 #include "xt_liveness.h"
@@ -44,8 +45,9 @@ void Detector::detect() {
     file.write_log_idx(i_path, log);
   }
 
+  vector<Alive_Func_> v_liveness_res;
   Liveness live;
-  live.analyze_liveness(dump_, curr_time, file, log);
+  live.analyze_liveness(dump_, curr_time, file, log, v_liveness_res);
 }
 
 string Detector::get_time() {

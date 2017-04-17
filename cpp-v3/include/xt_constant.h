@@ -5,7 +5,9 @@
 
 namespace xt_const
 {
-const uint32_t STACK_BEGIN_ADDR = 0xb0000000;
+const uint32_t STACK_BEGIN_ADDR   = 0xb0000000;
+const uint32_t VALID_BUF_LEN      = 0x8;
+const uint32_t KERNEL_BEGIN_ADDR  = 0xC0000000;
 }
 
 
