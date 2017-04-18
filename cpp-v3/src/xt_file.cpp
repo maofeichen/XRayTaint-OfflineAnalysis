@@ -195,7 +195,7 @@ xt_file::File::write_alive_func(const string& curr_t,
 
 void
 xt_file::File::write_cont_buf(const std::string& curr_t,
-                              const std::vector<Alive_Func_>& v_liveness_res)
+                              const std::vector<AliveFunction>& v_liveness_res)
 {
   if(v_liveness_res.empty() ) {
     cout << "write continuous buffer: given liveness analysis is empty." << endl;
@@ -212,25 +212,25 @@ xt_file::File::write_cont_buf(const std::string& curr_t,
   if(fp.is_open() ) {
     for(auto it_func = v_liveness_res.begin(); it_func != v_liveness_res.end(); ++it_func) {
       fp << "Function Call: " << endl;
-      fp << it_func->fir_c_mark.get_flag() << '\t'
-         << it_func->fir_c_mark.get_addr() << '\t'
-         << it_func->fir_c_mark.get_val()  <<  endl;
-      fp << it_func->sec_c_mark.get_flag() << '\t'
-         << it_func->sec_c_mark.get_addr() << '\t'
-         << it_func->sec_c_mark.get_val()  <<  endl;
+      fp << it_func->get_fir_c_mark().get_flag() << '\t'
+         << it_func->get_fir_c_mark().get_addr() << '\t'
+         << it_func->get_fir_c_mark().get_val()  <<  endl;
+      fp << it_func->get_sec_c_mark().get_flag() << '\t'
+         << it_func->get_sec_c_mark().get_addr() << '\t'
+         << it_func->get_sec_c_mark().get_val()  <<  endl;
 
-      for(auto it_buf = it_func->v_cont_buf.begin();
-          it_buf != it_func->v_cont_buf.end(); ++it_buf) {
-        fp << "Begin_Addr: " << hex << it_buf->begin_addr << endl;
-        fp << "Size: "       << dec << it_buf->byte_sz << " bytes" << endl;
+      for(auto it_buf = it_func->get_cont_buf().begin();
+          it_buf != it_func->get_cont_buf().end(); ++it_buf) {
+        fp << "Begin_Addr: " << hex << it_buf->get_begin()   << endl;
+        fp << "Size: "       << dec << it_buf->get_byte_sz() << " bytes" << endl;
       }
 
-      fp << it_func->fir_r_mark.get_flag() << '\t'
-         << it_func->fir_r_mark.get_addr() << '\t'
-         << it_func->fir_r_mark.get_val()  <<  endl;
-      fp << it_func->sec_r_mark.get_flag() << '\t'
-         << it_func->sec_r_mark.get_addr() << '\t'
-         << it_func->sec_r_mark.get_val()  <<  endl;
+      fp << it_func->get_fir_r_mark().get_flag() << '\t'
+         << it_func->get_fir_r_mark().get_addr() << '\t'
+         << it_func->get_fir_r_mark().get_val()  <<  endl;
+      fp << it_func->get_sec_r_mark().get_flag() << '\t'
+         << it_func->get_sec_r_mark().get_addr() << '\t'
+         << it_func->get_sec_r_mark().get_val()  <<  endl;
     }
   } else {
     cout << "error: write log - can't open file." << endl;

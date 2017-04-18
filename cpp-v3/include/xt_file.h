@@ -1,7 +1,7 @@
 #ifndef XT_FILE_H
 #define XT_FILE_H
 
-#include "xt_data.h"
+#include "xt_alivefunc.h"
 #include "xt_log.h"
 #include <string>
 #include <vector>
@@ -36,7 +36,7 @@ class xt_file::File{
   void write_alive_func(const std::string& curr_t,
                         const std::vector< std::vector<Record> >& alive_func) const;
   void write_cont_buf(const std::string& curr_t,
-                      const std::vector<Alive_Func_>& v_liveness_res);
+                      const std::vector<AliveFunction>& v_liveness_res);
 
  private:
   std::string fn_;

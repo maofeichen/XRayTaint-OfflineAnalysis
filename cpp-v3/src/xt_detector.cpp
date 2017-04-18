@@ -1,5 +1,5 @@
+#include "xt_alivefunc.h"
 #include "xt_file.h"
-#include "xt_data.h"
 #include "xt_detector.h"
 #include "xt_log.h"
 #include "xt_liveness.h"
@@ -45,10 +45,13 @@ void Detector::detect() {
     file.write_log_idx(i_path, log);
   }
 
-  vector<Alive_Func_> v_liveness_res;
+  vector<AliveFunction> v_liveness;
+  vector< vector<Record> > r_alive_func;
+
   Liveness live;
-  live.analyze_liveness(dump_, curr_time, file, log, v_liveness_res);
-  file.write_cont_buf(curr_time, v_liveness_res);
+  live.analyze_liveness(log, r_alive_func, v_liveness);
+  file.write_alive_func(curr_time, r_alive_func);
+  file.write_cont_buf(curr_time, v_liveness);
   // propagate alive buffer?
 }
 
