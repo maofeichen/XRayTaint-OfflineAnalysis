@@ -54,3 +54,10 @@ void ContinueBuf::print_cont_buf() const
     cout << "node idx: " << *it << endl;
   }
 }
+
+void ContinueBuf::print_cont_buf_noidx() const
+{
+  cout << "begin addr: " << hex << begin_addr_ << endl;
+  cout << "byte sz: "    << dec << byte_sz_ << endl;
+}
+

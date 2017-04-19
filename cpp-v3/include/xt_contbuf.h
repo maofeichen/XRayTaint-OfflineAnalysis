@@ -18,10 +18,11 @@ public:
 
   void     add_node_idx(const uint32_t node_idx);
   void     set_node_idx(const std::vector<uint32_t> &v_node_idx);
-  const std::vector<uint32_t>& get_node_idx() { return v_node_idx_; }
+  const std::vector<uint32_t>& get_node_idx() const { return v_node_idx_; }
 
   void     clear_node_idx();
   void     print_cont_buf() const;
+  void     print_cont_buf_noidx() const;
 private:
   uint32_t begin_addr_ = 0;
   uint32_t byte_sz_    = 0;

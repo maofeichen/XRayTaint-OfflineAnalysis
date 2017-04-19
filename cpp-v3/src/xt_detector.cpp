@@ -1,4 +1,5 @@
 #include "xt_alivefunc.h"
+#include "xt_avalanche.h"
 #include "xt_file.h"
 #include "xt_detector.h"
 #include "xt_log.h"
@@ -50,9 +51,14 @@ void Detector::detect() {
 
   Liveness live;
   live.analyze_liveness(log, r_alive_func, v_liveness);
-  file.write_alive_func(curr_time, r_alive_func);
-  file.write_cont_buf(curr_time, v_liveness);
-  // propagate alive buffer?
+  if(dump_) {
+    file.write_alive_func(curr_time, r_alive_func);
+    file.write_cont_buf(curr_time, v_liveness);
+    // propagate alive buffer?
+  }
+
+  Avalanche aval(log);
+  aval.detect(v_liveness);
 }
 
 string Detector::get_time() {
