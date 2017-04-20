@@ -66,7 +66,7 @@ Avalanche::gen_in_taint_src(const ContinueBuf& in,
 
   for(uint32_t idx_byte = 0; idx_byte < byte_sz; idx_byte++) {
     uint32_t addr = begin_addr + idx_byte;
-    cout << "addr: " << hex << addr << endl;
+//    cout << "addr: " << hex << addr << endl;
 
     Multi_Taint_Src_ byte_taint_src;
     byte_taint_src.addr = addr;
@@ -75,7 +75,7 @@ Avalanche::gen_in_taint_src(const ContinueBuf& in,
       Node node = get_mem_node(in.get_node_idx().at(idx_node) );
       uint32_t node_addr    = node.get_int_addr();
       uint32_t node_byte_sz = node.get_sz_byte();
-      node.print_mem_node();
+//      node.print_mem_node();
 
       if(node_addr > addr) {
         // if begin address is already larger, then it is impossible that the
@@ -101,14 +101,16 @@ Avalanche::gen_in_taint_src(const ContinueBuf& in,
   for(uint32_t i = 0; i < in_taint_src.size(); i++) {
     cout << "-----------" << endl;
     cout << "src addr: " << hex << in_taint_src[i].addr << endl;
-    for(uint32_t j = 0; j < in_taint_src[i].v_taint_src.size(); j++) {
-      uint32_t node_idx = in_taint_src[i].v_taint_src[j].node_idx;
-      uint8_t  pos      = in_taint_src[i].v_taint_src[j].pos;
+    cout << "num node idx: " << dec << in_taint_src[i].v_taint_src.size() << endl;
 
-      Node node = get_mem_node(node_idx);
-      node.print_mem_node();
-      cout << "byte pos: " << unsigned(pos) << endl;
-    }
+//    for(uint32_t j = 0; j < in_taint_src[i].v_taint_src.size(); j++) {
+//      uint32_t node_idx = in_taint_src[i].v_taint_src[j].node_idx;
+//      uint8_t  pos      = in_taint_src[i].v_taint_src[j].pos;
+//
+//      Node node = get_mem_node(node_idx);
+//      node.print_mem_node();
+//      cout << "byte pos: " << unsigned(pos) << endl;
+//    }
   }
 }
 

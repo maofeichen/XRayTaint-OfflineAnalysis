@@ -253,7 +253,7 @@ Liveness::create_continuous_buf(AliveFunction& alive_func_res,
 //  accum_byte_sz       = cont_buf.byte_sz;
 //  cont_buf.v_node_idx.push_back(alive_node.begin()->get_index() );
 
-  for(auto it_node = alive_node.begin(); it_node != alive_node.end(); ++it_node) {
+  for(auto it_node = alive_node.begin()+1; it_node != alive_node.end(); ++it_node) {
     uint32_t curr_addr = cont_buf.get_begin() + cont_buf.get_byte_sz();
 
     if(curr_addr > it_node->get_int_addr() ) {
