@@ -8,6 +8,7 @@ Node::Node(const Node &rhs) {
   index_    = rhs.get_index();
   is_mark_  = rhs.is_mark();
   is_mem_   = rhs.is_mem();
+  is_src_   = rhs.is_src();
   flag_     = rhs.get_flag();
   addr_     = rhs.get_addr();
   val_      = rhs.get_val();
@@ -18,12 +19,14 @@ Node::Node(const Node &rhs) {
 Node::Node(uint32_t index,
            bool is_mark,
            bool is_mem,
+           bool is_src,
            std::string flag,
            std::string addr,
            std::string val) {
   index_   = index;
   is_mark_ = is_mark;
   is_mem_  = is_mem;
+  is_src_  = is_src;
   flag_    = flag;
   addr_    = addr;
   val_     = val;
@@ -34,6 +37,7 @@ Node::operator=(const Node &rhs) {
   index_    = rhs.get_index();
   is_mark_  = rhs.is_mark();
   is_mem_   = rhs.is_mem();
+  is_src_   = rhs.is_src();
   flag_     = rhs.get_flag();
   addr_     = rhs.get_addr();
   val_      = rhs.get_val();

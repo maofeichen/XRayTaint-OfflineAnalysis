@@ -11,6 +11,7 @@ class Node{
   Node(uint32_t index,
        bool is_mark,
        bool is_mem,
+       bool is_src,
        std::string flag,
        std::string addr,
        std::string val);
@@ -19,6 +20,7 @@ class Node{
 
   bool        is_mark() const;
   bool        is_mem() const { return is_mem_; }
+  bool        is_src() const { return is_src_; }
   uint32_t    get_index() const;
 
   void        set_flag(std::string flag);
@@ -41,6 +43,7 @@ class Node{
  private:
   bool is_mark_     = false;
   bool is_mem_      = false;
+  bool is_src_      = false;
   uint32_t index_   = 0;
 
   std::string flag_ = "";
@@ -49,6 +52,16 @@ class Node{
 
   uint32_t int_addr_= 0;
   uint32_t sz_bit_  = 0;
+};
+
+struct NodeHash{
+  std::size_t operator()(const Node& rhs) const {
+    uint32_t idx = rhs.get_index();
+    if(rhs.is_src() ) { idx = idx * 2; }
+    else { idx = idx * 2 + 1;}
+    std::size_t h (std::hash<uint32_t>()(idx) );
+    return h;
+   }
 };
 
 #endif //XT_NODE_H

@@ -3,15 +3,17 @@
 
 #include "xt_alivefunc.h"
 #include "xt_log.h"
+#include <xt_propagate.h>
 #include <vector>
 
 class Avalanche{
 public:
-  Avalanche(const Log& log) : log_(log) {}
+  Avalanche(const Log& log, Propagate& prpgt) : log_(log), prpgt_(prpgt) {}
   void detect(const std::vector<AliveFunction>& v_liveness);
 
 private:
   const Log& log_;
+  Propagate& prpgt_;
 
   struct Taint_Src_ {
     uint32_t node_idx;
@@ -23,9 +25,19 @@ private:
     std::vector<Taint_Src_> v_taint_src;
   };
 
+  struct Prpgt_Byte_ {
+    uint32_t addr   = 0;
+    std::string val = "0";
+
+    bool operator<(const Prpgt_Byte_& rhs) const {
+      return addr < rhs.addr;
+    }
+  };
+
   void detect_in_out(const ContinueBuf& in,
                      const ContinueBuf& out);
-  void gen_in_byte_prpgt(const ContinueBuf& in);
+  void gen_in_byte_prpgt(const ContinueBuf& in,
+                         std::vector<std::vector<Prpgt_Byte_> >& in_prpgt_res);
   // There might be multiple sources for a byte, so group multi sources if
   // any, for further propagation search
   void gen_in_taint_src(const ContinueBuf& in,

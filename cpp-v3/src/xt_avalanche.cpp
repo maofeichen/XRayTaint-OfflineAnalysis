@@ -1,9 +1,11 @@
 #include "xt_avalanche.h"
 #include "xt_flag.h"
+#include "xt_propagate.h"
 #include "xt_node.h"
 
 #include <iostream>
 #include <stdexcept>
+#include <unordered_set>
 #include <vector>
 
 using namespace std;
@@ -46,15 +48,36 @@ Avalanche::detect_in_out(const ContinueBuf& in,
   cout << "out: ";
   out.print_cont_buf_noidx();
 
-  gen_in_byte_prpgt(in);
+  vector<vector<Prpgt_Byte_> > in_prpgt_res;
+  gen_in_byte_prpgt(in, in_prpgt_res);
 
 }
 
 void
-Avalanche::gen_in_byte_prpgt(const ContinueBuf& in)
+Avalanche::gen_in_byte_prpgt(const ContinueBuf& in,
+                             vector<vector<Prpgt_Byte_> >& in_prpgt_res)
 {
   vector<Multi_Taint_Src_> in_taint_src;
   gen_in_taint_src(in, in_taint_src);
+  if(in_taint_src.size() != in.get_byte_sz() ) {
+    throw runtime_error("gen in byte propagate: size of taint sources and \
+        input size are not matched.");
+  }
+
+  for(uint32_t idx_byte = 0; idx_byte < in_taint_src.size(); idx_byte++) {
+
+    for(auto it = in_taint_src[idx_byte].v_taint_src.begin();
+        it != in_taint_src[idx_byte].v_taint_src.end(); ++it) {
+      uint32_t node_idx = it->node_idx;
+      uint8_t  pos      = it->pos;
+
+      // searches propagate of node index
+      Node node = get_mem_node(node_idx);
+      unordered_set<Node,NodeHash> prpgt_res;
+      prpgt_.get_taint_prpgt(node, pos, prpgt_res);
+
+    }
+  }
 }
 
 void
@@ -99,9 +122,9 @@ Avalanche::gen_in_taint_src(const ContinueBuf& in,
   }
 
   for(uint32_t i = 0; i < in_taint_src.size(); i++) {
-    cout << "-----------" << endl;
-    cout << "src addr: " << hex << in_taint_src[i].addr << endl;
-    cout << "num node idx: " << dec << in_taint_src[i].v_taint_src.size() << endl;
+//    cout << "-----------" << endl;
+//    cout << "src addr: " << hex << in_taint_src[i].addr << endl;
+//    cout << "num node idx: " << dec << in_taint_src[i].v_taint_src.size() << endl;
 
 //    for(uint32_t j = 0; j < in_taint_src[i].v_taint_src.size(); j++) {
 //      uint32_t node_idx = in_taint_src[i].v_taint_src[j].node_idx;

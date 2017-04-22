@@ -5,6 +5,7 @@
 #include "xt_log.h"
 #include "xt_liveness.h"
 #include "xt_preprocess.h"
+#include "xt_propagate.h"
 
 #include <iostream>
 
@@ -57,7 +58,8 @@ void Detector::detect() {
     // propagate alive buffer?
   }
 
-  Avalanche aval(log);
+  Propagate prpgt(log);
+  Avalanche aval(log, prpgt);
   aval.detect(v_liveness);
 }
 
