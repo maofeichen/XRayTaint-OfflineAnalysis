@@ -58,6 +58,19 @@ Avalanche::detect_in_out(const ContinueBuf& in,
   vector<vector<Prpgt_Byte_> > in_prpgt_res;
   gen_in_byte_prpgt(in, in_prpgt_res);
 
+//  for(uint32_t idx_byte = 0; idx_byte < in_prpgt_res.size(); idx_byte++) {
+//    cout << "idx byte: " << idx_byte << endl;
+//    for(auto it_prpgt = in_prpgt_res[idx_byte].begin();
+//        it_prpgt != in_prpgt_res[idx_byte].end(); ++it_prpgt) {
+//      cout << "propagate to: addr: " << hex << it_prpgt->addr
+//           << " val: " << it_prpgt->val << endl;
+//    }
+//  }
+
+  cout << "num gen taint sources: " << dec << in_prpgt_res.size() << endl;
+  if(in_prpgt_res.size() != in.get_byte_sz() ) {
+    throw runtime_error("err: num gen taint sources does not match.");
+  }
 }
 
 void
@@ -72,15 +85,18 @@ Avalanche::gen_in_byte_prpgt(const ContinueBuf& in,
         input size are not matched.");
   }
 
+  cout << "begin addr: " << hex << in.get_begin() << endl;
+
   for(uint32_t idx_byte = 0; idx_byte < in_taint_src.size(); idx_byte++) {
+//    cout << "byte idx: " << idx_byte
+//         << " num node: " << in_taint_src[idx_byte].v_taint_src.size()  << endl;
     unordered_set<Node, NodeHash> set_prpgt_res;
 
     for(auto it = in_taint_src[idx_byte].v_taint_src.begin();
         it != in_taint_src[idx_byte].v_taint_src.end(); ++it) {
       uint32_t node_idx = it->node_idx;
       uint8_t  pos      = it->pos;
-
-      cout << "node idx: " << node_idx << endl;
+//      cout << "node idx: " << node_idx << endl;
 
       // searches propagate of node index
       Node node = get_mem_node(node_idx);
@@ -92,6 +108,10 @@ Avalanche::gen_in_byte_prpgt(const ContinueBuf& in,
 
     vector<Prpgt_Byte_> v_prpgt_byte;
     to_prpgt_byte(set_prpgt_res, v_prpgt_byte);
+//    for(auto it = v_prpgt_byte.begin(); it != v_prpgt_byte.end(); ++it) {
+//      it->print_prpgt_byte();
+//    }
+
     in_prpgt_res.push_back(v_prpgt_byte);
   }
 }

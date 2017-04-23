@@ -10,7 +10,6 @@ void Propagate::get_taint_prpgt(const Node& src,
                                 const uint8_t pos,
                                 unordered_set<Node,NodeHash>& prpgt_res)
 {
-  cout << "Taint propagate..." << endl;
   if(!src.is_mem() ) {
     throw runtime_error("taint propagate: given src is not a memory node.");
   }
@@ -26,7 +25,7 @@ void Propagate::search_propagate(const Node& src,
                                  const uint8_t pos,
                                  unordered_set<Node,NodeHash>& prpgt_res)
 {
-  src.print_mem_node();
+//  src.print_mem_node();
   uint32_t rec_begin    = src.get_index();
 
   search_propagate_init(src, pos, prpgt_res);
@@ -264,8 +263,8 @@ void Propagate::handle_destinate_node_mem(const Node &node,
       }
 
       // inserts to propagate result
-      cout << "propagate to: " << hex << i_byte_addr
-           << " val: " << byte_val << endl;
+//      cout << "propagate to: " << hex << i_byte_addr
+//           << " val: " << byte_val << endl;
       Node res;
       to_one_byte_node(node.get_flag(), i_byte_addr, byte_val, res);
       add_prpgt_res(res, prpgt_res);

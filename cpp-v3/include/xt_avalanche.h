@@ -33,6 +33,10 @@ private:
     bool operator<(const Prpgt_Byte_& rhs) const {
       return addr < rhs.addr;
     }
+
+    void print_prpgt_byte() {
+      std::cout << "addr: " << std::hex << addr << " val: " << val << std::endl;
+    }
   };
 
   void detect_in_out(const ContinueBuf& in,
