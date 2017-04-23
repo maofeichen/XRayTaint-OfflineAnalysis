@@ -3,7 +3,10 @@
 
 #include "xt_alivefunc.h"
 #include "xt_log.h"
-#include <xt_propagate.h>
+#include "xt_propagate.h"
+#include "xt_rangearray.h"
+#include "xt_taintpropagate.h"
+
 #include <vector>
 #include <unordered_set>
 
@@ -47,6 +50,12 @@ private:
   // any, for further propagation search
   void gen_in_taint_src(const ContinueBuf& in,
                         std::vector<Multi_Taint_Src_>& in_taint_src);
+  // Generates range arrays for all bytes of input buffer as taint sources
+  void gen_in_taint_ra(const ContinueBuf& in,
+                       const std::vector<std::vector<Prpgt_Byte_> >& in_prpgt_res,
+                       std::vector<TaintPropagate *>& in_prpgt_ra_res);
+  void gen_in_taint_ra_per_byte(const std::vector<Prpgt_Byte_>& byte_prpgt_res,
+                                RangeArray *byte_taint_prpgt);
 
   void merge_prpgt_res(std::unordered_set<Node,NodeHash> &prpgt_res,
                        std::unordered_set<Node,NodeHash> &set_prpgt_res);

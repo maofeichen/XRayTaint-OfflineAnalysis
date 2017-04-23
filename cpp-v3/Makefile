@@ -17,7 +17,9 @@ DET_OBJ = $(DIR_OBJ)main.o \
 		  $(DIR_OBJ)xt_liveness.o \
 		  $(DIR_OBJ)xt_avalanche.o \
 		  $(DIR_OBJ)xt_propagate.o \
-		  $(DIR_OBJ)TaintBitMap.o
+		  $(DIR_OBJ)TaintBitMap.o \
+		  $(DIR_OBJ)xt_range.o $(DIR_OBJ)xt_rangearray.o \
+		  $(DIR_OBJ)xt_taintpropagate.o
 
 all: $(DIR_BIN)detector
 

@@ -4,8 +4,10 @@
 #include "xt_node.h"
 
 #include <algorithm>
+#include <map>
 #include <iostream>
 #include <stdexcept>
+#include <string>
 #include <unordered_set>
 #include <vector>
 
@@ -71,6 +73,10 @@ Avalanche::detect_in_out(const ContinueBuf& in,
   if(in_prpgt_res.size() != in.get_byte_sz() ) {
     throw runtime_error("err: num gen taint sources does not match.");
   }
+
+  vector<TaintPropagate *> in_prpgt_ra_res;
+  gen_in_taint_ra(in, in_prpgt_res, in_prpgt_ra_res);
+
 }
 
 void
@@ -170,6 +176,73 @@ Avalanche::gen_in_taint_src(const ContinueBuf& in,
 //      node.print_mem_node();
 //      cout << "byte pos: " << unsigned(pos) << endl;
 //    }
+  }
+}
+
+void
+Avalanche::gen_in_taint_ra(const ContinueBuf& in,
+                           const vector<vector<Prpgt_Byte_> >& in_prpgt_res,
+                           vector<TaintPropagate *>& in_prpgt_ra_res)
+{
+  cout << "generating range arrays of input buffer..." << endl;
+
+  uint32_t begin_addr   = in.get_begin();
+  for(auto it = in_prpgt_res.begin(); it != in_prpgt_res.end(); ++it) {
+    TaintPropagate* taint_prpgt = new TaintPropagate(begin_addr);
+
+    gen_in_taint_ra_per_byte(*it, taint_prpgt->get_taint_propagate() );
+
+    in_prpgt_ra_res.push_back(taint_prpgt);
+    begin_addr++;
+  }
+
+//  for(uint32_t i = 0; i < in_prpgt_ra_res.size(); i++) {
+//    cout << "taint src: " << hex << in_prpgt_ra_res[i]->get_src_addr()
+//         << " can propagate to: " << endl;
+//    for(uint32_t j = 0; j < in_prpgt_ra_res[i]->get_taint_propagate()->get_size(); j++) {
+//      in_prpgt_ra_res[i]->get_taint_propagate()->at(j)->print_range();
+//      in_prpgt_ra_res[i]->get_taint_propagate()->at(j)->print_byte_val_map();
+//    }
+//  }
+
+}
+
+void
+Avalanche::gen_in_taint_ra_per_byte(const vector<Prpgt_Byte_>& byte_prpgt_res,
+                                    RangeArray *byte_taint_prpgt)
+{
+  if(byte_prpgt_res.empty() ) {
+    throw runtime_error("err: gen range arrays per byte, given byte propagation is empty.");
+  }
+
+  auto it_prpgt_byte  = byte_prpgt_res.begin();
+  uint32_t ra_begin   = it_prpgt_byte->addr;
+  uint32_t ra_len     = 1;
+  uint32_t ra_val     = stoul(it_prpgt_byte->val, nullptr, 16);
+
+  multimap<uint32_t, uint32_t> byte_val_map;
+  byte_val_map.insert(pair<uint32_t,uint32_t>(ra_begin, ra_val) );
+
+  for(it_prpgt_byte++; it_prpgt_byte != byte_prpgt_res.end(); ++it_prpgt_byte) {
+    uint32_t curr_range   = ra_begin + ra_len;
+    uint32_t curr_addr    = it_prpgt_byte->addr;
+
+    if(curr_range > curr_addr) {
+      uint32_t byte_val = stoul(it_prpgt_byte->val, nullptr, 16);
+      byte_val_map.insert(pair<uint32_t,uint32_t>(curr_addr, byte_val) );
+    } else if(curr_range == curr_addr) {
+      uint32_t byte_val = stoul(it_prpgt_byte->val, nullptr, 16);
+      byte_val_map.insert(pair<uint32_t,uint32_t>(curr_addr, byte_val) );
+      ra_len++;
+    } else {
+      byte_taint_prpgt->add_range(ra_begin, ra_len, byte_val_map);
+
+      ra_begin    = curr_addr;
+      ra_len      = 1;
+      ra_val      = stoul(it_prpgt_byte->val, nullptr, 16);
+      byte_val_map.clear();
+      byte_val_map.insert(pair<uint32_t,uint32_t>(ra_begin, ra_val) );
+    }
   }
 }
 
