@@ -1,4 +1,5 @@
 #include "xt_avalanche.h"
+#include "xt_blockdetector.h"
 #include "xt_flag.h"
 #include "xt_propagate.h"
 #include "xt_node.h"
@@ -77,6 +78,11 @@ Avalanche::detect_in_out(const ContinueBuf& in,
   vector<TaintPropagate *> in_prpgt_ra_res;
   gen_in_taint_ra(in, in_prpgt_res, in_prpgt_ra_res);
 
+  RangeArray      in_blocks;
+  VSPtrRangeArray in_blocks_prpgt;
+  BlockDetector   block_detector(in.get_begin(), in.get_byte_sz(),
+                                 out.get_begin(), out.get_byte_sz() );
+  block_detector.detect_block(in_blocks, in_blocks_prpgt, in_prpgt_ra_res);
 }
 
 void

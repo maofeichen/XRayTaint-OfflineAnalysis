@@ -8,6 +8,7 @@
 class RangeArray{
 public:
   RangeArray() { init(); }
+  RangeArray(uint32_t begin, uint32_t len);
   RangeArray(const Range& r);
   ~RangeArray();
 
@@ -16,11 +17,13 @@ public:
   RangeArray& operator=(const RangeArray& rhs);
 
   void add_range(const Range& r);
+  void add_range(uint32_t begin, uint32_t len);
   void add_range(uint32_t begin, uint32_t len,
                  const std::multimap<uint32_t,uint32_t>& byte_val_map);
 
   uint32_t get_size() const { return array_use_; }
 
+  void print_range_array() const;
 private:
   Range **ref_array_;
   uint32_t array_sz_;
@@ -35,10 +38,11 @@ private:
   void insert_range(int pos, const Range& r);
   void insert_range(int pos,
                     uint32_t begin,
+                    uint32_t len);
+  void insert_range(int pos,
+                    uint32_t begin,
                     uint32_t len,
                     const std::multimap<uint32_t,uint32_t>& byte_val_map);
-
-  void print_range_array() const;
 };
 
 #endif /* XT_RANGEARRAY_H_ */

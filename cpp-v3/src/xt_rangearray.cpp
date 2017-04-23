@@ -4,6 +4,12 @@
 
 using namespace std;
 
+RangeArray::RangeArray(uint32_t begin, uint32_t len)
+{
+  init();
+  add_range(begin, len);
+}
+
 RangeArray::RangeArray(const Range& r)
 {
   init();
@@ -60,6 +66,26 @@ RangeArray::add_range(const Range& r)
 }
 
 void
+RangeArray::add_range(uint32_t begin, uint32_t len)
+{
+  // binary searches
+  int low    = 0;
+  int mid    = low;
+  int hi     = array_use_;
+
+  while(low < hi) {
+    mid = low + (hi-low) / 2;
+    if(ref_array_[mid]->get_begin() < begin) {
+      low = mid + 1;
+    }else {
+      hi  = mid;
+    }
+  }
+
+  insert_range(low, begin, len);
+}
+
+void
 RangeArray::add_range(uint32_t begin, uint32_t len,
                       const std::multimap<uint32_t,uint32_t>& byte_val_map)
 {
@@ -79,6 +105,15 @@ RangeArray::add_range(uint32_t begin, uint32_t len,
 
   insert_range(low, begin, len, byte_val_map);
 }
+
+void
+RangeArray::print_range_array() const
+{
+  for(uint32_t i = 0; i < array_use_; i++) {
+    ref_array_[i]->print_range();
+  }
+}
+
 
 void
 RangeArray::copy_with_val(const RangeArray& rhs)
@@ -158,6 +193,44 @@ RangeArray::insert_range(int pos, const Range& r)
 void
 RangeArray::insert_range(int pos,
                          uint32_t begin,
+                         uint32_t len)
+{
+  if(pos > array_use_) {
+    throw runtime_error("insert range: pos is larger than used.");
+  }
+
+  Range* range = new Range(begin, len);
+
+  if(array_use_+1 > array_sz_) {
+    // grows size
+    array_sz_ += array_sz_;
+    Range** new_array = new Range* [array_sz_];
+
+    for(int i = 0; i < pos; i++) {
+      new_array[i] = ref_array_[i];
+    }
+
+    new_array[pos] = range;
+
+    for(int i = pos+1; i < array_use_ + 1; i++) {
+      new_array[i] = ref_array_[i-1];
+    }
+
+    delete[] ref_array_;
+    ref_array_ = new_array;
+  }else {
+    for(int i = array_use_-1; i >= pos; i--) {
+      ref_array_[i+1] = ref_array_[i];
+    }
+    ref_array_[pos] = range;
+  }
+
+  array_use_++;
+}
+
+void
+RangeArray::insert_range(int pos,
+                         uint32_t begin,
                          uint32_t len,
                          const multimap<uint32_t,uint32_t> &byte_val_map)
 {
@@ -194,10 +267,3 @@ RangeArray::insert_range(int pos,
   array_use_++;
 }
 
-void
-RangeArray::print_range_array() const
-{
-  for(uint32_t i = 0; i < array_use_; i++) {
-    ref_array_[i]->print_range();
-  }
-}
