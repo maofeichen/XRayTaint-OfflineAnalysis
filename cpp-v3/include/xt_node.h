@@ -17,6 +17,7 @@ class Node{
        std::string val);
   Node& operator=(const Node &rhs);
   bool  operator<(const Node& rhs);
+  bool  operator==(const Node& rhs) const;
 
   bool        is_mark() const;
   bool        is_mem() const { return is_mem_; }
@@ -25,8 +26,13 @@ class Node{
 
   void        set_flag(std::string flag);
   std::string get_flag() const;
+
+  void        set_addr(const std::string addr) { addr_ = addr; }
   std::string get_addr() const;
+
+  void        set_val(const std::string val) { val_ = val; }
   std::string get_val() const;
+
   void        set_int_addr(uint32_t i_addr);
   uint32_t    get_int_addr() const;
   void        set_sz_bit(uint32_t sz_bit);

@@ -53,6 +53,17 @@ Node::operator<(const Node& rhs)
   return int_addr_ < rhs.get_int_addr();
 }
 
+bool
+Node::operator==(const Node& rhs) const
+{
+  if(flag_ == rhs.get_flag()
+     && addr_ == rhs.get_addr()
+     && val_  == rhs.get_val() ) {
+    return true;
+  } else {
+    return false;
+  }
+}
 
 bool Node::is_mark() const { return  is_mark_; }
 

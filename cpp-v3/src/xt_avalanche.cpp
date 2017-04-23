@@ -3,6 +3,7 @@
 #include "xt_propagate.h"
 #include "xt_node.h"
 
+#include <algorithm>
 #include <iostream>
 #include <stdexcept>
 #include <unordered_set>
@@ -30,7 +31,13 @@ Avalanche::detect(const std::vector<AliveFunction>& v_liveness)
 
         auto it_out = it_func_out->get_cont_buf().begin();
         for(; it_out != it_func_out->get_cont_buf().end(); ++it_out) {
-          detect_in_out(*it_in, *it_out);
+
+          if(it_in->get_begin() == 0x804c860
+             && it_in->get_byte_sz() == 96
+             && it_out->get_begin() == 0x804d040
+             && it_out->get_byte_sz() == 96) {
+            detect_in_out(*it_in, *it_out);
+          }
         }
       }
     }
@@ -59,24 +66,33 @@ Avalanche::gen_in_byte_prpgt(const ContinueBuf& in,
 {
   vector<Multi_Taint_Src_> in_taint_src;
   gen_in_taint_src(in, in_taint_src);
+
   if(in_taint_src.size() != in.get_byte_sz() ) {
     throw runtime_error("gen in byte propagate: size of taint sources and \
         input size are not matched.");
   }
 
   for(uint32_t idx_byte = 0; idx_byte < in_taint_src.size(); idx_byte++) {
+    unordered_set<Node, NodeHash> set_prpgt_res;
 
     for(auto it = in_taint_src[idx_byte].v_taint_src.begin();
         it != in_taint_src[idx_byte].v_taint_src.end(); ++it) {
       uint32_t node_idx = it->node_idx;
       uint8_t  pos      = it->pos;
 
+      cout << "node idx: " << node_idx << endl;
+
       // searches propagate of node index
       Node node = get_mem_node(node_idx);
       unordered_set<Node,NodeHash> prpgt_res;
       prpgt_.get_taint_prpgt(node, pos, prpgt_res);
 
+      merge_prpgt_res(prpgt_res, set_prpgt_res);
     }
+
+    vector<Prpgt_Byte_> v_prpgt_byte;
+    to_prpgt_byte(set_prpgt_res, v_prpgt_byte);
+    in_prpgt_res.push_back(v_prpgt_byte);
   }
 }
 
@@ -135,6 +151,38 @@ Avalanche::gen_in_taint_src(const ContinueBuf& in,
 //      cout << "byte pos: " << unsigned(pos) << endl;
 //    }
   }
+}
+
+void
+Avalanche::merge_prpgt_res(unordered_set<Node,NodeHash> &prpgt_res,
+                           unordered_set<Node,NodeHash> &set_prpgt_res)
+{
+  unordered_set<Node, NodeHash>::const_iterator it_prpgt_res;
+  unordered_set<Node, NodeHash>::const_iterator got_multi;
+
+  it_prpgt_res = prpgt_res.begin();
+  for (; it_prpgt_res != prpgt_res.end(); ++it_prpgt_res) {
+    got_multi = set_prpgt_res.find(*it_prpgt_res);
+
+    if (got_multi == set_prpgt_res.end()) {
+      set_prpgt_res.insert(*it_prpgt_res);
+    }
+  }
+}
+
+void
+Avalanche::to_prpgt_byte(unordered_set<Node,NodeHash> &set_propagate_res,
+                         vector<Prpgt_Byte_>& v_prpgt_byte)
+{
+  Prpgt_Byte_ prpgt_byte;
+
+  for(auto it = set_propagate_res.begin(); it != set_propagate_res.end(); ++it) {
+    prpgt_byte.addr = it->get_int_addr();
+    prpgt_byte.val  = it->get_val();
+    v_prpgt_byte.push_back(prpgt_byte);
+  }
+
+  sort(v_prpgt_byte.begin(), v_prpgt_byte.end() );
 }
 
 Node

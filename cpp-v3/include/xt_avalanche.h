@@ -5,6 +5,7 @@
 #include "xt_log.h"
 #include <xt_propagate.h>
 #include <vector>
+#include <unordered_set>
 
 class Avalanche{
 public:
@@ -42,6 +43,12 @@ private:
   // any, for further propagation search
   void gen_in_taint_src(const ContinueBuf& in,
                         std::vector<Multi_Taint_Src_>& in_taint_src);
+
+  void merge_prpgt_res(std::unordered_set<Node,NodeHash> &prpgt_res,
+                       std::unordered_set<Node,NodeHash> &set_prpgt_res);
+  void to_prpgt_byte(std::unordered_set<Node,NodeHash> &set_propagate_res,
+                     std::vector<Prpgt_Byte_>& v_prpgt_byte);
+
   Node get_mem_node(uint32_t idx);
   uint8_t compute_byte_pos(const uint32_t addr, const Node& node);
 };
