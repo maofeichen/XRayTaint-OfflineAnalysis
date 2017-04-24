@@ -78,10 +78,15 @@ void Detect::detect_cipher() {
                 cout << "successfully detects cipher" << endl;
               }
 
-              if (in_buf.beginAddress == 0x804c860 &&
+              if (in_buf.beginAddress == 0x804c080 &&
                   in_buf.size == 96 * 8 &&
-                  out_buf.beginAddress == 0x804d040 &&
+                  out_buf.beginAddress == 0x804c860 &&
                   out_buf.size == 96 * 8) {
+
+//              if (in_buf.beginAddress == 0x804c860 &&
+//                  in_buf.size == 96 * 8 &&
+//                  out_buf.beginAddress == 0x804d040 &&
+//                  out_buf.size == 96 * 8) {
 
 //                int num_source = in_buf.vNodeIndex.size();
 //                cout << "number of source index in the input buffer: "
@@ -89,7 +94,7 @@ void Detect::detect_cipher() {
 //
                 detect_cipher_in_out(in_buf, out_buf, propagate);
 
-//                if (num_source == 24) {
+//                if (num_surce == 24) {
 //                  vector<unsigned long>::const_iterator it_n_idx =
 //                      it_in_buf->vNodeIndex.begin();
 //                  for (; it_n_idx != it_in_buf->vNodeIndex.end(); ++it_n_idx) {
@@ -192,7 +197,9 @@ Detect::comp_multi_src_propagate_res(unsigned int multi_src_interval,
     unordered_set<Node, NodeHash> multi_propagate_res;
 
     for(uint32_t i = 0; i < multi_src_interval; i++){
+        cout << "index: " << *it_multi_src_idx << endl;
         XTNode node = get_mem_node(*it_multi_src_idx);
+        cout << "addr: " << hex << node.getIntAddr() << endl;
         NodePropagate taint_src = init_taint_source(node, log_rec_);
         propagate_res = propagate.getPropagateResult(taint_src, log_rec_, byte_pos);
         merge_propagate_res(propagate_res, multi_propagate_res);
@@ -312,7 +319,7 @@ vector<vector<Detect::propagate_byte_> > Detect::gen_in_prpgt_byte(
         ; node_idx++) {
       uint32_t curr_node_idx = v_taint_src[byte_idx].v_multi_src[node_idx].node_idx;
       uint8_t curr_pos       = v_taint_src[byte_idx].v_multi_src[node_idx].pos;
-
+      cout << "node idx: " << curr_node_idx << endl;
       XTNode node = get_mem_node(curr_node_idx);
       NodePropagate taint_src = init_taint_source(node, log_rec_);
 
@@ -324,6 +331,10 @@ vector<vector<Detect::propagate_byte_> > Detect::gen_in_prpgt_byte(
 
     vector<propagate_byte_> v_prpgt_byte;
     v_prpgt_byte = convert_propagate_byte(multi_prpgt_res);
+    for(auto it = v_prpgt_byte.begin(); it != v_prpgt_byte.end(); ++it) {
+      it->print_prpgt_byte();
+    }
+
     v_in_prpgt_byte.push_back(v_prpgt_byte);
   }
 
@@ -467,15 +478,15 @@ void Detect::gen_in_range_array(t_AliveContinueBuffer &in,
     begin_addr++;
   }
 
-//  for(int i = 0; i < in_taint_propagate.size(); i++){
-//    cout << "byte addr: " << hex << in_taint_propagate[i]->get_taint_src()
-//         << " can propagate to ranges: " << endl;
-//    for(int j = 0; j < in_taint_propagate[i]->get_taint_propagate()->get_size
-//        (); j++) {
-//      in_taint_propagate[i]->get_taint_propagate()->at(j)->disp_range();
+  for(int i = 0; i < in_taint_propagate.size(); i++){
+    cout << "byte addr: " << hex << in_taint_propagate[i]->get_taint_src()
+         << " can propagate to ranges: " << endl;
+    for(int j = 0; j < in_taint_propagate[i]->get_taint_propagate()->get_size
+        (); j++) {
+      in_taint_propagate[i]->get_taint_propagate()->at(j)->disp_range();
 //      in_taint_propagate[i]->get_taint_propagate()->at(j)->disp_byte_val_map();
-//    }
-//  }
+    }
+  }
 }
 
 vector<Detect::Multi_Taint_Source_> Detect::gen_taint_source(const t_AliveContinueBuffer &in)
@@ -612,7 +623,17 @@ bool Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
 //  v_in_propagated_byte_test = gen_in_propagate_byte(in, propagate);
   v_in_propagated_byte = gen_in_prpgt_byte(in, propagate);
 
-//  if(v_in_propagated_byte.size() == v_in_propagated_byte_test.size() ) {
+  for(uint32_t idx_byte = 0; idx_byte < v_in_propagated_byte.size(); idx_byte++) {
+    cout << "idx byte: " << idx_byte << endl;
+    for(auto it_prpgt = v_in_propagated_byte[idx_byte].begin();
+        it_prpgt != v_in_propagated_byte[idx_byte].end(); ++it_prpgt) {
+      cout << "propagate to: addr: " << hex << it_prpgt->addr
+           << " val: " << it_prpgt->val << endl;
+    }
+  }
+
+
+  //  if(v_in_propagated_byte.size() == v_in_propagated_byte_test.size() ) {
 //    for(int i = 0; i < v_in_propagated_byte.size(); i++) {
 //      if(v_in_propagated_byte[i].size() == v_in_propagated_byte_test[i].size() ) {
 //        for(int j = 0; j < v_in_propagated_byte[i].size(); j++) {
@@ -660,11 +681,11 @@ bool Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
   block_detector.detect_block_size(input_blocks, input_block_propa,
                                    v_in_taint_propagate);
 //  cout << "block detection result: " << endl;
-//  input_blocks.disp_range_array();
-//  cout << "blocks propagated ranges: " << endl;
-//  for(uint32_t i = 0; i < input_block_propa.size(); i++) {
-//    input_block_propa[i]->disp_range_array();
-//  }
+  input_blocks.disp_range_array();
+  cout << "blocks propagated ranges: " << endl;
+  for(uint32_t i = 0; i < input_block_propa.size(); i++) {
+    input_block_propa[i]->disp_range_array();
+  }
 
   bool is_det = false;
   CFBDetector det_cfb;

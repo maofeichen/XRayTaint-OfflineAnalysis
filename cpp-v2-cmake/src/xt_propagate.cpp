@@ -215,6 +215,8 @@ unordered_set<Node, NodeHash> Propagate::bfs_old(NodePropagate &s, vector<Record
 unordered_set<Node, NodeHash> Propagate::search_propagate(NodePropagate &taint_src, 
                                                           unsigned int byte_pos)
 {
+//    cout << "search propagation: " << dec << taint_src.insnAddr << endl;
+
     unordered_set<Node, NodeHash> propagate_res;
 
     unsigned int record_idx = taint_src.pos;
@@ -447,7 +449,7 @@ void Propagate::handle_destinate_node_mem(XTNode &xt_node,
 
                 // Inserts to propagate result
                 // Inserts based on the taint info, but now insert all
-                cout << "propagate to: " << hex << i_byte_addr << " val: " << byte_val << endl;
+//                cout << "propagate to: " << hex << i_byte_addr << " val: " << byte_val << endl;
 
                 // Debug
                 if(i_byte_addr == 0xbffff10f) {

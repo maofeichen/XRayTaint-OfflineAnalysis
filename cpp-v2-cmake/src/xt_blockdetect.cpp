@@ -507,6 +507,8 @@ void BlockDetect::detect_block_size_handling_last_block(RangeArray &input_blocks
 
   uint32_t block_sz = 0;
 
+  RangeArray last_common;
+
   // loops until reaching the begin of potential last block
   while (buf_sz - accumu_b_sz > block_sz) {
     // Initially common range cover full address space of output range
@@ -585,14 +587,16 @@ void BlockDetect::detect_block_size_handling_last_block(RangeArray &input_blocks
 //      block_sz = in_blocks_.at(num_block - 1)->get_len();
 //    }
 
-//    last_common = prev_common;
+    last_common = prev_common;
   } // end while
 
 
   // save the last block if any
-  input_blocks.add_range(b_begin_byte, buf_sz);
+//  input_blocks.add_range(b_begin_byte, buf_sz);
+  store_block(input_blocks, input_block_propa, b_begin_byte,
+              accumu_b_sz, last_common);
 //  in_blocks_.add_range(b_begin_byte, buf_sz);
-//  save_block_with_val(b_begin_byte, accumu_b_sz, last_common);
+//  save_bock_with_val(b_begin_byte, accumu_b_sz, last_common);
 }
 
 bool BlockDetect::init_block(RangeArray &common,

@@ -9,6 +9,7 @@
 #include "xt_log.h"
 #include "RangeArray.h"
 
+#include <iostream>
 #include <unordered_set>
 #include <vector>
 
@@ -30,6 +31,10 @@ class Detect {
 
     bool operator<(const propagate_byte_ &propagate_byte) const {
       return (addr < propagate_byte.addr);
+    }
+
+    void print_prpgt_byte() {
+      std::cout << "addr: " << std::hex << addr << " val: " << val << std::endl;
     }
   };
 
