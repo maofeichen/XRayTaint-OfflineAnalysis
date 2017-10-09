@@ -31,8 +31,8 @@ void Detect::detect_cipher() {
   // Store which IN and OUT buffer had been searched already
   vector<pair_inout_> v_buf_in_out;
 
-  vector<t_AliveFunctionCall>::iterator it_in_func = v_func_cont_buf_.end() - 2;
-  // vector<t_AliveFunctionCall>::iterator it_in_func = v_func_cont_buf_.begin() + 3;
+//  vector<t_AliveFunctionCall>::iterator it_in_func = v_func_cont_buf_.end() - 2;
+   vector<t_AliveFunctionCall>::iterator it_in_func = v_func_cont_buf_.begin();
 
   // Iterates each function call
   for (; it_in_func != v_func_cont_buf_.end() - 1; ++it_in_func) {
@@ -78,10 +78,21 @@ void Detect::detect_cipher() {
                 cout << "successfully detects cipher" << endl;
               }
 
+<<<<<<< HEAD
               if (in_buf.beginAddress == 0x804c080 &&
                   in_buf.size == 96 * 8 &&
                   out_buf.beginAddress == 0x804c860 &&
                   out_buf.size == 96 * 8) {
+=======
+              /* if (in_buf.beginAddress == 0xe5515000 &&
+                  in_buf.size == 92 * 8*/ /* &&
+                  out_buf.beginAddress == 0xbfffee8c*/ /*&&
+                  out_buf.size == 92 * 8 ) { */
+
+              if(in_buf.beginAddress == 0xde911000 && in_buf.size == 64 * 8
+                  && out_buf.beginAddress == 0x804c170 && out_buf.size == 64
+                  * 8) {
+>>>>>>> temp2
 
 //              if (in_buf.beginAddress == 0x804c860 &&
 //                  in_buf.size == 96 * 8 &&
@@ -659,20 +670,20 @@ bool Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
   vector<ByteTaintPropagate *> v_in_taint_propagate;
   gen_in_range_array(in, v_in_propagated_byte, v_in_taint_propagate);
 
-//  for (int i = 0; i < v_in_taint_propagate.size(); i++) {
-//    cout << "taint src: " << hex << v_in_taint_propagate[i]->get_taint_src()
-//         << endl;
-//    uint32_t addr = v_in_taint_propagate[i]->get_taint_src();
+  for (int i = 0; i < v_in_taint_propagate.size(); i++) {
+    cout << "taint src: " << hex << v_in_taint_propagate[i]->get_taint_src()
+         << endl;
+    uint32_t addr = v_in_taint_propagate[i]->get_taint_src();
 //    if(addr == 0x804b0e0) {
 //      cout << "addr: 804b0e0" << endl;
 //    }
-//    for(int j = 0; j < v_in_taint_propagate[i]->get_taint_propagate()
-//        ->get_size(); j++) {
-//      v_in_taint_propagate[i]->get_taint_propagate()->at(j)->disp_range();
+    for(int j = 0; j < v_in_taint_propagate[i]->get_taint_propagate()
+        ->get_size(); j++) {
+      v_in_taint_propagate[i]->get_taint_propagate()->at(j)->disp_range();
 //      v_in_taint_propagate[i]->get_taint_propagate()->at(j)
 //          ->disp_byte_val_map();
-//    }
-//  }
+    }
+  }
 
   RangeArray input_blocks;
   VSPtrRangeArray input_block_propa;
@@ -680,7 +691,11 @@ bool Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
                              out.beginAddress, out.size / 8);
   block_detector.detect_block_size(input_blocks, input_block_propa,
                                    v_in_taint_propagate);
+<<<<<<< HEAD
 //  cout << "block detection result: " << endl;
+=======
+  cout << "block detection result: " << endl;
+>>>>>>> temp2
   input_blocks.disp_range_array();
   cout << "blocks propagated ranges: " << endl;
   for(uint32_t i = 0; i < input_block_propa.size(); i++) {

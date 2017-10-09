@@ -25,6 +25,7 @@ namespace xt_file {
 class xt_file::File{
  public:
   File(std::string fn);
+<<<<<<< HEAD
   void read(std::vector<std::string> &s_log);
 
   void write_str_log(const std::string path,
@@ -37,6 +38,10 @@ class xt_file::File{
                         const std::vector< std::vector<Record> >& alive_func) const;
   void write_cont_buf(const std::string& curr_t,
                       const std::vector<AliveFunction>& v_liveness_res);
+=======
+  std::vector<std::string> read();
+  void read(std::vector<std::string>& v_s_log);
+>>>>>>> temp2
 
  private:
   std::string fn_;

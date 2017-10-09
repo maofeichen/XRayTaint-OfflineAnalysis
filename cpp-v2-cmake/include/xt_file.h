@@ -11,8 +11,11 @@
 using namespace std;
 
 const string XT_FILE_EXT    = ".txt";
-const string XT_FILE_PATH	= "/home/xtaint/Workplace/XRayTaint-OfflineAnalysis/test_file/";
-const string XT_RESULT_PATH = "/home/xtaint/Workplace/XRayTaint-OfflineAnalysis/test_result/";
+//const string XT_FILE_PATH	= "/home/xtaint/Workplace/XRayTaint-OfflineAnalysis/test_file/";
+//const string XT_RESULT_PATH = "/home/xtaint/Workplace/XRayTaint-OfflineAnalysis/test_result/";
+const std::string XT_FILE_PATH  = "/home/xtaint/Workplace/XRayTaint/TestResult/";
+const std::string XT_RESULT_PATH  = "/home/xtaint/Workplace/XT_Test_Result/";
+
 
 const string XT_PREPROCESS      = "-preprocess";
 const string XT_ADD_SIZE_INFO   = "-add-size-info";
@@ -30,6 +33,7 @@ public:
     XT_File(std::string);
 
     std::vector<std::string> read();
+  	void read(std::vector<std::string>& log);
     void write(std::string, std::vector<std::string> &);
     void write_continue_buffer(string, vector<t_AliveFunctionCall> &);
     void write_continuous_buffer(std::string path, 

@@ -459,10 +459,10 @@ void RangeArray::get_common_range_with_val(RangeArray &ra_right,
     }
   }
 
-  for(int i = 0; i < common.get_size(); i++) {
-    common[i]->disp_range();
-    common[i]->disp_byte_val_map();
-  }
+//  for(int i = 0; i < common.get_size(); i++) {
+//    common[i]->disp_range();
+//    common[i]->disp_byte_val_map();
+//  }
 }
 
 RangeArray &RangeArray::get_common_range(RangeArray &r)
@@ -560,7 +560,7 @@ void RangeArray::remove_range(int pos)
 
 void RangeArray::reset()
 {
-  cout << "num used array: " << array_used_ << endl;
+//  cout << "num used array: " << array_used_ << endl;
   for(int i = 0; i < array_used_; i++) {
     ref_rray_[i]->disp_range();
   }
@@ -593,11 +593,11 @@ multimap<uint32_t, uint32_t> RangeArray::get_byte_val_map(Range &r,
     }
   }
 
-  for(multimap<uint32_t,uint32_t>::iterator it = byte_val_map.begin();
-      it != byte_val_map.end(); ++it) {
-    cout << "addr: " << hex << it->first << " val: " << hex << it->second
-         << endl;
-  }
+//  for(multimap<uint32_t,uint32_t>::iterator it = byte_val_map.begin();
+//      it != byte_val_map.end(); ++it) {
+//    cout << "addr: " << hex << it->first << " val: " << hex << it->second
+//         << endl;
+//  }
   return byte_val_map;
 }
 

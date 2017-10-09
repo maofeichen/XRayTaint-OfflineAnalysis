@@ -37,7 +37,8 @@ void XT_DetectAvalanche::detect_avalanche(string logPath, bool is_dump) {
   vector<string> v_s_log;
   // Read file
   XT_File xt_file = (XT_FILE_PATH + logPath + XT_FILE_EXT);
-  v_s_log = xt_file.read();
+//  v_s_log = xt_file.read();
+  xt_file.read(v_s_log);
 
   // Preprocess
   XT_PreProcess preproc;
@@ -92,7 +93,7 @@ void XT_DetectAvalanche::detect_avalanche(string logPath, bool is_dump) {
 //  v_alive_func = func_live.create_function_call_buffer(o_log);
 
   func_live.propagate_alive_buffer(v_alive_func);
-  v_alive_func = func_live.filter_kernel_buffer(v_alive_func);
+//  v_alive_func = func_live.filter_kernel_buffer(v_alive_func);
   if (is_dump) {
     xt_file.write_continue_buffer(
         XT_RESULT_PATH + logPath + CONT_BUF + c_time + XT_FILE_EXT,

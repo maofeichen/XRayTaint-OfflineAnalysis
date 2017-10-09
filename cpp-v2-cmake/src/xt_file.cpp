@@ -1,7 +1,10 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+
 #include "xt_file.h"
+#include "xt_flag.h"
+#include "xt_util.h"
 
 XT_File::XT_File(std::string path)
 {
@@ -35,6 +38,40 @@ std::vector<std::string> XT_File::read()
     return v;
 }
 
+void XT_File::read(std::vector<std::string>& log)
+{
+    std::ifstream xt_file(path_r.c_str() );
+
+    if(xt_file.is_open() ){
+        string prev_line;
+        string curr_line;
+
+        int num_line = 1;
+
+        getline(xt_file, prev_line);
+        while (getline(xt_file, curr_line)) {
+            string prev_flag = prev_line.substr(0,2);
+            string curr_flag = curr_line.substr(0,2);
+            if(XT_Util::equal_mark(curr_flag, flag::XT_INSN_ADDR)
+                && XT_Util::equal_mark(prev_flag, flag::XT_INSN_ADDR) ) {
+
+            } else {
+                log.push_back(curr_line);
+            }
+
+            prev_line = curr_line;
+            num_line++;
+        }
+        cout << "total lines scanned: " << num_line << endl;
+    }
+    else
+        std::cout << "error open file: " << path_r << std::endl;
+    xt_file.close();
+
+    // std::cout << "read file: " << path_r << std::endl;
+    // for(std::vector<std::string>::iterator it = v.begin(); it != v.end(); ++it)
+    //     std::cout << *it << std::endl;
+}
 
 void XT_File::write(string p, vector<string> &v)
 {

@@ -30,8 +30,34 @@ void xt_file::File::read(std::vector<std::string> &s_log) {
   //  }
 }
 
+<<<<<<< HEAD
 void xt_file::File::write_str_log(const string path,
                                   const vector<string> &v_s_log) {
+=======
+// Does the pre-process in reading time
+void
+xt_file::File::read(std::vector<std::string>& v_s_log)
+{
+  string lp = xt_file::log_path + fn_ + xt_file::ext;
+  cout << "reading log file... : " << lp  << endl;
+
+  ifstream fp(lp.c_str() );
+
+  if(fp.is_open() ) {
+    string line;
+    while (getline(fp, line) ) {
+      v_s_log.push_back(line);
+    }
+  } else {
+    cout << "error open file: " << lp << endl;
+  }
+  fp.close();
+}
+
+
+void xt_file::File::write_str_log(std::string path,
+                                  std::vector<std::string> &v_s_log) {
+>>>>>>> temp2
   if(v_s_log.empty() ) {
     cout << "write log: log is empty" << endl;
     return;
@@ -50,6 +76,7 @@ void xt_file::File::write_str_log(const string path,
     cout << "error: write log - can't open file" << endl;
   }
 }
+<<<<<<< HEAD
 
 void xt_file::File::write_log_mem(const string path,
                                   const Log &log)
@@ -236,3 +263,5 @@ xt_file::File::write_cont_buf(const std::string& curr_t,
     cout << "error: write log - can't open file." << endl;
   }
 }
+=======
+>>>>>>> temp2
