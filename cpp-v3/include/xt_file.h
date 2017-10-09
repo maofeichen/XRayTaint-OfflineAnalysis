@@ -24,6 +24,7 @@ class xt_file::File{
  public:
   File(std::string fn);
   std::vector<std::string> read();
+  void read(std::vector<std::string>& v_s_log);
 
   void write_str_log(std::string path, std::vector<std::string> &v_s_log);
  private:

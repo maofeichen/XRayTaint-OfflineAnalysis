@@ -33,6 +33,27 @@ vector<string> xt_file::File::read() {
   return v;
 }
 
+// Does the pre-process in reading time
+void
+xt_file::File::read(std::vector<std::string>& v_s_log)
+{
+  string lp = xt_file::log_path + fn_ + xt_file::ext;
+  cout << "reading log file... : " << lp  << endl;
+
+  ifstream fp(lp.c_str() );
+
+  if(fp.is_open() ) {
+    string line;
+    while (getline(fp, line) ) {
+      v_s_log.push_back(line);
+    }
+  } else {
+    cout << "error open file: " << lp << endl;
+  }
+  fp.close();
+}
+
+
 void xt_file::File::write_str_log(std::string path,
                                   std::vector<std::string> &v_s_log) {
   if(v_s_log.empty() ) {
