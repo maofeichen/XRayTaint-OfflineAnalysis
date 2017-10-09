@@ -588,6 +588,25 @@ void BlockDetect::detect_block_size_handling_last_block(RangeArray &input_blocks
 //    last_common = prev_common;
   } // end while
 
+  cout << "curr begin byte: " << b_begin_byte
+       << " buf size: " << buf_sz << endl;
+
+  for(int i = b_begin_byte; i < b_begin_byte+buf_sz; i++) {
+    RangeArray common(out_begin_addr_, out_len_);
+    ByteTaintPropagate *byte = buf_taint_propagate[i];
+
+    if (byte->get_taint_propagate()->get_size() == 0) {
+      continue;
+    }
+
+    cout << "byte addr: " << hex << byte->get_taint_src() << endl;
+    cout << "before intersecting current byte: " << endl;
+    common.disp_range_array();
+
+    common.get_common_range_with_val(*byte->get_taint_propagate());
+    cout << "after intersecting current byte: " << endl;
+    common.disp_range_array();
+  }
 
   // save the last block if any
   input_blocks.add_range(b_begin_byte, buf_sz);
@@ -616,6 +635,9 @@ bool BlockDetect::init_block(RangeArray &common,
          << endl;
     return false;
   }
+
+  a->get_taint_propagate()->disp_range_array();
+  b->get_taint_propagate()->disp_range_array();
 
   common.get_common_range_with_val(*a->get_taint_propagate() );
   if(common.get_size() == 0) {
@@ -766,6 +788,7 @@ bool BlockDetect::store_block(RangeArray &input_blocks,
   } else {
     input_blocks.add_range(b_begin_idx, accumu_b_sz);
     input_blocks.disp_range_array();
+     ra_common.disp_range_array();
 
     RangeArray *propa_ra = new RangeArray();
     for(uint32_t i = 0; i < ra_common.get_size(); i++) {

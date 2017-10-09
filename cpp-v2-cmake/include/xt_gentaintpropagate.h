@@ -3,7 +3,7 @@
 #define XT_GENTAINTPROPAGATE_H
 
 class GenTaintPropagate{
-  GenTaintPropagate()
+  GenTaintPropagate();
 };
 
 #endif //XT_GENTAINTPROPAGATE_H
