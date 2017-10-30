@@ -95,7 +95,7 @@ void XT_DetectAvalanche::detect_avalanche(string logPath, bool is_dump) {
   if (is_dump) {
     xt_file.write_continue_buffer(
         XT_RESULT_PATH + logPath + CONT_BUF + c_time + XT_FILE_EXT,
-        v_alive_func);
+    v_alive_func);
   }
 
   // Converts string format to Record format
@@ -103,11 +103,12 @@ void XT_DetectAvalanche::detect_avalanche(string logPath, bool is_dump) {
   log_rec = preproc.convertToRec(v_s_log);
 
   // Searches avalanche effect
-  /*
-  vector<AvalResBetweenInOut> vAvalResult;
-  vector<XT_FunctionCall> v_xtFunctionCall = func_live.getAliveFunctionCall();
-  SearchAvalanche sa(v_xtFunctionCall, vAliveFunctionCall, log_rec, o_log);
-  */
+
+  // vector<AvalResBetweenInOut> vAvalResult;
+  //vector<XT_FunctionCall> v_xtFunctionCall = func_live.getAliveFunctionCall();
+  // SearchAvalanche sa(v_xtFunctionCall, vAliveFunctionCall, log_rec, o_log);
+
+
   // SearchAvalanche sa(v_alive_func, log_rec, o_log);
   // vAvalResult = sa.detect_avalanche();
   //    if(is_dump){
@@ -117,6 +118,7 @@ void XT_DetectAvalanche::detect_avalanche(string logPath, bool is_dump) {
   // Detects after liveness analysis
   Detect det(v_alive_func, o_log, log_rec);
   det.detect_cipher();
+
 }
 
 string XT_DetectAvalanche::get_time() {

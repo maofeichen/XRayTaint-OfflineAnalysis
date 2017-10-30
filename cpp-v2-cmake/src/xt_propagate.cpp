@@ -264,8 +264,21 @@ unordered_set<Node, NodeHash> Propagate::search_propagate(NodePropagate &taint_s
 //        cout << "record: " << record_idx << " src " << src.getAddr() << " val: " << src.getVal() << " dst: " << dst.getAddr() << " val: " << dst.getVal() << endl;
 
         if(!src.isMark() ){
+            // Local temp only use within one instruction. If see source is
+            // a global or a memory addr (load), indicates crossing insn
+            // boundary.
+            // No need to use insn mark.
+//            string flag = src.getFlag();
+//            string addr = src.getAddr();
+//            if(is_mem_load(flag) || is_global_temp(addr) ) {
+//                localTempMap_.clear();
+//            }
+
             taint = 0;
             if(handle_source_node(src, taint) ){
+//                cout << "record: " << std::dec << record_idx << " src " << src.getAddr() << " val: " << src.getVal() << " dst: " << dst.getAddr() << " val: " << dst.getVal() << endl;
+
+
                 string flag = src.getFlag();
                 // if not bitwise ir, assume all 4 bytes of temp are tainted,
                 // results in a overtained to 4 bytes
@@ -273,11 +286,12 @@ unordered_set<Node, NodeHash> Propagate::search_propagate(NodePropagate &taint_s
                     taint = 15;
 
                 handle_destinate_node(dst, taint, false, propagate_res);
-            } 
+
+            }
         }else if(is_insn_mark(src.getFlag() ) ){
             // cross insn bounary, clear locam temp
             // local temp can only be used within same instruction (Qemu)
-            localTempMap_.clear();
+             localTempMap_.clear();
         }
     }
 

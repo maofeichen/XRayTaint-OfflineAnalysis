@@ -83,9 +83,8 @@ void Detect::detect_cipher() {
                   out_buf.beginAddress == 0xbfffee8c*/ /*&&
                   out_buf.size == 92 * 8 ) { */
 
-              if(in_buf.beginAddress == 0xde911000 && in_buf.size == 64 * 8
-                  && out_buf.beginAddress == 0x804c170 && out_buf.size == 64
-                  * 8) {
+              if(in_buf.beginAddress == 0xdc99a100 && in_buf.size == 1024 * 8
+                  && out_buf.beginAddress == 0x804c270 && out_buf.size == 1024 * 8) {
 
 //                int num_source = in_buf.vNodeIndex.size();
 //                cout << "number of source index in the input buffer: "
@@ -667,6 +666,7 @@ bool Detect::detect_cipher_in_out(t_AliveContinueBuffer &in,
   input_blocks.disp_range_array();
   cout << "blocks propagated ranges: " << endl;
   for(uint32_t i = 0; i < input_block_propa.size(); i++) {
+    cout << i+1 << "\tblock ->" << endl;
     input_block_propa[i]->disp_range_array();
   }
 
